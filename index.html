@@ -66,6 +66,13 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .chip { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 0; background: var(--card-2); color: var(--text); font-weight: 600; font-size: 14px; cursor: pointer; }
 .chip[aria-pressed="true"] { background: var(--text); color: var(--ink); font-weight: 800; }
 .section-label { font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.link { background: none; border: 0; padding: 8px 4px; min-height: 44px; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; text-decoration: underline; cursor: pointer; }
+.restore { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center; }
+.restore img { width: 140px; height: auto; }
+.restore .spinner { width: 28px; height: 28px; color: var(--yellow); }
+.privacy h2 { font-size: 18px; margin: 8px 0 0; }
+.privacy p, .privacy li { color: var(--soft); font-size: 15px; line-height: 1.55; margin: 0; }
+.privacy ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
 .spinner { width: 18px; height: 18px; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
@@ -313,7 +320,22 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       <p>Simpan kata yang kamu temukan saat nonton, baca berita atau scroll medsos. Latihan bareng Bibo, 5 menit sehari.</p>
     </div>
     <button class="btn" id="open-btn" type="button">Buka lemari</button>
+    <button class="link" type="button" data-privacy style="align-self:center">Privasi</button>
   </section>
+
+  <!-- Restoring a saved session -->
+  <section id="restore" hidden aria-live="polite">
+    <div class="restore">
+      <img src="img/bibo-reading.webp" alt="" id="restore-img">
+      <span class="spinner" id="restore-spin" aria-hidden="true"></span>
+      <p class="bubble" id="restore-text">Bibo lagi buka lemarimu…</p>
+      <div class="stack" id="restore-actions" hidden style="width:100%;max-width:360px">
+        <button class="btn" type="button" id="restore-retry">Coba lagi</button>
+        <button class="btn btn--ghost" type="button" id="restore-other">Masuk dengan akun lain</button>
+      </div>
+    </div>
+  </section>
+  <script>try { if (localStorage.getItem('wr_token')) { document.getElementById('landing').hidden = true; document.getElementById('restore').hidden = false; document.body.setAttribute('data-screen', 'restore'); } } catch (e) { /* no storage */ }</script>
 
   <!-- Sign in -->
   <section id="signin" hidden aria-labelledby="signin-title">
@@ -343,6 +365,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <button class="btn btn--ghost" type="submit" id="send-btn">Kirim kode</button>
         <button class="btn btn--trial" type="button" id="trial-btn">Coba gratis 7 hari</button>
         <p class="note" style="text-align:center">Pengguna baru? Coba semua fitur gratis selama 7 hari.</p>
+        <button class="link" type="button" data-privacy style="align-self:center">Privasi</button>
       </form>
 
       <form id="code-form" class="stack" novalidate hidden>
@@ -666,6 +689,39 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     </div>
   </section>
 
+  <!-- Privacy -->
+  <section id="privacy" hidden aria-labelledby="privacy-title">
+    <div class="top">
+      <button class="round" type="button" id="privacy-back" aria-label="Kembali">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+    </div>
+    <div class="stack privacy" style="gap:12px;max-width:640px">
+      <h1 class="screen-title" id="privacy-title">Privasi</h1>
+      <p>Singkatnya: Wordrobe hanya menyimpan yang dibutuhkan supaya lemarimu bisa dibuka di mana saja.</p>
+      <h2>Yang disimpan</h2>
+      <ul>
+        <li>Alamat email, untuk masuk dan mengirim kode.</li>
+        <li>Password, kalau kamu membuatnya. Disimpan sebagai sidik acak (hash), tidak bisa dibaca siapa pun.</li>
+        <li>Kata, arti, kalimat dan sumber yang kamu masukkan, serta hasil latihanmu (jumlah per hari dan streak).</li>
+      </ul>
+      <h2>Yang dibagikan ke pengguna lain</h2>
+      <ul>
+        <li>Hanya kata bahasa Inggris dan terjemahan otomatisnya, untuk saran kata dan "Lagi rame di Wordrobe", ditambah jumlah orang yang menyimpannya.</li>
+        <li>Email, kalimat, arti tulisanmu sendiri dan siapa yang menyimpan sebuah kata tidak pernah ditampilkan ke orang lain.</li>
+      </ul>
+      <h2>Layanan yang dipakai</h2>
+      <ul>
+        <li>Google (Apps Script, Google Sheets, Google Translate, email) untuk menyimpan data, menerjemahkan dan mengirim kode. Kata dan kalimat yang kamu cari dikirim ke Google Translate.</li>
+        <li>dictionaryapi.dev untuk pelafalan dan definisi bahasa Inggris (hanya katanya yang dikirim).</li>
+        <li>Pengenal suara di Ngomong disediakan oleh browsermu (di Chrome, suaramu diproses oleh Google). Wordrobe tidak menerima dan tidak menyimpan rekaman suara.</li>
+      </ul>
+      <h2>Menghapus akun</h2>
+      <p>Mau akun dan semua katamu dihapus? DM @dnshlutfiii di Instagram dari akun yang bisa kami cocokkan dengan emailmu. Kata satu per satu bisa kamu hapus sendiri di Lemariku.</p>
+      <p>Wordrobe tidak menjual datamu dan tidak memasang iklan.</p>
+    </div>
+  </section>
+
 </main>
 
 <nav class="nav" id="nav" aria-label="Menu utama" hidden>
@@ -715,6 +771,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     <p class="note" id="menu-email"></p>
     <button class="btn btn--ghost" type="button" id="menu-password">Atur password</button>
     <button class="btn btn--ghost" type="button" id="menu-logout">Keluar</button>
+    <button class="link" type="button" data-privacy style="align-self:center">Privasi</button>
     <button class="btn" type="button" id="menu-close">Tutup</button>
   </div>
 </div>
@@ -784,10 +841,12 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   var FIT_MAX = 20, RING = 169.6;
   var community = null, communityAt = 0;
 
-  var SCREENS = ['landing', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'speak', 'fix', 'slay'];
+  var SCREENS = ['landing', 'restore', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'speak', 'fix', 'slay', 'privacy'];
+  var current = 'landing', privacyFrom = 'landing';
   function show(id) {
     SCREENS.forEach(function (s) { $(s).hidden = s !== id; });
     document.body.setAttribute('data-screen', id);
+    current = id;
     var nav = ['home', 'lemari', 'add', 'result', 'fit', 'speak', 'fix', 'slay'].indexOf(id) !== -1;
     if (id !== 'speak') stopListening();
     $('nav').hidden = !nav;
@@ -833,6 +892,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   /* ---------- landing + sign-in ---------- */
   $('open-btn').addEventListener('click', function () {
     if (me) { go('home'); return; }
+    if (readToken()) { restoreSession(); return; }
     show('signin'); signinStep('email');
     if (notice) { msg($('signin-msg'), notice, 'error'); notice = ''; }
     $('email').focus();
@@ -1510,12 +1570,33 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   });
 
   /* ---------- start: restore the session if there is one ---------- */
-  var saved = readToken();
-  if (saved) {
-    api('getMe', saved).then(function (r) { setMe(r.user, r.hasPassword); loadWords(); }, function (e) {
-      if (SESSION_RE.test(e.message)) { clearToken(); notice = e.message; }
+  // With a saved token the learner goes straight home; sign-in only when the session really ended.
+  function restoreSession() {
+    var token = readToken();
+    if (!token) { show('landing'); return; }
+    $('restore-text').textContent = 'Bibo lagi buka lemarimu…';
+    $('restore-spin').hidden = false; $('restore-actions').hidden = true;
+    show('restore');
+    api('getMe', token).then(function (r) {
+      if (readToken() !== token) return;   // signed in or out meanwhile
+      setMe(r.user, r.hasPassword);
+      if (current === 'restore') go('home');
+      loadWords();
+    }, function (e) {
+      if (readToken() !== token) return;
+      if (SESSION_RE.test(e.message)) { signedOut(e.message); return; }
+      $('restore-text').textContent = e.message;
+      $('restore-spin').hidden = true; $('restore-actions').hidden = false;
+      $('restore-retry').focus();
     });
   }
+  $('restore-retry').addEventListener('click', restoreSession);
+  $('restore-other').addEventListener('click', function () { clearToken(); show('signin'); signinStep('email'); $('email').focus(); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-privacy]'), function (b) {
+    b.addEventListener('click', function () { $('menu-sheet').hidden = true; privacyFrom = current; show('privacy'); $('privacy-back').focus(); });
+  });
+  $('privacy-back').addEventListener('click', function () { if (privacyFrom === 'privacy') privacyFrom = 'landing'; if (me || ['landing', 'signin', 'restore'].indexOf(privacyFrom) !== -1) show(privacyFrom); else show('landing'); });
+  if (readToken()) restoreSession();
 })();
 </script>
 </body>
