@@ -34,6 +34,8 @@ button, input, textarea { font: inherit; }
   border: 0; border-radius: 999px; background: var(--yellow); color: var(--ink); font-weight: 800; font-size: 16px; cursor: pointer; }
 .btn:disabled { opacity: .55; cursor: default; }
 .btn--ghost { background: var(--card-2); color: var(--text); }
+.btn--trial { background: transparent; color: var(--mint); box-shadow: inset 0 0 0 1.5px var(--mint); }
+.trial-pill { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 800; color: var(--ink); background: var(--mint); border-radius: 999px; padding: 3px 10px; }
 .btn--danger { background: transparent; color: var(--pink); box-shadow: inset 0 0 0 1.5px var(--pink); }
 .link { background: none; border: 0; padding: 8px 4px; min-height: 44px; color: var(--yellow); font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .brand { display: flex; align-items: center; gap: 10px; }
@@ -161,7 +163,7 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
     <div class="stack">
       <div class="bubble-row">
         <img src="img/bibo-wave.webp" width="320" height="257" alt="">
-        <div class="bubble" id="signin-bubble">Halo! Masukin emailmu, nanti aku kirim kode.</div>
+        <div class="bubble" id="signin-bubble">Halo! Masukin emailmu dulu ya.</div>
       </div>
       <h1 class="screen-title" id="signin-title">Masuk ke lemarimu</h1>
 
@@ -170,9 +172,10 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
           <label for="email">Email</label>
           <input class="input" id="email" type="email" inputmode="email" autocomplete="email" placeholder="nama@email.com" required>
         </div>
-        <button class="btn" type="submit" id="send-btn">Kirim kode</button>
-        <p class="note">Belum punya akun? Sama saja: masukkan email, akunmu dibuat otomatis.</p>
-        <button class="link" type="button" id="to-password">Masuk pakai password</button>
+        <button class="btn" type="button" id="to-password">Masuk pakai password</button>
+        <button class="btn btn--ghost" type="submit" id="send-btn">Kirim kode</button>
+        <button class="btn btn--trial" type="button" id="trial-btn">Coba gratis 7 hari</button>
+        <p class="note" style="text-align:center">Pengguna baru? Coba semua fitur gratis selama 7 hari.</p>
       </form>
 
       <form id="code-form" class="stack" novalidate hidden>
@@ -212,6 +215,7 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
           <div style="min-width:0">
             <p class="note" id="home-hello">Halo!</p>
             <h1 id="home-title">Ada kata baru<br>hari ini?</h1>
+            <span class="trial-pill" id="trial-pill" hidden></span>
           </div>
         </div>
         <button class="round" type="button" id="menu-btn" aria-label="Akun">
@@ -415,7 +419,7 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
   'use strict';
   var API_URL = 'https://script.google.com/macros/s/AKfycbzc09FoJGw5y0o5tERsPI7bcXgeDhEqrOnwstaUCqmxyiOiROfVJxODNy7DmpAg41gu8g/exec';
   var NET_MSG = 'Koneksi bermasalah. Cek internetmu lalu coba lagi.';
-  var SESSION_RE = /Sesi kamu sudah habis/;
+  var SESSION_RE = /Sesi kamu sudah habis|Masa coba gratis/;
   var TOKEN_KEY = 'wr_token';
   var SOURCES = ['Nonton', 'Berita', 'Medsos', 'Kerja'];
   var STATUS = { 'new': ['Baru', 'tag--new'], revise: ['Masih nyoba', 'tag--revise'], known: ['Udah slay', 'tag--known'] };
@@ -440,7 +444,7 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
   function clearToken() { memToken = ''; try { localStorage.removeItem(TOKEN_KEY); } catch (e) { /* ignore */ } }
 
   /* ---------- state ---------- */
-  var me = null, hasPassword = false, pendingEmail = '', cooldownTimer = null;
+  var me = null, hasPassword = false, pendingEmail = '', cooldownTimer = null, notice = '';
   var words = [], wordsLoaded = false, draftSource = 'Medsos', lastLookup = null, editing = null, deleteArmed = false;
 
   var SCREENS = ['landing', 'signin', 'home', 'add', 'result', 'lemari'];
@@ -486,7 +490,9 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
   /* ---------- landing + sign-in ---------- */
   $('open-btn').addEventListener('click', function () {
     if (me) { go('home'); return; }
-    show('signin'); signinStep('email'); $('email').focus();
+    show('signin'); signinStep('email');
+    if (notice) { msg($('signin-msg'), notice, 'error'); notice = ''; }
+    $('email').focus();
   });
   $('signin-back').addEventListener('click', function () { show('landing'); });
   function signinStep(step) {
@@ -494,7 +500,7 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
     $('code-form').hidden = step !== 'code';
     $('password-form').hidden = step !== 'password';
     $('signin-bubble').textContent = step === 'code' ? 'Cek emailmu ya, kodenya sudah aku kirim.'
-      : step === 'password' ? 'Udah punya password? Masuk langsung di sini.' : 'Halo! Masukin emailmu, nanti aku kirim kode.';
+      : step === 'password' ? 'Udah punya password? Masuk langsung di sini.' : 'Halo! Masukin emailmu dulu ya.';
     msg($('signin-msg'), '');
   }
   function startCooldown(seconds) {
@@ -508,9 +514,9 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
       else btn.textContent = 'Kirim ulang kode (' + left + ')';
     }, 1000);
   }
-  function sendCode(email, btn) {
+  function sendCode(email, btn, fn) {
     busy(btn, true, 'Mengirim…');
-    return api('requestLoginCode', email).then(function (r) {
+    return api(fn || 'requestLoginCode', email).then(function (r) {
       busy(btn, false);
       pendingEmail = email;
       signinStep('code');
@@ -525,6 +531,11 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
     var email = $('email').value.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg($('signin-msg'), 'Tulis alamat email yang benar ya.', 'error'); return; }
     sendCode(email, $('send-btn'));
+  });
+  $('trial-btn').addEventListener('click', function () {
+    var email = $('email').value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg($('signin-msg'), 'Tulis emailmu dulu, lalu tekan Coba gratis 7 hari.', 'error'); $('email').focus(); return; }
+    sendCode(email, $('trial-btn'), 'startTrial');
   });
   $('resend-btn').addEventListener('click', function () { if (pendingEmail) sendCode(pendingEmail, $('resend-btn')); });
   $('change-email').addEventListener('click', function () { clearInterval(cooldownTimer); signinStep('email'); $('email').focus(); });
@@ -560,7 +571,7 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
   function signedIn(r) {
     saveToken(r.token);
     setMe(r.user, r.hasPassword);
-    msg($('home-msg'), r.isNew ? 'Akunmu sudah dibuat. Selamat datang di Wordrobe!' : '', 'ok');
+    msg($('home-msg'), !r.isNew ? '' : r.user.access === 'trial' ? 'Coba gratis 7 hari dimulai. Selamat datang di Wordrobe!' : 'Selamat datang di Wordrobe!', 'ok');
     words = []; wordsLoaded = false;
     go('home');
     loadWords();
@@ -569,6 +580,12 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
     me = user; hasPassword = !!pw;
     $('home-hello').textContent = 'Halo, ' + (user.display_name || 'kamu') + '!';
     $('menu-email').textContent = 'Masuk sebagai ' + user.email;
+    var pill = $('trial-pill'), end = user.access === 'trial' ? Date.parse(user.trial_ends_at || '') : NaN;
+    if (isFinite(end)) {
+      var days = Math.max(0, Math.ceil((end - Date.now()) / 86400000));
+      pill.textContent = days <= 1 ? 'Coba gratis: hari terakhir' : 'Coba gratis: sisa ' + days + ' hari';
+      pill.hidden = false;
+    } else pill.hidden = true;
   }
   function signedOut(text) {
     clearToken(); me = null; words = []; wordsLoaded = false;
@@ -773,7 +790,7 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
   var saved = readToken();
   if (saved) {
     api('getMe', saved).then(function (r) { setMe(r.user, r.hasPassword); loadWords(); }, function (e) {
-      if (SESSION_RE.test(e.message)) clearToken();
+      if (SESSION_RE.test(e.message)) { clearToken(); notice = e.message; }
     });
   }
 })();
