@@ -24,26 +24,31 @@ html, body { margin: 0; min-height: 100%; background: var(--ink); color: var(--t
 body { -webkit-font-smoothing: antialiased; }
 .app { max-width: 440px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
   padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); }
+.app.with-nav { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 [hidden] { display: none !important; }
 h1, h2 { font-family: var(--display); font-weight: 800; letter-spacing: -0.5px; margin: 0; line-height: 1.05; }
 p { margin: 0; }
-button, input { font: inherit; }
+button, input, textarea { font: inherit; }
 :focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 54px; padding: 0 22px;
   border: 0; border-radius: 999px; background: var(--yellow); color: var(--ink); font-weight: 800; font-size: 16px; cursor: pointer; }
 .btn:disabled { opacity: .55; cursor: default; }
 .btn--ghost { background: var(--card-2); color: var(--text); }
+.btn--danger { background: transparent; color: var(--pink); box-shadow: inset 0 0 0 1.5px var(--pink); }
 .link { background: none; border: 0; padding: 8px 4px; min-height: 44px; color: var(--yellow); font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand-mark { width: 38px; height: 38px; border-radius: 11px; background: var(--blue); display: grid; place-items: center; flex: none; }
 .brand-name { font-family: var(--display); font-weight: 800; font-size: 25px; letter-spacing: -0.5px; }
 .stack { display: flex; flex-direction: column; gap: 16px; }
 .field { display: flex; flex-direction: column; gap: 8px; }
-.field label { font-size: 14px; font-weight: 700; }
+.field label, .label { font-size: 14px; font-weight: 700; }
+.opt { font-weight: 500; color: var(--muted); }
 .input { min-height: 56px; width: 100%; padding: 0 16px; border-radius: 18px; border: 1.5px solid var(--line); background: var(--card);
   color: var(--text); font-size: 17px; }
+textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-height: 1.45; font-size: 16px; }
 .input:focus { border-color: var(--yellow); outline: none; }
 .input--code { letter-spacing: .4em; font-size: 24px; font-weight: 800; text-align: center; }
+.input::placeholder { color: #7D788A; }
 .note { font-size: 14px; color: var(--muted); }
 .msg { font-size: 14px; font-weight: 600; padding: 12px 14px; border-radius: 14px; background: var(--card); }
 .msg--error { color: var(--error); }
@@ -51,6 +56,17 @@ button, input { font: inherit; }
 .bubble-row { display: flex; align-items: center; gap: 12px; }
 .bubble-row img { width: 72px; height: auto; flex: none; }
 .bubble { background: var(--card); border-radius: 18px 18px 18px 6px; padding: 10px 14px; font-weight: 700; font-size: 15px; }
+.top { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.top-title { font-weight: 800; }
+.round { width: 44px; height: 44px; border-radius: 999px; border: 0; background: var(--card); color: var(--text); display: grid; place-items: center; cursor: pointer; flex: none; }
+.screen-title { font-size: 32px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 0; background: var(--card-2); color: var(--text); font-weight: 600; font-size: 14px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--text); color: var(--ink); font-weight: 800; }
+.section-label { font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.spinner { width: 18px; height: 18px; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
 
 /* landing */
 #landing { flex: 1; display: flex; flex-direction: column; gap: 20px; background: var(--ink-2); margin: calc(-1 * max(24px, env(safe-area-inset-top))) -20px calc(-1 * max(24px, env(safe-area-inset-bottom)));
@@ -60,32 +76,66 @@ button, input { font: inherit; }
 #landing h1 { font-size: 42px; line-height: 1; letter-spacing: -1px; }
 #landing p { color: var(--soft); }
 
-/* sign-in */
-.top { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-.back { width: 44px; height: 44px; border-radius: 999px; border: 0; background: var(--card); color: var(--text); display: grid; place-items: center; cursor: pointer; flex: none; }
-.screen-title { font-size: 32px; }
-
 /* home */
 .home-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .home-head .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .home-head img { width: 80px; height: auto; flex: none; }
 .home-head h1 { font-size: 27px; }
-.menu-btn { width: 44px; height: 44px; border-radius: 999px; border: 0; background: var(--card); color: var(--text); display: grid; place-items: center; cursor: pointer; flex: none; }
-.soon { background: var(--card); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-.soon h2 { font-size: 22px; }
-.pill { align-self: flex-start; font-size: 12px; font-weight: 800; background: var(--blue); color: #fff; border-radius: 999px; padding: 4px 10px; }
+.drop-btn { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 72px; padding: 12px 18px; border: 0; border-radius: 24px;
+  background: var(--yellow); color: var(--ink); text-align: left; cursor: pointer; }
+.drop-btn .plus { width: 42px; height: 42px; border-radius: 999px; background: var(--ink); color: var(--yellow); display: grid; place-items: center; flex: none; }
+.drop-btn b { display: block; font-size: 17px; }
+.drop-btn span span { font-size: 13px; font-weight: 600; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tile { display: flex; flex-direction: column; justify-content: space-between; gap: 16px; min-height: 108px; padding: 16px; border: 0; border-radius: 24px; text-align: left; font: inherit; }
+.tile b { font-family: var(--display); font-size: 21px; font-weight: 800; }
+.tile small { font-size: 13px; font-weight: 700; }
+.tile--blue { background: var(--blue); color: #fff; cursor: pointer; }
+.tile--pink { background: var(--pink); color: var(--ink); }
+.word-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px; border: 0; border-radius: 18px; background: var(--card); color: var(--text); text-align: left; cursor: pointer; font: inherit; }
+.word-row .w { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.word-row .w b { font-size: 16px; overflow-wrap: anywhere; }
+.word-row .w span { font-size: 14px; color: var(--soft); overflow-wrap: anywhere; }
+.tag { flex: none; font-size: 12px; font-weight: 800; border-radius: 999px; padding: 4px 10px; background: var(--card-2); color: var(--text); }
+.tag--new { background: #A78BFA; color: var(--ink); }
+.tag--revise { background: var(--pink); color: var(--ink); }
+.tag--known { background: var(--mint); color: var(--ink); }
+.list { display: flex; flex-direction: column; gap: 10px; }
+.empty { background: var(--card); border-radius: 22px; padding: 18px; display: flex; gap: 12px; align-items: center; }
+.empty img { width: 64px; height: auto; flex: none; }
+
+/* result */
+.result-card { background: var(--yellow); color: var(--ink); border-radius: 28px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; }
+.result-card .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.result-card h2 { font-size: 34px; overflow-wrap: anywhere; }
+.result-card .phon { font-size: 14px; font-weight: 600; }
+.speak { width: 44px; height: 44px; border-radius: 999px; border: 0; background: var(--ink); color: var(--yellow); display: grid; place-items: center; cursor: pointer; flex: none; }
+.panel { background: var(--card); border-radius: 20px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; }
+.panel .en { font-weight: 700; }
+.panel .id { color: var(--soft); }
+.panel .ex { font-style: italic; color: var(--soft); }
+
+/* nav */
+.nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--ink); border-top: 1px solid var(--card-2); padding-bottom: env(safe-area-inset-bottom); }
+.nav-inner { max-width: 440px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; padding: 6px 12px 8px; }
+.nav-btn { min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: none; border: 0; color: var(--muted); font-size: 12px; font-weight: 700; cursor: pointer; }
+.nav-btn[aria-current="page"] { color: var(--yellow); font-weight: 800; }
+.nav-add { justify-self: center; width: 56px; height: 56px; border-radius: 999px; border: 0; background: var(--yellow); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+
+/* toast + sheets */
+.toast { display: flex; align-items: center; gap: 12px; padding: 8px 16px 8px 8px; background: var(--mint); color: var(--ink); border-radius: 20px; }
+.toast img { width: 60px; height: auto; flex: none; }
+.toast b { display: block; font-size: 16px; }
+.toast span { font-size: 13px; font-weight: 600; }
 .sheet { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; justify-content: center; z-index: 10; }
-.sheet-card { width: 100%; max-width: 440px; background: var(--ink); border-radius: 28px 28px 0 0; padding: 22px 20px max(22px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; }
-.sheet-card h2 { font-size: 24px; }
-.spinner { width: 18px; height: 18px; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+.sheet-card { width: 100%; max-width: 440px; max-height: 92vh; overflow-y: auto; background: var(--ink); border-radius: 28px 28px 0 0; padding: 22px 20px max(22px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; }
+.sheet-card h2 { font-size: 24px; overflow-wrap: anywhere; }
 </style>
 </head>
 <body>
 <main class="app" id="app">
 
-  <!-- 1. Welcome -->
+  <!-- Welcome -->
   <section id="landing" aria-labelledby="landing-title">
     <div class="brand">
       <span class="brand-mark" aria-hidden="true">
@@ -101,10 +151,10 @@ button, input { font: inherit; }
     <button class="btn" id="open-btn" type="button">Buka lemari</button>
   </section>
 
-  <!-- 2. Sign in -->
+  <!-- Sign in -->
   <section id="signin" hidden aria-labelledby="signin-title">
     <div class="top">
-      <button class="back" type="button" id="signin-back" aria-label="Kembali">
+      <button class="round" type="button" id="signin-back" aria-label="Kembali">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
       </button>
     </div>
@@ -153,9 +203,9 @@ button, input { font: inherit; }
     </div>
   </section>
 
-  <!-- 3. Home (phase 1 shell) -->
+  <!-- Home -->
   <section id="home" hidden aria-labelledby="home-title">
-    <div class="stack" style="gap:20px">
+    <div class="stack" style="gap:18px">
       <div class="home-head">
         <div class="who">
           <img src="img/bibo-wave.webp" width="320" height="257" alt="Bibo melambaikan tangan">
@@ -164,20 +214,143 @@ button, input { font: inherit; }
             <h1 id="home-title">Ada kata baru<br>hari ini?</h1>
           </div>
         </div>
-        <button class="menu-btn" type="button" id="menu-btn" aria-label="Akun">
+        <button class="round" type="button" id="menu-btn" aria-label="Akun">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
         </button>
       </div>
-      <div class="soon">
-        <span class="pill">Segera hadir</span>
-        <h2>Lemarimu sudah siap.</h2>
-        <p class="note">Kamu sudah masuk. Fitur New drop, Lemariku dan Fit check sedang dibangun dan akan muncul di sini.</p>
-      </div>
       <div class="msg msg--ok" id="home-msg" role="status" hidden></div>
+      <button class="drop-btn" type="button" id="home-drop">
+        <span class="plus" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+        <span><b>New drop</b><span>Masukin kata baru ke lemari</span></span>
+      </button>
+      <div class="tiles">
+        <button class="tile tile--blue" type="button" id="home-lemari"><b>Lemariku</b><small id="home-count">0 kata</small></button>
+        <div class="tile tile--pink" aria-label="Fit check, segera hadir"><b>Fit check</b><small>Segera hadir</small></div>
+      </div>
+      <div class="stack" style="gap:10px">
+        <span class="section-label">Baru masuk lemari</span>
+        <div class="list" id="recent-list"></div>
+        <div class="empty" id="recent-empty" hidden>
+          <img src="img/bibo-thinking.webp" width="320" height="396" alt="">
+          <p class="note" style="color:var(--soft)">Lemarimu masih kosong. Ketemu kata baru waktu nonton atau scroll? Masukin lewat New drop.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- New drop: add a word -->
+  <section id="add" hidden aria-labelledby="add-title">
+    <div class="top">
+      <button class="round" type="button" data-go="home" aria-label="Kembali">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <h1 class="top-title" id="add-title" style="font-family:var(--ui);font-size:16px;letter-spacing:0">New drop</h1>
+    </div>
+    <form class="stack" id="add-form" novalidate style="gap:20px">
+      <div class="bubble-row">
+        <img src="img/bibo-thinking.webp" width="320" height="396" alt="Bibo sedang berpikir" style="width:64px">
+        <div class="bubble">Hmm, kata baru buat lemarimu? Aku carikan artinya.</div>
+      </div>
+      <div class="field">
+        <label for="add-word">Kata atau frasa</label>
+        <input class="input" id="add-word" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60" placeholder="mis. breathtaking" style="border-color:var(--yellow);font-weight:700;font-size:18px">
+      </div>
+      <div class="field">
+        <label for="add-sentence">Kalimat tempat kamu menemukannya <span class="opt">(opsional)</span></label>
+        <textarea class="input" id="add-sentence" rows="3" maxlength="300" placeholder="mis. This view is breathtaking!"></textarea>
+        <span class="note">Dengan kalimatnya, kamu bisa lihat artinya sesuai konteks.</span>
+      </div>
+      <div class="field">
+        <span class="label" id="src-label">Ketemu di mana?</span>
+        <div class="chips" id="add-sources" role="group" aria-labelledby="src-label"></div>
+      </div>
+      <div class="msg msg--error" id="add-msg" role="alert" hidden></div>
+      <button class="btn" type="submit" id="add-btn">Cari arti</button>
+    </form>
+  </section>
+
+  <!-- Result -->
+  <section id="result" hidden aria-labelledby="res-word">
+    <div class="top">
+      <button class="round" type="button" data-go="add" aria-label="Kembali">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <span class="top-title">Arti ditemukan</span>
+    </div>
+    <div class="stack">
+      <div class="result-card">
+        <div class="head">
+          <div style="min-width:0;display:flex;flex-direction:column;gap:4px">
+            <h2 id="res-word"></h2>
+            <span class="phon" id="res-phon"></span>
+          </div>
+          <button class="speak" type="button" id="res-speak" aria-label="Dengarkan">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 010 7"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="res-meaning">Arti <span class="opt">(bisa kamu ubah)</span></label>
+        <input class="input" id="res-meaning" type="text" maxlength="120" autocomplete="off" style="font-weight:700">
+        <span class="note" id="res-meaning-note"></span>
+      </div>
+      <div class="panel" id="res-sentence-panel" hidden>
+        <span class="section-label">Kalimatmu</span>
+        <span class="en" id="res-sentence"></span>
+        <span class="id" id="res-sentence-tr"></span>
+      </div>
+      <div class="panel" id="res-def-panel" hidden>
+        <span class="section-label">Definisi (English)</span>
+        <span id="res-def"></span>
+        <span class="ex" id="res-ex"></span>
+      </div>
+      <p class="note">Arti dari Google Translate dan kamus gratis. Kalau kurang pas, ubah artinya sebelum disimpan.</p>
+      <div class="msg msg--error" id="res-msg" role="alert" hidden></div>
+      <button class="btn" type="button" id="res-save">Masukin lemari</button>
+    </div>
+  </section>
+
+  <!-- Lemariku -->
+  <section id="lemari" hidden aria-labelledby="lemari-title">
+    <div class="stack">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <h1 class="screen-title" id="lemari-title">Lemariku</h1>
+        <span class="note" id="lemari-count"></span>
+      </div>
+      <div class="toast" id="saved-toast" role="status" hidden>
+        <img src="img/bibo-jump.webp" width="320" height="295" alt="Bibo melompat senang">
+        <span><b>+1 kata masuk lemari!</b><span>Nanti kita latihan bareng ya.</span></span>
+      </div>
+      <div class="field" id="lemari-search-field">
+        <label for="lemari-search" class="label">Cari di lemari</label>
+        <input class="input" id="lemari-search" type="search" autocomplete="off" placeholder="ketik kata atau arti">
+      </div>
+      <div class="list" id="lemari-list"></div>
+      <div class="empty" id="lemari-empty" hidden>
+        <img src="img/bibo-thinking.webp" width="320" height="396" alt="">
+        <p class="note" style="color:var(--soft)" id="lemari-empty-text">Lemarimu masih kosong. Tekan + untuk New drop.</p>
+      </div>
+      <div class="msg msg--error" id="lemari-msg" role="alert" hidden></div>
     </div>
   </section>
 
 </main>
+
+<nav class="nav" id="nav" aria-label="Menu utama" hidden>
+  <div class="nav-inner">
+    <button class="nav-btn" type="button" data-go="home" id="nav-home">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+      <span>Beranda</span>
+    </button>
+    <button class="nav-add" type="button" data-go="add" aria-label="New drop: tambah kata">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+    <button class="nav-btn" type="button" data-go="lemari" id="nav-lemari">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M9.5 11v2M14.5 11v2"/></svg>
+      <span>Lemari</span>
+    </button>
+  </div>
+</nav>
 
 <!-- Set password sheet -->
 <div class="sheet" id="pw-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="pw-sheet-title">
@@ -209,12 +382,43 @@ button, input { font: inherit; }
   </div>
 </div>
 
+<!-- Edit word sheet -->
+<div class="sheet" id="edit-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="edit-title">
+  <form class="sheet-card" id="edit-form" novalidate>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div style="min-width:0;display:flex;flex-direction:column;gap:6px">
+        <h2 id="edit-title"></h2>
+        <span class="tag" id="edit-tag" style="align-self:flex-start"></span>
+      </div>
+      <button class="round" type="button" id="edit-speak" aria-label="Dengarkan">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 010 7"/></svg>
+      </button>
+    </div>
+    <div class="field">
+      <label for="edit-meaning">Arti</label>
+      <input class="input" id="edit-meaning" type="text" maxlength="120" autocomplete="off" style="font-weight:700">
+    </div>
+    <div class="field">
+      <label for="edit-sentence">Kalimat <span class="opt">(opsional)</span></label>
+      <textarea class="input" id="edit-sentence" rows="3" maxlength="300"></textarea>
+    </div>
+    <p class="note" id="edit-source"></p>
+    <div class="msg msg--error" id="edit-msg" role="alert" hidden></div>
+    <button class="btn" type="submit" id="edit-save">Simpan</button>
+    <button class="btn btn--danger" type="button" id="edit-delete">Hapus dari lemari</button>
+    <button class="btn btn--ghost" type="button" id="edit-close">Tutup</button>
+  </form>
+</div>
+
 <script>
 (function () {
   'use strict';
   var API_URL = 'https://script.google.com/macros/s/AKfycbzc09FoJGw5y0o5tERsPI7bcXgeDhEqrOnwstaUCqmxyiOiROfVJxODNy7DmpAg41gu8g/exec';
   var NET_MSG = 'Koneksi bermasalah. Cek internetmu lalu coba lagi.';
+  var SESSION_RE = /Sesi kamu sudah habis/;
   var TOKEN_KEY = 'wr_token';
+  var SOURCES = ['Nonton', 'Berita', 'Medsos', 'Kerja'];
+  var STATUS = { 'new': ['Baru', 'tag--new'], revise: ['Masih nyoba', 'tag--revise'], known: ['Udah slay', 'tag--known'] };
   var $ = function (id) { return document.getElementById(id); };
 
   /* ---------- server ---------- */
@@ -230,18 +434,37 @@ button, input { font: inherit; }
   }
 
   /* ---------- storage (may be unavailable) ---------- */
-  function readToken() { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return memToken; } }
+  var memToken = '';
+  function readToken() { try { return localStorage.getItem(TOKEN_KEY) || memToken; } catch (e) { return memToken; } }
   function saveToken(t) { memToken = t; try { localStorage.setItem(TOKEN_KEY, t); } catch (e) { /* memory only */ } }
   function clearToken() { memToken = ''; try { localStorage.removeItem(TOKEN_KEY); } catch (e) { /* ignore */ } }
-  var memToken = '';
 
   /* ---------- state ---------- */
   var me = null, hasPassword = false, pendingEmail = '', cooldownTimer = null;
+  var words = [], wordsLoaded = false, draftSource = 'Medsos', lastLookup = null, editing = null, deleteArmed = false;
 
+  var SCREENS = ['landing', 'signin', 'home', 'add', 'result', 'lemari'];
   function show(id) {
-    ['landing', 'signin', 'home'].forEach(function (s) { $(s).hidden = s !== id; });
+    SCREENS.forEach(function (s) { $(s).hidden = s !== id; });
+    var nav = id === 'home' || id === 'lemari';
+    $('nav').hidden = !nav;
+    $('app').classList.toggle('with-nav', nav);
+    $('nav-home').setAttribute('aria-current', id === 'home' ? 'page' : 'false');
+    $('nav-lemari').setAttribute('aria-current', id === 'lemari' ? 'page' : 'false');
+    if (id !== 'lemari') $('saved-toast').hidden = true;
     window.scrollTo(0, 0);
   }
+  function go(id) {
+    if ((id === 'home' || id === 'add' || id === 'lemari') && !me) { show('landing'); return; }
+    if (id === 'add') openAdd();
+    else if (id === 'lemari') { renderLemari(); show('lemari'); }
+    else if (id === 'home') { renderHome(); show('home'); }
+    else show(id);
+  }
+  document.addEventListener('click', function (ev) {
+    var t = ev.target.closest ? ev.target.closest('[data-go]') : null;
+    if (t) go(t.getAttribute('data-go'));
+  });
   function msg(el, text, kind) {
     el.textContent = text || '';
     el.hidden = !text;
@@ -252,6 +475,20 @@ button, input { font: inherit; }
     if (on) { btn.dataset.label = btn.textContent; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span><span></span>'; btn.lastChild.textContent = label || 'Tunggu…'; }
     else if (btn.dataset.label) btn.textContent = btn.dataset.label;
   }
+  function speak(text) {
+    try { var u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); } catch (e) { /* no speech on this device */ }
+  }
+  function failed(e, el) {
+    if (e && SESSION_RE.test(e.message)) { signedOut(e.message); return; }
+    if (el) msg(el, e.message, 'error');
+  }
+
+  /* ---------- landing + sign-in ---------- */
+  $('open-btn').addEventListener('click', function () {
+    if (me) { go('home'); return; }
+    show('signin'); signinStep('email'); $('email').focus();
+  });
+  $('signin-back').addEventListener('click', function () { show('landing'); });
   function signinStep(step) {
     $('email-form').hidden = step !== 'email';
     $('code-form').hidden = step !== 'code';
@@ -260,15 +497,6 @@ button, input { font: inherit; }
       : step === 'password' ? 'Udah punya password? Masuk langsung di sini.' : 'Halo! Masukin emailmu, nanti aku kirim kode.';
     msg($('signin-msg'), '');
   }
-
-  /* ---------- landing ---------- */
-  $('open-btn').addEventListener('click', function () {
-    if (me) { show('home'); return; }
-    show('signin'); signinStep('email'); $('email').focus();
-  });
-  $('signin-back').addEventListener('click', function () { show('landing'); });
-
-  /* ---------- code sign-in ---------- */
   function startCooldown(seconds) {
     var btn = $('resend-btn'), left = Math.max(1, Math.round(seconds || 30));
     clearInterval(cooldownTimer);
@@ -302,7 +530,7 @@ button, input { font: inherit; }
   $('change-email').addEventListener('click', function () { clearInterval(cooldownTimer); signinStep('email'); $('email').focus(); });
   $('code').addEventListener('input', function () {
     this.value = this.value.replace(/\D/g, '').slice(0, 6);
-    if (this.value.length === 6) $('code-form').requestSubmit ? $('code-form').requestSubmit() : null;
+    if (this.value.length === 6 && $('code-form').requestSubmit) $('code-form').requestSubmit();
   });
   $('code-form').addEventListener('submit', function (ev) {
     ev.preventDefault();
@@ -317,8 +545,6 @@ button, input { font: inherit; }
       if (!r.hasPassword) openPasswordSheet(false);
     }, function (e) { busy($('verify-btn'), false); msg($('signin-msg'), e.message, 'error'); $('code').select(); });
   });
-
-  /* ---------- password sign-in ---------- */
   $('to-password').addEventListener('click', function () { signinStep('password'); $('pw-email').value = $('email').value; ($('pw-email').value ? $('pw') : $('pw-email')).focus(); });
   $('to-code').addEventListener('click', function () { signinStep('email'); $('email').value = $('pw-email').value; $('email').focus(); });
   $('password-form').addEventListener('submit', function (ev) {
@@ -331,20 +557,27 @@ button, input { font: inherit; }
     }, function (e) { busy($('pw-btn'), false); msg($('signin-msg'), e.message, 'error'); });
   });
 
-  /* ---------- after sign-in ---------- */
   function signedIn(r) {
     saveToken(r.token);
     setMe(r.user, r.hasPassword);
     msg($('home-msg'), r.isNew ? 'Akunmu sudah dibuat. Selamat datang di Wordrobe!' : '', 'ok');
-    show('home');
+    words = []; wordsLoaded = false;
+    go('home');
+    loadWords();
   }
   function setMe(user, pw) {
     me = user; hasPassword = !!pw;
     $('home-hello').textContent = 'Halo, ' + (user.display_name || 'kamu') + '!';
     $('menu-email').textContent = 'Masuk sebagai ' + user.email;
   }
+  function signedOut(text) {
+    clearToken(); me = null; words = []; wordsLoaded = false;
+    ['pw-sheet', 'menu-sheet', 'edit-sheet'].forEach(function (s) { $(s).hidden = true; });
+    show('signin'); signinStep('email');
+    if (text) msg($('signin-msg'), text, 'error');
+  }
 
-  /* ---------- set / change password ---------- */
+  /* ---------- password sheet ---------- */
   function openPasswordSheet(fromMenu) {
     $('pw-sheet').hidden = false;
     $('current-pw-field').hidden = true;
@@ -353,9 +586,7 @@ button, input { font: inherit; }
     $('pw-sheet-note').textContent = hasPassword ? 'Pilih password baru.' : 'Biar lain kali bisa langsung masuk tanpa nunggu kode email.';
     $('setpw-skip').textContent = fromMenu ? 'Batal' : 'Nanti saja';
     msg($('setpw-msg'), '', 'error');
-    if (hasPassword) {
-      api('getPasswordInfo', readToken()).then(function (info) { $('current-pw-field').hidden = !info.needs_current; }, function () {});
-    }
+    if (hasPassword) api('getPasswordInfo', readToken()).then(function (info) { $('current-pw-field').hidden = !info.needs_current; }, function () {});
     $('new-pw').focus();
   }
   $('setpw-skip').addEventListener('click', function () { $('pw-sheet').hidden = true; });
@@ -369,7 +600,7 @@ button, input { font: inherit; }
       hasPassword = true;
       $('pw-sheet').hidden = true;
       msg($('home-msg'), 'Password tersimpan. Lain kali kamu bisa masuk pakai password.', 'ok');
-    }, function (e) { busy($('setpw-btn'), false); sessionCheck(e); msg($('setpw-msg'), e.message, 'error'); });
+    }, function (e) { busy($('setpw-btn'), false); failed(e, $('setpw-msg')); });
   });
 
   /* ---------- account menu ---------- */
@@ -378,24 +609,171 @@ button, input { font: inherit; }
   $('menu-password').addEventListener('click', function () { $('menu-sheet').hidden = true; openPasswordSheet(true); });
   $('menu-logout').addEventListener('click', function () {
     var t = readToken();
-    clearToken(); me = null; $('menu-sheet').hidden = true;
+    clearToken(); me = null; words = []; wordsLoaded = false; $('menu-sheet').hidden = true;
     show('landing');
     if (t) api('logout', t).catch(function () { /* the token is gone on this device anyway */ });
   });
   document.addEventListener('keydown', function (ev) {
     if (ev.key !== 'Escape') return;
-    $('menu-sheet').hidden = true; $('pw-sheet').hidden = true;
+    ['menu-sheet', 'pw-sheet', 'edit-sheet'].forEach(function (s) { $(s).hidden = true; });
   });
 
-  function sessionCheck(e) {
-    if (e && /Sesi kamu sudah habis/.test(e.message)) { clearToken(); me = null; $('pw-sheet').hidden = true; show('signin'); signinStep('email'); msg($('signin-msg'), e.message, 'error'); }
+  /* ---------- words ---------- */
+  function loadWords() {
+    return api('listWords', readToken()).then(function (r) {
+      words = r.words || []; wordsLoaded = true;
+      if (!$('home').hidden) renderHome();
+      if (!$('lemari').hidden) renderLemari();
+    }, function (e) { failed(e, null); });
   }
+  function wordRow(w) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'word-row';
+    var box = document.createElement('span'); box.className = 'w';
+    var t = document.createElement('b'); t.textContent = w.word;
+    var m = document.createElement('span'); m.textContent = w.meaning;
+    box.appendChild(t); box.appendChild(m);
+    var st = STATUS[w.status] || STATUS['new'];
+    var tag = document.createElement('span'); tag.className = 'tag ' + st[1]; tag.textContent = st[0];
+    b.appendChild(box); b.appendChild(tag);
+    b.addEventListener('click', function () { openEdit(w.word_id); });
+    return b;
+  }
+  function renderHome() {
+    $('home-count').textContent = wordsLoaded ? words.length + ' kata' : '…';
+    var list = $('recent-list'); list.textContent = '';
+    words.slice(0, 3).forEach(function (w) { list.appendChild(wordRow(w)); });
+    $('recent-empty').hidden = !wordsLoaded || words.length > 0;
+  }
+  function renderLemari() {
+    var q = $('lemari-search').value.trim().toLowerCase();
+    var shown = !q ? words : words.filter(function (w) { return (w.word + ' ' + w.meaning).toLowerCase().indexOf(q) !== -1; });
+    var known = words.filter(function (w) { return w.status === 'known'; }).length;
+    $('lemari-count').textContent = wordsLoaded ? words.length + ' kata · ' + known + ' udah slay' : 'Memuat…';
+    $('lemari-search-field').hidden = words.length < 6;
+    var list = $('lemari-list'); list.textContent = '';
+    shown.forEach(function (w) { list.appendChild(wordRow(w)); });
+    $('lemari-empty').hidden = !wordsLoaded || shown.length > 0;
+    $('lemari-empty-text').textContent = words.length ? 'Tidak ada kata yang cocok.' : 'Lemarimu masih kosong. Tekan + untuk New drop.';
+  }
+  $('lemari-search').addEventListener('input', renderLemari);
+  $('home-drop').addEventListener('click', function () { go('add'); });
+  $('home-lemari').addEventListener('click', function () { go('lemari'); });
+
+  /* ---------- New drop ---------- */
+  function renderSources() {
+    var box = $('add-sources'); box.textContent = '';
+    SOURCES.forEach(function (s) {
+      var c = document.createElement('button');
+      c.type = 'button'; c.className = 'chip'; c.textContent = s;
+      c.setAttribute('aria-pressed', s === draftSource ? 'true' : 'false');
+      c.addEventListener('click', function () { draftSource = s; renderSources(); });
+      box.appendChild(c);
+    });
+  }
+  function openAdd() {
+    renderSources();
+    msg($('add-msg'), '', 'error');
+    show('add');
+    $('add-word').focus();
+  }
+  $('add-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var word = $('add-word').value.trim(), sentence = $('add-sentence').value.trim();
+    if (!word) { msg($('add-msg'), 'Tulis katanya dulu ya.', 'error'); return; }
+    if (!/^[A-Za-z][A-Za-z'’ -]*$/.test(word.replace(/^[\s.,!?;:"'“”‘’()\[\]…-]+|[\s.,!?;:"'“”‘’()\[\]…-]+$/g, ''))) { msg($('add-msg'), 'Pakai huruf bahasa Inggris saja ya (tanpa angka atau simbol).', 'error'); return; }
+    busy($('add-btn'), true, 'Bibo lagi nyari…');
+    msg($('add-msg'), '', 'error');
+    api('lookupWord', readToken(), word, sentence).then(function (r) {
+      busy($('add-btn'), false);
+      showResult(r);
+    }, function (e) { busy($('add-btn'), false); failed(e, $('add-msg')); });
+  });
+
+  function showResult(r) {
+    lastLookup = r;
+    $('res-word').textContent = r.word;
+    $('res-phon').textContent = r.phonetic || '';
+    $('res-meaning').value = r.translation && r.translation.toLowerCase() !== r.word_key ? r.translation : '';
+    $('res-meaning-note').textContent = $('res-meaning').value ? '' : 'Terjemahan otomatis belum ketemu. Tulis artimu sendiri ya.';
+    $('res-sentence-panel').hidden = !r.sentence;
+    $('res-sentence').textContent = r.sentence || '';
+    $('res-sentence-tr').textContent = r.sentence_translation || '';
+    $('res-def-panel').hidden = !r.definition;
+    $('res-def').textContent = r.definition || '';
+    $('res-ex').textContent = r.example ? '“' + r.example + '”' : '';
+    $('res-ex').hidden = !r.example;
+    msg($('res-msg'), r.already_saved ? 'Kata ini sudah ada di lemarimu, dengan arti: ' + r.already_saved.meaning : '', 'error');
+    $('res-save').textContent = r.already_saved ? 'Lihat di lemari' : 'Masukin lemari';
+    show('result');
+  }
+  $('res-speak').addEventListener('click', function () { if (lastLookup) speak(lastLookup.word); });
+  $('res-save').addEventListener('click', function () {
+    var r = lastLookup; if (!r) return;
+    if (r.already_saved) { go('lemari'); openEdit(r.already_saved.word_id); return; }
+    var meaning = $('res-meaning').value.trim();
+    if (!meaning) { msg($('res-msg'), 'Tulis artinya dulu ya.', 'error'); $('res-meaning').focus(); return; }
+    busy($('res-save'), true, 'Menyimpan…');
+    api('saveWord', readToken(), { word: r.word, meaning: meaning, sentence: r.sentence, sentence_translation: r.sentence_translation, source: draftSource })
+      .then(function (s) {
+        busy($('res-save'), false);
+        if (!s.duplicate) words.unshift(s.word);
+        wordsLoaded = true;
+        $('add-word').value = ''; $('add-sentence').value = '';
+        go('lemari');
+        $('saved-toast').hidden = !!s.duplicate;
+      }, function (e) { busy($('res-save'), false); failed(e, $('res-msg')); });
+  });
+
+  /* ---------- edit / delete ---------- */
+  function openEdit(id) {
+    var w = words.find(function (x) { return x.word_id === id; });
+    if (!w) return;
+    editing = w; deleteArmed = false;
+    $('edit-title').textContent = w.word;
+    var st = STATUS[w.status] || STATUS['new'];
+    $('edit-tag').className = 'tag ' + st[1]; $('edit-tag').textContent = st[0];
+    $('edit-meaning').value = w.meaning;
+    $('edit-sentence').value = w.sentence || '';
+    $('edit-source').textContent = 'Ketemu di: ' + (w.source || 'Lainnya') + (w.sentence_translation ? ' · ' + w.sentence_translation : '');
+    $('edit-delete').textContent = 'Hapus dari lemari';
+    msg($('edit-msg'), '', 'error');
+    $('edit-sheet').hidden = false;
+    $('edit-meaning').focus();
+  }
+  function closeEdit() { $('edit-sheet').hidden = true; editing = null; }
+  $('edit-close').addEventListener('click', closeEdit);
+  $('edit-speak').addEventListener('click', function () { if (editing) speak(editing.word); });
+  $('edit-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (!editing) return;
+    var meaning = $('edit-meaning').value.trim();
+    if (!meaning) { msg($('edit-msg'), 'Tulis artinya dulu ya.', 'error'); return; }
+    var id = editing.word_id;
+    busy($('edit-save'), true, 'Menyimpan…');
+    api('updateWord', readToken(), id, { meaning: meaning, sentence: $('edit-sentence').value.trim() }).then(function (r) {
+      busy($('edit-save'), false);
+      words = words.map(function (w) { return w.word_id === id ? r.word : w; });
+      closeEdit(); renderLemari(); renderHome();
+    }, function (e) { busy($('edit-save'), false); failed(e, $('edit-msg')); });
+  });
+  $('edit-delete').addEventListener('click', function () {
+    if (!editing) return;
+    if (!deleteArmed) { deleteArmed = true; $('edit-delete').textContent = 'Yakin? Tekan lagi untuk hapus'; return; }
+    var id = editing.word_id;
+    busy($('edit-delete'), true, 'Menghapus…');
+    api('deleteWord', readToken(), id).then(function () {
+      busy($('edit-delete'), false);
+      words = words.filter(function (w) { return w.word_id !== id; });
+      closeEdit(); renderLemari(); renderHome();
+    }, function (e) { busy($('edit-delete'), false); failed(e, $('edit-msg')); });
+  });
 
   /* ---------- start: restore the session if there is one ---------- */
   var saved = readToken();
   if (saved) {
-    api('getMe', saved).then(function (r) { setMe(r.user, r.hasPassword); }, function (e) {
-      if (/Sesi kamu sudah habis/.test(e.message)) clearToken();
+    api('getMe', saved).then(function (r) { setMe(r.user, r.hasPassword); loadWords(); }, function (e) {
+      if (SESSION_RE.test(e.message)) clearToken();
     });
   }
 })();
