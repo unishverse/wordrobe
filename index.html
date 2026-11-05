@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#151419">
+<title>Wordrobe</title>
+<meta name="description" content="Fit check your vocab. Simpan kata bahasa Inggris yang kamu temukan dan latihan bareng Bibo.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23277BC0'/%3E%3Cg fill='none' stroke='white' stroke-width='2' stroke-linecap='round'%3E%3Crect x='6' y='5' width='12' height='14' rx='1.5'/%3E%3Cpath d='M12 5v14M10 11v2M14 11v2'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap">
+<style>
+:root {
+  --ink: #121117; --ink-2: #151419; --card: #1E1C25; --card-2: #2A2733; --line: #34313D;
+  --text: #F5F3EE; --muted: #A9A4B5; --soft: #D2CDDB;
+  --yellow: #FFD23F; --pink: #FF8FB1; --mint: #7EE0B5; --blue: #277BC0; --error: #FF8FB1;
+  --display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --ui: 'Plus Jakarta Sans', system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--ink); color: var(--text); font-family: var(--ui); font-size: 16px; line-height: 1.5; }
+body { -webkit-font-smoothing: antialiased; }
+.app { max-width: 440px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
+  padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); }
+[hidden] { display: none !important; }
+h1, h2 { font-family: var(--display); font-weight: 800; letter-spacing: -0.5px; margin: 0; line-height: 1.05; }
+p { margin: 0; }
+button, input { font: inherit; }
+:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 54px; padding: 0 22px;
+  border: 0; border-radius: 999px; background: var(--yellow); color: var(--ink); font-weight: 800; font-size: 16px; cursor: pointer; }
+.btn:disabled { opacity: .55; cursor: default; }
+.btn--ghost { background: var(--card-2); color: var(--text); }
+.link { background: none; border: 0; padding: 8px 4px; min-height: 44px; color: var(--yellow); font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { width: 38px; height: 38px; border-radius: 11px; background: var(--blue); display: grid; place-items: center; flex: none; }
+.brand-name { font-family: var(--display); font-weight: 800; font-size: 25px; letter-spacing: -0.5px; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field label { font-size: 14px; font-weight: 700; }
+.input { min-height: 56px; width: 100%; padding: 0 16px; border-radius: 18px; border: 1.5px solid var(--line); background: var(--card);
+  color: var(--text); font-size: 17px; }
+.input:focus { border-color: var(--yellow); outline: none; }
+.input--code { letter-spacing: .4em; font-size: 24px; font-weight: 800; text-align: center; }
+.note { font-size: 14px; color: var(--muted); }
+.msg { font-size: 14px; font-weight: 600; padding: 12px 14px; border-radius: 14px; background: var(--card); }
+.msg--error { color: var(--error); }
+.msg--ok { color: var(--mint); }
+.bubble-row { display: flex; align-items: center; gap: 12px; }
+.bubble-row img { width: 72px; height: auto; flex: none; }
+.bubble { background: var(--card); border-radius: 18px 18px 18px 6px; padding: 10px 14px; font-weight: 700; font-size: 15px; }
+
+/* landing */
+#landing { flex: 1; display: flex; flex-direction: column; gap: 20px; background: var(--ink-2); margin: calc(-1 * max(24px, env(safe-area-inset-top))) -20px calc(-1 * max(24px, env(safe-area-inset-bottom)));
+  padding: max(28px, env(safe-area-inset-top)) 24px max(28px, env(safe-area-inset-bottom)); }
+.hero { flex: 1; min-height: 240px; display: flex; align-items: center; justify-content: center; }
+.hero img { width: 100%; max-height: 52vh; object-fit: contain; }
+#landing h1 { font-size: 42px; line-height: 1; letter-spacing: -1px; }
+#landing p { color: var(--soft); }
+
+/* sign-in */
+.top { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.back { width: 44px; height: 44px; border-radius: 999px; border: 0; background: var(--card); color: var(--text); display: grid; place-items: center; cursor: pointer; flex: none; }
+.screen-title { font-size: 32px; }
+
+/* home */
+.home-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.home-head .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.home-head img { width: 80px; height: auto; flex: none; }
+.home-head h1 { font-size: 27px; }
+.menu-btn { width: 44px; height: 44px; border-radius: 999px; border: 0; background: var(--card); color: var(--text); display: grid; place-items: center; cursor: pointer; flex: none; }
+.soon { background: var(--card); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.soon h2 { font-size: 22px; }
+.pill { align-self: flex-start; font-size: 12px; font-weight: 800; background: var(--blue); color: #fff; border-radius: 999px; padding: 4px 10px; }
+.sheet { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; justify-content: center; z-index: 10; }
+.sheet-card { width: 100%; max-width: 440px; background: var(--ink); border-radius: 28px 28px 0 0; padding: 22px 20px max(22px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; }
+.sheet-card h2 { font-size: 24px; }
+.spinner { width: 18px; height: 18px; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+</style>
+</head>
+<body>
+<main class="app" id="app">
+
+  <!-- 1. Welcome -->
+  <section id="landing" aria-labelledby="landing-title">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M9.5 11v2M14.5 11v2"/></svg>
+      </span>
+      <span class="brand-name">Wordrobe</span>
+    </div>
+    <div class="hero"><img src="img/hero.webp" width="700" height="869" alt="Bibo melompat keluar dari lemari berisi kartu kata warna-warni"></div>
+    <div class="stack" style="gap:10px">
+      <h1 id="landing-title">Fit check<br>your vocab.</h1>
+      <p>Simpan kata yang kamu temukan saat nonton, baca berita atau scroll medsos. Latihan bareng Bibo, 5 menit sehari.</p>
+    </div>
+    <button class="btn" id="open-btn" type="button">Buka lemari</button>
+  </section>
+
+  <!-- 2. Sign in -->
+  <section id="signin" hidden aria-labelledby="signin-title">
+    <div class="top">
+      <button class="back" type="button" id="signin-back" aria-label="Kembali">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+    </div>
+    <div class="stack">
+      <div class="bubble-row">
+        <img src="img/bibo-wave.webp" width="320" height="257" alt="">
+        <div class="bubble" id="signin-bubble">Halo! Masukin emailmu, nanti aku kirim kode.</div>
+      </div>
+      <h1 class="screen-title" id="signin-title">Masuk ke lemarimu</h1>
+
+      <form id="email-form" class="stack" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input class="input" id="email" type="email" inputmode="email" autocomplete="email" placeholder="nama@email.com" required>
+        </div>
+        <button class="btn" type="submit" id="send-btn">Kirim kode</button>
+        <p class="note">Belum punya akun? Sama saja: masukkan email, akunmu dibuat otomatis.</p>
+        <button class="link" type="button" id="to-password">Masuk pakai password</button>
+      </form>
+
+      <form id="code-form" class="stack" novalidate hidden>
+        <p class="note" id="code-note"></p>
+        <div class="field">
+          <label for="code">Kode 6 angka</label>
+          <input class="input input--code" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="••••••" required>
+        </div>
+        <button class="btn" type="submit" id="verify-btn">Masuk</button>
+        <button class="link" type="button" id="resend-btn">Kirim ulang kode</button>
+        <button class="link" type="button" id="change-email">Ganti email</button>
+      </form>
+
+      <form id="password-form" class="stack" novalidate hidden>
+        <div class="field">
+          <label for="pw-email">Email</label>
+          <input class="input" id="pw-email" type="email" inputmode="email" autocomplete="username" placeholder="nama@email.com" required>
+        </div>
+        <div class="field">
+          <label for="pw">Password</label>
+          <input class="input" id="pw" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="btn" type="submit" id="pw-btn">Masuk</button>
+        <button class="link" type="button" id="to-code">Masuk pakai kode email</button>
+      </form>
+
+      <div class="msg" id="signin-msg" role="status" hidden></div>
+    </div>
+  </section>
+
+  <!-- 3. Home (phase 1 shell) -->
+  <section id="home" hidden aria-labelledby="home-title">
+    <div class="stack" style="gap:20px">
+      <div class="home-head">
+        <div class="who">
+          <img src="img/bibo-wave.webp" width="320" height="257" alt="Bibo melambaikan tangan">
+          <div style="min-width:0">
+            <p class="note" id="home-hello">Halo!</p>
+            <h1 id="home-title">Ada kata baru<br>hari ini?</h1>
+          </div>
+        </div>
+        <button class="menu-btn" type="button" id="menu-btn" aria-label="Akun">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+        </button>
+      </div>
+      <div class="soon">
+        <span class="pill">Segera hadir</span>
+        <h2>Lemarimu sudah siap.</h2>
+        <p class="note">Kamu sudah masuk. Fitur New drop, Lemariku dan Fit check sedang dibangun dan akan muncul di sini.</p>
+      </div>
+      <div class="msg msg--ok" id="home-msg" role="status" hidden></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Set password sheet -->
+<div class="sheet" id="pw-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="pw-sheet-title">
+  <form class="sheet-card" id="setpw-form" novalidate>
+    <h2 id="pw-sheet-title">Buat password?</h2>
+    <p class="note" id="pw-sheet-note">Biar lain kali bisa langsung masuk tanpa nunggu kode email.</p>
+    <div class="field" id="current-pw-field" hidden>
+      <label for="current-pw">Password lama</label>
+      <input class="input" id="current-pw" type="password" autocomplete="current-password">
+    </div>
+    <div class="field">
+      <label for="new-pw">Password baru (minimal 8 karakter)</label>
+      <input class="input" id="new-pw" type="password" autocomplete="new-password" minlength="8" required>
+    </div>
+    <div class="msg msg--error" id="setpw-msg" role="alert" hidden></div>
+    <button class="btn" type="submit" id="setpw-btn">Simpan password</button>
+    <button class="btn btn--ghost" type="button" id="setpw-skip">Nanti saja</button>
+  </form>
+</div>
+
+<!-- Account sheet -->
+<div class="sheet" id="menu-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="menu-title">
+  <div class="sheet-card">
+    <h2 id="menu-title">Akun</h2>
+    <p class="note" id="menu-email"></p>
+    <button class="btn btn--ghost" type="button" id="menu-password">Atur password</button>
+    <button class="btn btn--ghost" type="button" id="menu-logout">Keluar</button>
+    <button class="btn" type="button" id="menu-close">Tutup</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var API_URL = 'https://script.google.com/macros/s/AKfycbzc09FoJGw5y0o5tERsPI7bcXgeDhEqrOnwstaUCqmxyiOiROfVJxODNy7DmpAg41gu8g/exec';
+  var NET_MSG = 'Koneksi bermasalah. Cek internetmu lalu coba lagi.';
+  var TOKEN_KEY = 'wr_token';
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------- server ---------- */
+  function api(fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return fetch(API_URL, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ fn: fn, args: args }) })
+      .then(function (r) { return r.json(); }, function () { throw new Error(NET_MSG); })
+      .then(function (o) {
+        if (o && o.ok) return o.result;
+        throw new Error((o && o.error) || 'Ada yang error. Coba lagi sebentar lagi ya.');
+      }, function (e) { throw e && e.message === NET_MSG ? e : new Error(NET_MSG); });
+  }
+
+  /* ---------- storage (may be unavailable) ---------- */
+  function readToken() { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return memToken; } }
+  function saveToken(t) { memToken = t; try { localStorage.setItem(TOKEN_KEY, t); } catch (e) { /* memory only */ } }
+  function clearToken() { memToken = ''; try { localStorage.removeItem(TOKEN_KEY); } catch (e) { /* ignore */ } }
+  var memToken = '';
+
+  /* ---------- state ---------- */
+  var me = null, hasPassword = false, pendingEmail = '', cooldownTimer = null;
+
+  function show(id) {
+    ['landing', 'signin', 'home'].forEach(function (s) { $(s).hidden = s !== id; });
+    window.scrollTo(0, 0);
+  }
+  function msg(el, text, kind) {
+    el.textContent = text || '';
+    el.hidden = !text;
+    el.className = 'msg' + (kind ? ' msg--' + kind : '');
+  }
+  function busy(btn, on, label) {
+    btn.disabled = on;
+    if (on) { btn.dataset.label = btn.textContent; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span><span></span>'; btn.lastChild.textContent = label || 'Tunggu…'; }
+    else if (btn.dataset.label) btn.textContent = btn.dataset.label;
+  }
+  function signinStep(step) {
+    $('email-form').hidden = step !== 'email';
+    $('code-form').hidden = step !== 'code';
+    $('password-form').hidden = step !== 'password';
+    $('signin-bubble').textContent = step === 'code' ? 'Cek emailmu ya, kodenya sudah aku kirim.'
+      : step === 'password' ? 'Udah punya password? Masuk langsung di sini.' : 'Halo! Masukin emailmu, nanti aku kirim kode.';
+    msg($('signin-msg'), '');
+  }
+
+  /* ---------- landing ---------- */
+  $('open-btn').addEventListener('click', function () {
+    if (me) { show('home'); return; }
+    show('signin'); signinStep('email'); $('email').focus();
+  });
+  $('signin-back').addEventListener('click', function () { show('landing'); });
+
+  /* ---------- code sign-in ---------- */
+  function startCooldown(seconds) {
+    var btn = $('resend-btn'), left = Math.max(1, Math.round(seconds || 30));
+    clearInterval(cooldownTimer);
+    btn.disabled = true;
+    btn.textContent = 'Kirim ulang kode (' + left + ')';
+    cooldownTimer = setInterval(function () {
+      left -= 1;
+      if (left <= 0) { clearInterval(cooldownTimer); btn.disabled = false; btn.textContent = 'Kirim ulang kode'; }
+      else btn.textContent = 'Kirim ulang kode (' + left + ')';
+    }, 1000);
+  }
+  function sendCode(email, btn) {
+    busy(btn, true, 'Mengirim…');
+    return api('requestLoginCode', email).then(function (r) {
+      busy(btn, false);
+      pendingEmail = email;
+      signinStep('code');
+      $('code-note').textContent = r.message + ' (' + email + ')';
+      $('code').value = '';
+      $('code').focus();
+      startCooldown(r.cooldownSeconds);
+    }, function (e) { busy(btn, false); msg($('signin-msg'), e.message, 'error'); });
+  }
+  $('email-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var email = $('email').value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg($('signin-msg'), 'Tulis alamat email yang benar ya.', 'error'); return; }
+    sendCode(email, $('send-btn'));
+  });
+  $('resend-btn').addEventListener('click', function () { if (pendingEmail) sendCode(pendingEmail, $('resend-btn')); });
+  $('change-email').addEventListener('click', function () { clearInterval(cooldownTimer); signinStep('email'); $('email').focus(); });
+  $('code').addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    if (this.value.length === 6) $('code-form').requestSubmit ? $('code-form').requestSubmit() : null;
+  });
+  $('code-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var code = $('code').value.trim();
+    if (!/^\d{6}$/.test(code)) { msg($('signin-msg'), 'Kodenya 6 angka ya.', 'error'); return; }
+    if ($('verify-btn').disabled) return;
+    busy($('verify-btn'), true, 'Memeriksa…');
+    api('verifyLoginCode', pendingEmail, code).then(function (r) {
+      busy($('verify-btn'), false);
+      clearInterval(cooldownTimer);
+      signedIn(r);
+      if (!r.hasPassword) openPasswordSheet(false);
+    }, function (e) { busy($('verify-btn'), false); msg($('signin-msg'), e.message, 'error'); $('code').select(); });
+  });
+
+  /* ---------- password sign-in ---------- */
+  $('to-password').addEventListener('click', function () { signinStep('password'); $('pw-email').value = $('email').value; ($('pw-email').value ? $('pw') : $('pw-email')).focus(); });
+  $('to-code').addEventListener('click', function () { signinStep('email'); $('email').value = $('pw-email').value; $('email').focus(); });
+  $('password-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var email = $('pw-email').value.trim().toLowerCase(), pw = $('pw').value;
+    if (!email || !pw) { msg($('signin-msg'), 'Isi email dan password dulu ya.', 'error'); return; }
+    busy($('pw-btn'), true, 'Memeriksa…');
+    api('loginWithPassword', email, pw).then(function (r) {
+      busy($('pw-btn'), false); $('pw').value = ''; signedIn(r);
+    }, function (e) { busy($('pw-btn'), false); msg($('signin-msg'), e.message, 'error'); });
+  });
+
+  /* ---------- after sign-in ---------- */
+  function signedIn(r) {
+    saveToken(r.token);
+    setMe(r.user, r.hasPassword);
+    msg($('home-msg'), r.isNew ? 'Akunmu sudah dibuat. Selamat datang di Wordrobe!' : '', 'ok');
+    show('home');
+  }
+  function setMe(user, pw) {
+    me = user; hasPassword = !!pw;
+    $('home-hello').textContent = 'Halo, ' + (user.display_name || 'kamu') + '!';
+    $('menu-email').textContent = 'Masuk sebagai ' + user.email;
+  }
+
+  /* ---------- set / change password ---------- */
+  function openPasswordSheet(fromMenu) {
+    $('pw-sheet').hidden = false;
+    $('current-pw-field').hidden = true;
+    $('current-pw').value = ''; $('new-pw').value = '';
+    $('pw-sheet-title').textContent = hasPassword ? 'Ganti password' : 'Buat password?';
+    $('pw-sheet-note').textContent = hasPassword ? 'Pilih password baru.' : 'Biar lain kali bisa langsung masuk tanpa nunggu kode email.';
+    $('setpw-skip').textContent = fromMenu ? 'Batal' : 'Nanti saja';
+    msg($('setpw-msg'), '', 'error');
+    if (hasPassword) {
+      api('getPasswordInfo', readToken()).then(function (info) { $('current-pw-field').hidden = !info.needs_current; }, function () {});
+    }
+    $('new-pw').focus();
+  }
+  $('setpw-skip').addEventListener('click', function () { $('pw-sheet').hidden = true; });
+  $('setpw-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var pw = $('new-pw').value, current = $('current-pw').value;
+    if (pw.length < 8) { msg($('setpw-msg'), 'Password minimal 8 karakter.', 'error'); return; }
+    busy($('setpw-btn'), true, 'Menyimpan…');
+    api('setPassword', readToken(), pw, current).then(function () {
+      busy($('setpw-btn'), false);
+      hasPassword = true;
+      $('pw-sheet').hidden = true;
+      msg($('home-msg'), 'Password tersimpan. Lain kali kamu bisa masuk pakai password.', 'ok');
+    }, function (e) { busy($('setpw-btn'), false); sessionCheck(e); msg($('setpw-msg'), e.message, 'error'); });
+  });
+
+  /* ---------- account menu ---------- */
+  $('menu-btn').addEventListener('click', function () { $('menu-sheet').hidden = false; $('menu-close').focus(); });
+  $('menu-close').addEventListener('click', function () { $('menu-sheet').hidden = true; });
+  $('menu-password').addEventListener('click', function () { $('menu-sheet').hidden = true; openPasswordSheet(true); });
+  $('menu-logout').addEventListener('click', function () {
+    var t = readToken();
+    clearToken(); me = null; $('menu-sheet').hidden = true;
+    show('landing');
+    if (t) api('logout', t).catch(function () { /* the token is gone on this device anyway */ });
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Escape') return;
+    $('menu-sheet').hidden = true; $('pw-sheet').hidden = true;
+  });
+
+  function sessionCheck(e) {
+    if (e && /Sesi kamu sudah habis/.test(e.message)) { clearToken(); me = null; $('pw-sheet').hidden = true; show('signin'); signinStep('email'); msg($('signin-msg'), e.message, 'error'); }
+  }
+
+  /* ---------- start: restore the session if there is one ---------- */
+  var saved = readToken();
+  if (saved) {
+    api('getMe', saved).then(function (r) { setMe(r.user, r.hasPassword); }, function (e) {
+      if (/Sesi kamu sudah habis/.test(e.message)) clearToken();
+    });
+  }
+})();
+</script>
+</body>
+</html>
