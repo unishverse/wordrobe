@@ -103,6 +103,14 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .tag--revise { background: var(--pink); color: var(--ink); }
 .tag--known { background: var(--mint); color: var(--ink); }
 .list { display: flex; flex-direction: column; gap: 10px; }
+.suggest { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.suggest button { display: flex; align-items: baseline; gap: 10px; width: 100%; min-height: 44px; padding: 10px 14px; border: 0; border-radius: 14px; background: var(--card); color: var(--text); text-align: left; cursor: pointer; font: inherit; }
+.suggest button b { font-size: 16px; }
+.suggest button span { flex: 1; min-width: 0; font-size: 14px; color: var(--soft); overflow-wrap: break-word; }
+.suggest button small { flex: none; font-size: 12px; font-weight: 800; color: var(--mint); }
+.trend-row { cursor: default; }
+.trend-add { flex: none; width: 44px; height: 44px; border-radius: 999px; border: 0; background: var(--yellow); color: var(--ink); font-size: 22px; font-weight: 800; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+.trend-add:disabled { opacity: .6; cursor: default; }
 .empty { background: var(--card); border-radius: 22px; padding: 18px; display: flex; gap: 12px; align-items: center; }
 .empty img { width: 64px; height: auto; flex: none; }
 
@@ -422,6 +430,10 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <img src="img/bibo-thinking.webp" width="320" height="396" alt="">
           <p class="note" style="color:var(--soft)">Lemarimu masih kosong. Ketemu kata baru waktu nonton atau scroll? Masukin lewat New drop.</p>
         </div>
+        <div class="stack" id="trend-box" hidden style="gap:10px;margin-top:14px">
+          <span class="section-label">Lagi rame di Wordrobe</span>
+          <div class="list" id="trend-list"></div>
+        </div>
       </div>
       </div>
     </div>
@@ -442,7 +454,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       </div>
       <div class="field">
         <label for="add-word">Kata atau frasa</label>
-        <input class="input" id="add-word" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60" placeholder="mis. breathtaking" style="border-color:var(--yellow);font-weight:700;font-size:18px">
+        <input class="input" id="add-word" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60" placeholder="mis. breathtaking" style="border-color:var(--yellow);font-weight:700;font-size:18px" aria-describedby="add-suggest">
+        <div class="suggest" id="add-suggest" aria-label="Saran kata dari kamus Wordrobe" hidden></div>
       </div>
       <div class="field">
         <label for="add-sentence">Kalimat tempat kamu menemukannya <span class="opt">(opsional)</span></label>
@@ -769,6 +782,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   var stats = null, deck = [], pos = 0, flipped = false, results = [], lastAnswer = '', saving = false, mode = 'fit';
   var traps = null, recognizer = null, listening = false, cardTries = 0, cardDone = false, cardOk = false;
   var FIT_MAX = 20, RING = 169.6;
+  var community = null, communityAt = 0;
 
   var SCREENS = ['landing', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'speak', 'fix', 'slay'];
   function show(id) {
@@ -901,7 +915,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     saveToken(r.token);
     setMe(r.user, r.hasPassword);
     msg($('home-msg'), !r.isNew ? '' : r.user.access === 'trial' ? 'Coba gratis 7 hari dimulai. Selamat datang di Wordrobe!' : 'Selamat datang di Wordrobe!', 'ok');
-    words = []; wordsLoaded = false;
+    words = []; wordsLoaded = false; community = null;
     go('home');
     loadWords();
   }
@@ -970,7 +984,42 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       words = r.words || []; wordsLoaded = true; stats = r.stats || stats;
       if (!$('home').hidden) renderHome();
       if (!$('lemari').hidden) renderLemari();
+      loadCommunity();
     }, function (e) { failed(e, null); });
+  }
+  /* shared dictionary: typing suggestions + "Lagi rame" (optional: a failure only hides them) */
+  function loadCommunity() {
+    if (community && Date.now() - communityAt < 600000) return;
+    communityAt = Date.now();
+    api('getCommunity', readToken()).then(function (r) {
+      community = { suggest: r.suggest || [], trending: r.trending || [] };
+      if (!$('home').hidden) renderHome();
+    }, function () { communityAt = 0; });
+  }
+  function hasWord(key) { return words.some(function (w) { return w.word_key === key; }); }
+  function renderTrending() {
+    var list = $('trend-list'); list.textContent = '';
+    var items = (community ? community.trending : []).filter(function (t) { return !hasWord(t.word_key); }).slice(0, 5);
+    $('trend-box').hidden = !items.length;
+    items.forEach(function (t) {
+      var row = document.createElement('div'); row.className = 'word-row trend-row';
+      var box = document.createElement('span'); box.className = 'w';
+      var b = document.createElement('b'); b.textContent = t.word_key;
+      var m = document.createElement('span'); m.textContent = t.translation + ' · ' + t.learners + ' orang nyimpen';
+      box.appendChild(b); box.appendChild(m);
+      var add = document.createElement('button'); add.type = 'button'; add.className = 'trend-add'; add.textContent = '+';
+      add.setAttribute('aria-label', 'Masukin "' + t.word_key + '" ke lemari');
+      add.addEventListener('click', function () {
+        add.disabled = true;
+        api('saveWord', readToken(), { word: t.word_key, meaning: t.translation, source: 'Lainnya' }).then(function (s) {
+          if (!s.duplicate) words.unshift(s.word);
+          msg($('home-msg'), '"' + t.word_key + '" masuk lemari. Arti bisa kamu ubah di Lemariku.', 'ok');
+          renderHome();
+        }, function (e) { add.disabled = false; failed(e, $('home-msg')); });
+      });
+      row.appendChild(box); row.appendChild(add);
+      list.appendChild(row);
+    });
   }
   function wordRow(w) {
     var b = document.createElement('button');
@@ -1001,6 +1050,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('streak-pill').setAttribute('aria-label', 'Streak ' + (stats ? stats.streak : 0) + ' hari');
     var todo = words.filter(function (w) { return w.status !== 'known'; }).length;
     $('home-fit-sub').textContent = !words.length ? 'Tambah kata dulu' : todo ? todo + ' kata perlu dilatih' : 'Ulang semua kata';
+    renderTrending();
   }
   function renderLemari() {
     var q = $('lemari-search').value.trim().toLowerCase();
@@ -1346,9 +1396,27 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   function openAdd() {
     renderSources();
     msg($('add-msg'), '', 'error');
+    renderSuggest();
     show('add');
     $('add-word').focus();
+    loadCommunity();
   }
+  function renderSuggest() {
+    var box = $('add-suggest'); box.textContent = '';
+    var q = $('add-word').value.replace(/[‘’ʼ]/g, "'").toLowerCase().replace(/\s+/g, ' ').replace(/^\s+/, '');
+    var hits = q.length < 2 || !community ? [] : community.suggest.filter(function (s) { return s[0].indexOf(q) === 0 && s[0] !== q.trim(); }).slice(0, 5);
+    box.hidden = !hits.length;
+    hits.forEach(function (s) {
+      var b = document.createElement('button'); b.type = 'button';
+      var w = document.createElement('b'); w.textContent = s[0];
+      var m = document.createElement('span'); m.textContent = s[1];
+      b.appendChild(w); b.appendChild(m);
+      if (hasWord(s[0])) { var k = document.createElement('small'); k.textContent = 'Udah di lemari'; b.appendChild(k); }
+      b.addEventListener('click', function () { $('add-word').value = s[0]; renderSuggest(); $('add-sentence').focus(); });
+      box.appendChild(b);
+    });
+  }
+  $('add-word').addEventListener('input', renderSuggest);
   $('add-form').addEventListener('submit', function (ev) {
     ev.preventDefault();
     var word = $('add-word').value.trim(), sentence = $('add-sentence').value.trim();
