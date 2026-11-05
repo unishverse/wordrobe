@@ -134,12 +134,53 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .sheet-card h2 { font-size: 24px; overflow-wrap: anywhere; }
 
 .nav-brand, .nav-add-label, .signin-art { display: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.daily { background: var(--card); border-radius: 28px; padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 14px; }
+.daily-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.daily-head b { font-family: var(--display); font-size: 20px; }
+.streak { display: inline-flex; align-items: center; gap: 6px; background: var(--card-2); color: var(--yellow); border-radius: 999px; padding: 6px 12px; font-weight: 800; font-size: 14px; }
+.streak span { color: var(--text); }
+.rings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ring-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: 0; padding: 4px 0; color: var(--text); font: inherit; }
+button.ring-btn { cursor: pointer; border-radius: 18px; }
+.ring-name { font-size: 13px; font-weight: 700; }
+.ring-sub { font-size: 12px; color: var(--muted); }
+.ring-btn--soon { opacity: .7; }
+button.tile--pink { cursor: pointer; }
+.fit-wrap { display: flex; flex-direction: column; gap: 16px; min-height: calc(100dvh - 48px); }
+.fit-top { display: flex; align-items: center; gap: 12px; }
+.segs { flex: 1; display: flex; gap: 4px; }
+.segs i { flex: 1; height: 5px; border-radius: 3px; background: var(--line); }
+.segs i.done { background: var(--yellow); }
+.fit-pos { font-size: 14px; font-weight: 800; min-width: 44px; text-align: right; }
+.flash { flex: 1; min-height: 300px; display: flex; flex-direction: column; justify-content: center; padding: 28px 24px; border: 0; border-radius: 32px;
+  background: var(--text); color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
+.flash-face { display: flex; flex-direction: column; gap: 14px; }
+.flash-label { font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #5E5970; }
+.flash-word { font-family: var(--display); font-weight: 800; font-size: 40px; line-height: 1.02; letter-spacing: -0.5px; overflow-wrap: break-word; }
+.flash-meaning { font-family: var(--display); font-weight: 800; font-size: 32px; line-height: 1.1; overflow-wrap: break-word; }
+.flash-sentence { font-size: 16px; font-style: italic; line-height: 1.5; color: #3B3746; }
+.flash-hint { margin-top: 8px; font-size: 14px; font-weight: 700; color: #5E5970; }
+.fit-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.btn--revise { background: var(--pink); color: var(--ink); min-height: 58px; font-size: 17px; }
+.btn--slay { background: var(--mint); color: var(--ink); min-height: 58px; font-size: 17px; }
+.fit-keys { display: none; text-align: center; }
+.slay-wrap { display: flex; flex-direction: column; gap: 16px; padding-top: 12px; }
+.slay-bibo { width: 180px; height: auto; align-self: center; }
+.slay-pill { align-self: center; background: var(--card); border-radius: 999px; padding: 8px 16px; font-size: 15px; font-weight: 700; }
+#slay-title { font-size: 48px; line-height: 1; }
+.slay-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.count { border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 4px; color: var(--ink); }
+.count b { font-family: var(--display); font-weight: 800; font-size: 36px; line-height: 1; }
+.count span { font-size: 14px; font-weight: 700; }
+.count--mint { background: var(--mint); } .count--pink { background: var(--pink); }
+.streak-line { font-weight: 700; color: var(--yellow); }
 .res-side { display: flex; flex-direction: column; gap: 16px; }
 .home-grid, .home-main { display: flex; flex-direction: column; gap: 18px; }
 .res-side:not(:has(.panel:not([hidden]))) { display: none; }
 /* phones: New drop and the result are focused screens without the bottom menu */
-body[data-screen="add"] .nav, body[data-screen="result"] .nav { display: none; }
-body[data-screen="add"] .app, body[data-screen="result"] .app { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+body[data-screen="add"] .nav, body[data-screen="result"] .nav, body[data-screen="fit"] .nav, body[data-screen="slay"] .nav { display: none; }
+body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen="fit"] .app, body[data-screen="slay"] .app { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
 
 /* ---------- tablet (768 px and up): wider content, bottom menu stays ---------- */
 @media (min-width: 768px) {
@@ -165,6 +206,9 @@ body[data-screen="add"] .app, body[data-screen="result"] .app { padding-bottom: 
   .tile { min-height: 132px; }
 
   #add-form { max-width: 640px; }
+  .fit-wrap { max-width: 600px; margin: 0 auto; min-height: 0; }
+  .flash { min-height: 360px; }
+  .slay-wrap { max-width: 520px; margin: 0 auto; }
 
   .res-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 20px; row-gap: 16px; align-items: start; }
   .res-grid > * { grid-column: 1; }
@@ -208,7 +252,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app { padding-bottom: 
   #nav-home { order: 2; } #nav-lemari { order: 3; }
   .nav-btn { flex-direction: row; justify-content: flex-start; gap: 12px; min-height: 48px; padding: 0 14px; border-radius: 14px; font-size: 15px; }
   .nav-btn[aria-current="page"] { background: var(--card); }
-  body[data-screen="add"] .nav, body[data-screen="result"] .nav { display: block; }
+  body[data-screen="add"] .nav, body[data-screen="result"] .nav, body[data-screen="fit"] .nav, body[data-screen="slay"] .nav { display: block; }
+  .fit-keys { display: block; }
   .app.with-nav, body[data-screen="add"] .app, body[data-screen="result"] .app { padding-bottom: 48px; }
 
   .home-head h1 { font-size: 38px; }
@@ -320,13 +365,34 @@ body[data-screen="add"] .app, body[data-screen="result"] .app { padding-bottom: 
       <div class="msg msg--ok" id="home-msg" role="status" hidden></div>
       <div class="home-grid">
       <div class="home-main">
+      <div class="daily">
+        <div class="daily-head">
+          <b>Daily Challenge</b>
+          <span class="streak" id="streak-pill"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 01-10 0c0-2.5 1.5-4 2.5-5 .3 1.6 1 2.6 2 3 0-3 0-5.5.5-8z"/></svg><span id="streak-text">0 hari</span></span>
+        </div>
+        <div class="rings">
+          <button class="ring-btn" type="button" id="ring-fit-btn">
+            <svg width="68" height="68" viewBox="0 0 68 68" aria-hidden="true"><circle cx="34" cy="34" r="27" fill="none" stroke="#34313D" stroke-width="6"/><circle id="ring-fit" cx="34" cy="34" r="27" fill="none" stroke="#FF8FB1" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 169.6" transform="rotate(-90 34 34)"/><path d="M27 25h12v18H27z" fill="none" stroke="#F5F3EE" stroke-width="2" stroke-linejoin="round"/><path d="M41 28l3 1-4 15-3-1" fill="none" stroke="#F5F3EE" stroke-width="2" stroke-linejoin="round"/></svg>
+            <span class="ring-name">Fit check</span>
+            <span class="ring-sub" id="ring-fit-sub">0/5 kartu</span>
+          </button>
+          <div class="ring-btn ring-btn--soon">
+            <svg width="68" height="68" viewBox="0 0 68 68" aria-hidden="true"><circle cx="34" cy="34" r="27" fill="none" stroke="#34313D" stroke-width="6"/><path d="M27 34v-1M31 38v-9M35 41v-15M39 37v-7M43 34v-1" fill="none" stroke="#FFD23F" stroke-width="2.4" stroke-linecap="round"/></svg>
+            <span class="ring-name">Ngomong</span><span class="ring-sub">Segera</span>
+          </div>
+          <div class="ring-btn ring-btn--soon">
+            <svg width="68" height="68" viewBox="0 0 68 68" aria-hidden="true"><circle cx="34" cy="34" r="27" fill="none" stroke="#34313D" stroke-width="6"/><path d="M26 35l5 5 11-12" fill="none" stroke="#7EE0B5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="ring-name">Benerin</span><span class="ring-sub">Segera</span>
+          </div>
+        </div>
+      </div>
       <button class="drop-btn" type="button" id="home-drop">
         <span class="plus" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
         <span><b>New drop</b><span>Masukin kata baru ke lemari</span></span>
       </button>
       <div class="tiles">
         <button class="tile tile--blue" type="button" id="home-lemari"><b>Lemariku</b><small id="home-count">0 kata</small></button>
-        <div class="tile tile--pink" aria-label="Fit check, segera hadir"><b>Fit check</b><small>Segera hadir</small></div>
+        <button class="tile tile--pink" type="button" id="home-fit"><b>Fit check</b><small id="home-fit-sub">Latihan 5 menit</small></button>
       </div>
       </div>
       <div class="stack home-side" style="gap:10px">
@@ -436,6 +502,68 @@ body[data-screen="add"] .app, body[data-screen="result"] .app { padding-bottom: 
         <p class="note" style="color:var(--soft)" id="lemari-empty-text">Lemarimu masih kosong. Tekan + untuk New drop.</p>
       </div>
       <div class="msg msg--error" id="lemari-msg" role="alert" hidden></div>
+    </div>
+  </section>
+
+  <!-- Fit check -->
+  <section id="fit" hidden aria-labelledby="fit-title">
+    <div class="fit-wrap">
+      <div class="fit-top">
+        <button class="round" type="button" id="fit-close" aria-label="Selesai latihan">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <div class="segs" id="fit-segs" aria-hidden="true"></div>
+        <span class="fit-pos" id="fit-pos"></span>
+      </div>
+      <h1 class="sr-only" id="fit-title">Fit check</h1>
+      <button class="flash" type="button" id="fit-card" aria-label="Balik kartu">
+        <span class="flash-face" id="fit-front">
+          <span class="flash-label" id="fit-source"></span>
+          <span class="flash-word" id="fit-word"></span>
+          <span class="flash-sentence" id="fit-sentence"></span>
+          <span class="flash-hint">Ketuk untuk lihat arti</span>
+        </span>
+        <span class="flash-face" id="fit-back" hidden>
+          <span class="flash-label" id="fit-word-small"></span>
+          <span class="flash-meaning" id="fit-meaning"></span>
+          <span class="flash-sentence" id="fit-sentence-tr"></span>
+          <span class="flash-hint">Kamu sudah tahu kata ini?</span>
+        </span>
+      </button>
+      <div class="bubble-row">
+        <img id="fit-bibo" src="img/bibo-thinking.webp" width="320" height="396" alt="" style="width:64px">
+        <div class="bubble" id="fit-bubble" aria-live="polite">Masih ingat artinya? Ketuk kartunya.</div>
+      </div>
+      <div class="fit-actions">
+        <button class="btn btn--revise" type="button" id="fit-revise">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v5h5"/></svg>
+          <span>Coba lagi</span>
+        </button>
+        <button class="btn btn--slay" type="button" id="fit-know">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+          <span>Slay</span>
+        </button>
+      </div>
+      <p class="note fit-keys">Keyboard: Spasi = balik kartu · ← Coba lagi · → Slay</p>
+    </div>
+  </section>
+
+  <!-- Slay: end of a Fit check -->
+  <section id="slay" hidden aria-labelledby="slay-title">
+    <div class="slay-wrap">
+      <img src="img/bibo-clap.webp" width="420" height="431" alt="Bibo bertepuk tangan" class="slay-bibo">
+      <span class="slay-pill">Bibo bangga sama kamu!</span>
+      <h1 id="slay-title">Slay!</h1>
+      <p class="note" style="color:var(--soft);font-size:16px">Lemari katamu makin lengkap. Kata yang masih kamu coba akan muncul duluan di Fit check berikutnya.</p>
+      <div class="slay-counts">
+        <div class="count count--mint"><b id="slay-know">0</b><span>Udah slay</span></div>
+        <div class="count count--pink"><b id="slay-revise">0</b><span>Coba lagi</span></div>
+      </div>
+      <p class="streak-line" id="slay-streak" hidden></p>
+      <div class="msg" id="slay-msg" role="status" hidden></div>
+      <button class="btn btn--ghost" type="button" id="slay-retry" hidden>Coba simpan lagi</button>
+      <button class="btn" type="button" id="slay-again">Fit check lagi</button>
+      <button class="btn btn--ghost" type="button" id="slay-home">Ke Beranda</button>
     </div>
   </section>
 
@@ -552,12 +680,14 @@ body[data-screen="add"] .app, body[data-screen="result"] .app { padding-bottom: 
   /* ---------- state ---------- */
   var me = null, hasPassword = false, pendingEmail = '', cooldownTimer = null, notice = '';
   var words = [], wordsLoaded = false, draftSource = 'Medsos', lastLookup = null, editing = null, deleteArmed = false;
+  var stats = null, deck = [], pos = 0, flipped = false, results = [], lastAnswer = '', saving = false;
+  var FIT_MAX = 20, RING = 169.6;
 
-  var SCREENS = ['landing', 'signin', 'home', 'add', 'result', 'lemari'];
+  var SCREENS = ['landing', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'slay'];
   function show(id) {
     SCREENS.forEach(function (s) { $(s).hidden = s !== id; });
     document.body.setAttribute('data-screen', id);
-    var nav = ['home', 'lemari', 'add', 'result'].indexOf(id) !== -1;
+    var nav = ['home', 'lemari', 'add', 'result', 'fit', 'slay'].indexOf(id) !== -1;
     $('nav').hidden = !nav;
     $('app').classList.toggle('with-nav', nav);
     $('nav-home').setAttribute('aria-current', id === 'home' ? 'page' : 'false');
@@ -567,8 +697,9 @@ body[data-screen="add"] .app, body[data-screen="result"] .app { padding-bottom: 
     window.scrollTo(0, 0);
   }
   function go(id) {
-    if ((id === 'home' || id === 'add' || id === 'lemari') && !me) { show('landing'); return; }
+    if ((id === 'home' || id === 'add' || id === 'lemari' || id === 'fit') && !me) { show('landing'); return; }
     if (id === 'add') openAdd();
+    else if (id === 'fit') startFit();
     else if (id === 'lemari') { renderLemari(); show('lemari'); }
     else if (id === 'home') { renderHome(); show('home'); }
     else show(id);
@@ -746,7 +877,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app { padding-bottom: 
   /* ---------- words ---------- */
   function loadWords() {
     return api('listWords', readToken()).then(function (r) {
-      words = r.words || []; wordsLoaded = true;
+      words = r.words || []; wordsLoaded = true; stats = r.stats || stats;
       if (!$('home').hidden) renderHome();
       if (!$('lemari').hidden) renderLemari();
     }, function (e) { failed(e, null); });
@@ -769,6 +900,14 @@ body[data-screen="add"] .app, body[data-screen="result"] .app { padding-bottom: 
     var list = $('recent-list'); list.textContent = '';
     words.slice(0, 3).forEach(function (w) { list.appendChild(wordRow(w)); });
     $('recent-empty').hidden = !wordsLoaded || words.length > 0;
+    var today = stats ? stats.today : 0, goal = stats ? stats.goal : 5;
+    $('ring-fit').setAttribute('stroke-dasharray', (Math.min(today, goal) / goal * RING).toFixed(1) + ' ' + RING);
+    $('ring-fit').setAttribute('stroke-opacity', today > 0 ? '1' : '0');
+    $('ring-fit-sub').textContent = Math.min(today, goal) + '/' + goal + ' kartu';
+    $('streak-text').textContent = (stats ? stats.streak : 0) + ' hari';
+    $('streak-pill').setAttribute('aria-label', 'Streak ' + (stats ? stats.streak : 0) + ' hari');
+    var todo = words.filter(function (w) { return w.status !== 'known'; }).length;
+    $('home-fit-sub').textContent = !words.length ? 'Tambah kata dulu' : todo ? todo + ' kata perlu dilatih' : 'Ulang semua kata';
   }
   function renderLemari() {
     var q = $('lemari-search').value.trim().toLowerCase();
@@ -784,6 +923,97 @@ body[data-screen="add"] .app, body[data-screen="result"] .app { padding-bottom: 
   $('lemari-search').addEventListener('input', renderLemari);
   $('home-drop').addEventListener('click', function () { go('add'); });
   $('home-lemari').addEventListener('click', function () { go('lemari'); });
+  $('home-fit').addEventListener('click', function () { go('fit'); });
+  $('ring-fit-btn').addEventListener('click', function () { go('fit'); });
+
+  /* ---------- Fit check ---------- */
+  var ORDER = { revise: 0, 'new': 1, known: 2 };
+  function startFit() {
+    if (!wordsLoaded) { msg($('home-msg'), 'Lemarimu masih dimuat, coba lagi sebentar.', 'ok'); go('home'); return; }
+    if (!words.length) { renderHome(); show('home'); msg($('home-msg'), 'Lemarimu masih kosong. Tambah kata lewat New drop dulu, baru Fit check.', 'ok'); return; }
+    deck = words.slice().sort(function (a, b) {
+      var d = (ORDER[a.status] == null ? 1 : ORDER[a.status]) - (ORDER[b.status] == null ? 1 : ORDER[b.status]);
+      return d || (a.updated_at < b.updated_at ? -1 : a.updated_at > b.updated_at ? 1 : 0);
+    }).slice(0, FIT_MAX);
+    pos = 0; results = []; lastAnswer = ''; flipped = false; saving = false;
+    renderFit();
+    show('fit');
+    $('fit-card').focus();
+  }
+  function renderFit() {
+    var w = deck[pos];
+    var segs = $('fit-segs'); segs.textContent = '';
+    deck.forEach(function (x, i) { var s = document.createElement('i'); if (i < pos) s.className = 'done'; segs.appendChild(s); });
+    $('fit-pos').textContent = (pos + 1) + '/' + deck.length;
+    $('fit-source').textContent = 'Dari ' + (w.source || 'Lainnya');
+    $('fit-word').textContent = w.word;
+    $('fit-sentence').textContent = w.sentence ? '“' + w.sentence + '”' : '';
+    $('fit-sentence').hidden = !w.sentence;
+    $('fit-word-small').textContent = w.word;
+    $('fit-meaning').textContent = w.meaning;
+    $('fit-sentence-tr').textContent = w.sentence_translation || '';
+    $('fit-sentence-tr').hidden = !w.sentence_translation;
+    $('fit-front').hidden = flipped; $('fit-back').hidden = !flipped;
+    $('fit-card').setAttribute('aria-label', flipped ? 'Arti: ' + w.meaning + '. Ketuk untuk balik lagi' : 'Kata: ' + w.word + '. Ketuk untuk lihat arti');
+    var pose = flipped ? ['bibo-reading', 'Nah, ini artinya. Udah tahu?'] : lastAnswer === 'known' ? ['bibo-thumbs', 'Slay! Kartu berikutnya.']
+      : lastAnswer === 'revise' ? ['bibo-surprised', 'Santai, kita coba lagi nanti.'] : ['bibo-thinking', 'Masih ingat artinya? Ketuk kartunya.'];
+    $('fit-bibo').src = 'img/' + pose[0] + '.webp';
+    $('fit-bubble').textContent = pose[1];
+  }
+  function flip() {
+    flipped = !flipped;
+    if (flipped) speak(deck[pos].word);
+    renderFit();
+  }
+  function answer(res) {
+    if (!deck[pos]) return;
+    results.push({ word_id: deck[pos].word_id, result: res });
+    lastAnswer = res; flipped = false; pos++;
+    if (pos >= deck.length) finishFit(); else renderFit();
+  }
+  $('fit-card').addEventListener('click', flip);
+  $('fit-know').addEventListener('click', function () { answer('known'); });
+  $('fit-revise').addEventListener('click', function () { answer('revise'); });
+  $('fit-close').addEventListener('click', function () { if (results.length) finishFit(); else go('home'); });
+  document.addEventListener('keydown', function (ev) {
+    if ($('fit').hidden || !$('edit-sheet').hidden || !$('menu-sheet').hidden || !$('pw-sheet').hidden) return;
+    if (ev.key === 'ArrowRight') { ev.preventDefault(); answer('known'); }
+    else if (ev.key === 'ArrowLeft') { ev.preventDefault(); answer('revise'); }
+    else if (ev.key === ' ' || ev.key === 'Spacebar') { ev.preventDefault(); if (!ev.repeat) flip(); }   // also when a button has focus: Space must never re-press Slay
+  });
+
+  function finishFit() {
+    var know = results.filter(function (r) { return r.result === 'known'; }).length;
+    $('slay-know').textContent = know;
+    $('slay-revise').textContent = results.length - know;
+    $('slay-streak').hidden = true;
+    $('slay-retry').hidden = true;
+    show('slay');
+    saveFit();
+  }
+  function saveFit() {
+    if (saving || !results.length) return;
+    saving = true;
+    msg($('slay-msg'), 'Menyimpan hasil latihan…', '');
+    $('slay-retry').hidden = true;
+    api('submitFitCheck', readToken(), results).then(function (r) {
+      saving = false;
+      var upd = r.updated || {};
+      words = words.map(function (w) { return upd[w.word_id] ? Object.assign({}, w, { status: upd[w.word_id], updated_at: new Date().toISOString() }) : w; });
+      stats = r.stats || stats;
+      results = [];
+      msg($('slay-msg'), '', '');
+      if (stats && stats.streak) { $('slay-streak').textContent = 'Streak kamu: ' + stats.streak + ' hari berturut-turut.'; $('slay-streak').hidden = false; }
+    }, function (e) {
+      saving = false;
+      if (e && SESSION_RE.test(e.message)) { failed(e, null); return; }
+      msg($('slay-msg'), 'Hasilnya belum tersimpan: ' + e.message, 'error');
+      $('slay-retry').hidden = false;
+    });
+  }
+  $('slay-retry').addEventListener('click', saveFit);
+  $('slay-again').addEventListener('click', function () { if (results.length) { saveFit(); return; } go('fit'); });
+  $('slay-home').addEventListener('click', function () { if (results.length && !saving) saveFit(); go('home'); });
 
   /* ---------- New drop ---------- */
   function renderSources() {
