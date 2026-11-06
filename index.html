@@ -1073,7 +1073,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     } else pill.hidden = true;
   }
   function signedOut(text) {
-    clearToken(); me = null; words = []; wordsLoaded = false; racks = []; rackLinks = []; rackFilter = '';
+    clearToken(); clearCache(); me = null; words = []; wordsLoaded = false; racks = []; rackLinks = []; rackFilter = '';
     ['pw-sheet', 'menu-sheet', 'edit-sheet', 'rack-sheet'].forEach(function (s) { $(s).hidden = true; });
     show('signin'); signinStep('email');
     if (text) msg($('signin-msg'), text, 'error');
@@ -1111,7 +1111,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   $('menu-password').addEventListener('click', function () { $('menu-sheet').hidden = true; openPasswordSheet(true); });
   $('menu-logout').addEventListener('click', function () {
     var t = readToken();
-    clearToken(); me = null; words = []; wordsLoaded = false; racks = []; rackLinks = []; rackFilter = ''; $('menu-sheet').hidden = true;
+    clearToken(); clearCache(); me = null; words = []; wordsLoaded = false; racks = []; rackLinks = []; rackFilter = ''; $('menu-sheet').hidden = true;
     show('landing');
     if (t) api('logout', t).catch(function () { /* the token is gone on this device anyway */ });
   });
@@ -1121,9 +1121,32 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   });
 
   /* ---------- words ---------- */
+  /* last word list kept in this browser: shown at once on the next visit, then refreshed from the server */
+  var CACHE_KEY = 'wr_cache', wordsVersion = 0;
+  function saveCache() {
+    if (!me || !wordsLoaded) return;
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ email: me.email, words: words, stats: stats, racks: racks, links: rackLinks, idle_hours: idleHours })); } catch (e) { /* full or unavailable */ }
+  }
+  function readCache() {
+    try { var c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); return c && me && c.email === me.email && Array.isArray(c.words) ? c : null; } catch (e) { return null; }
+  }
+  function clearCache() { try { localStorage.removeItem(CACHE_KEY); } catch (e) { /* ignore */ } }
+  function changed() { wordsVersion++; saveCache(); }   // after every local change, so a refresh started earlier cannot undo it
   function loadWords() {
+    if (!wordsLoaded) {
+      var c = readCache();
+      if (c) {
+        words = c.words; stats = c.stats || stats; applyRacks({ racks: c.racks || [], links: c.links || [], idle_hours: c.idle_hours });
+        wordsLoaded = true;
+        if (!$('home').hidden) renderHome();
+        if (!$('lemari').hidden) renderLemari();
+      }
+    }
+    var v = wordsVersion;
     return api('listWords', readToken()).then(function (r) {
+      if (v !== wordsVersion) return loadWords();   // something changed meanwhile: ask again
       words = r.words || []; wordsLoaded = true; stats = r.stats || stats; applyRacks(r);
+      saveCache();
       if (!$('home').hidden) renderHome();
       if (!$('lemari').hidden) renderLemari();
       loadCommunity();
@@ -1155,6 +1178,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         add.disabled = true;
         api('saveWord', readToken(), { word: t.word_key, meaning: t.translation, source: 'Lainnya' }).then(function (s) {
           if (!s.duplicate) words.unshift(s.word);
+          changed();
           msg($('home-msg'), '"' + t.word_key + '" masuk lemari. Arti bisa kamu ubah di Lemariku.', 'ok');
           renderHome();
         }, function (e) { add.disabled = false; failed(e, $('home-msg')); });
@@ -1310,7 +1334,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     if (btn) busy(btn, true);
     return api.apply(null, [fn, readToken()].concat(args)).then(function (r) {
       if (btn) busy(btn, false);
-      applyRacks(r);
+      applyRacks(r); changed();
       if (then) then(r);
       if (!$('home').hidden) renderHome();
       if (!$('lemari').hidden) renderLemari();
@@ -1485,6 +1509,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         words = words.map(function (w) { return upd[w.word_id] ? Object.assign({}, w, { status: upd[w.word_id], updated_at: new Date().toISOString() }) : w; });
       }
       stats = r.stats || stats;
+      changed();
       results = [];
       msg($('slay-msg'), '', '');
       if (stats && stats.streak) { $('slay-streak').textContent = 'Streak kamu: ' + stats.streak + ' hari berturut-turut.'; $('slay-streak').hidden = false; }
@@ -1806,6 +1831,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           if (inRack) inRack.last_used_at = link.added_at;
           rackFilter = link.rack_id;
         }
+        changed();
         $('add-word').value = ''; $('add-sentence').value = ''; $('add-loc').value = '';
         go('lemari');
         $('saved-toast-title').textContent = inRack ? (s.duplicate ? 'Masuk rak ' : '+1 kata masuk rak ') + inRack.title + '!' : '+1 kata masuk lemari!';
@@ -1848,6 +1874,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     api('updateWord', readToken(), id, { meaning: meaning, sentence: $('edit-sentence').value.trim() }).then(function (r) {
       busy($('edit-save'), false);
       words = words.map(function (w) { return w.word_id === id ? r.word : w; });
+      changed();
       closeEdit(); renderLemari(); renderHome();
     }, function (e) { busy($('edit-save'), false); failed(e, $('edit-msg')); });
   });
@@ -1860,6 +1887,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       busy($('edit-delete'), false);
       words = words.filter(function (w) { return w.word_id !== id; });
       rackLinks = rackLinks.filter(function (l) { return l.word_id !== id; });
+      changed();
       closeEdit(); renderLemari(); renderHome();
     }, function (e) { busy($('edit-delete'), false); failed(e, $('edit-msg')); });
   });
