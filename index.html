@@ -317,7 +317,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     <div class="hero"><img src="img/hero.webp" width="700" height="869" alt="Bibo melompat keluar dari lemari berisi kartu kata warna-warni"></div>
     <div class="stack landing-text" style="gap:10px">
       <h1 id="landing-title">Fit check<br>your vocab.</h1>
-      <p>Simpan kata yang kamu temukan saat nonton, baca berita atau scroll medsos. Latihan bareng Bibo, 5 menit sehari.</p>
+      <p>Simpan kata yang kamu temukan saat nonton, scroll medsos, atau baca buku. Latihan bareng Bibo, 5 menit sehari.</p>
     </div>
     <button class="btn" id="open-btn" type="button">Buka lemari</button>
     <button class="link" type="button" data-privacy style="align-self:center">Privasi</button>
@@ -451,7 +451,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <div class="list" id="recent-list"></div>
         <div class="empty" id="recent-empty" hidden>
           <img src="img/bibo-thinking.webp" width="320" height="396" alt="">
-          <p class="note" style="color:var(--soft)">Lemarimu masih kosong. Ketemu kata baru waktu nonton atau scroll? Masukin lewat New drop.</p>
+          <p class="note" style="color:var(--soft)">Ketemu kata baru waktu nonton, scroll, atau baca buku? Masukin lewat New drop.</p>
         </div>
         <div class="stack" id="trend-box" hidden style="gap:10px;margin-top:14px">
           <span class="section-label">Lagi rame di Wordrobe</span>
@@ -488,6 +488,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       <div class="field">
         <span class="label" id="src-label">Ketemu di mana?</span>
         <div class="chips" id="add-sources" role="group" aria-labelledby="src-label"></div>
+        <input class="input" id="add-source-own" type="text" maxlength="20" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="mis. Podcast" aria-label="Tulis sendiri (1 kata)" hidden>
+        <span class="note" id="add-source-note" hidden>Tulis sendiri (1 kata), boleh dikosongkan.</span>
       </div>
       <div class="msg msg--error" id="add-msg" role="alert" hidden></div>
       <button class="btn" type="submit" id="add-btn">Cari arti</button>
@@ -811,7 +813,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   var NET_MSG = 'Koneksi bermasalah. Cek internetmu lalu coba lagi.';
   var SESSION_RE = /Sesi kamu sudah habis|Masa coba gratis/;
   var TOKEN_KEY = 'wr_token';
-  var SOURCES = ['Nonton', 'Berita', 'Medsos', 'Kerja'];
+  var SOURCES = ['Nonton', 'Medsos', 'Buku', 'Lainnya'];
   var STATUS = { 'new': ['Baru', 'tag--new'], revise: ['Masih nyoba', 'tag--revise'], known: ['Udah slay', 'tag--known'] };
   var $ = function (id) { return document.getElementById(id); };
 
@@ -1449,9 +1451,22 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       var c = document.createElement('button');
       c.type = 'button'; c.className = 'chip'; c.textContent = s;
       c.setAttribute('aria-pressed', s === draftSource ? 'true' : 'false');
-      c.addEventListener('click', function () { draftSource = s; renderSources(); });
+      c.addEventListener('click', function () {
+        draftSource = s; renderSources();
+        if (s === 'Lainnya') $('add-source-own').focus();
+      });
       box.appendChild(c);
     });
+    $('add-source-own').hidden = $('add-source-note').hidden = draftSource !== 'Lainnya';
+  }
+  // One word only: letters, digits, hyphen, max 20 (the server checks the same rule).
+  $('add-source-own').addEventListener('input', function () {
+    var el = this, v = el.value.replace(/[^\p{L}\p{N}-]/gu, '').slice(0, 20);
+    if (v !== el.value) el.value = v;
+  });
+  function chosenSource() {
+    if (draftSource !== 'Lainnya') return draftSource;
+    return $('add-source-own').value.replace(/[^\p{L}\p{N}-]/gu, '').slice(0, 20) || 'Lainnya';
   }
   function openAdd() {
     renderSources();
@@ -1514,7 +1529,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     var meaning = $('res-meaning').value.trim();
     if (!meaning) { msg($('res-msg'), 'Tulis artinya dulu ya.', 'error'); $('res-meaning').focus(); return; }
     busy($('res-save'), true, 'Menyimpan…');
-    api('saveWord', readToken(), { word: r.word, meaning: meaning, sentence: r.sentence, sentence_translation: r.sentence_translation, source: draftSource })
+    api('saveWord', readToken(), { word: r.word, meaning: meaning, sentence: r.sentence, sentence_translation: r.sentence_translation, source: chosenSource() })
       .then(function (s) {
         busy($('res-save'), false);
         if (!s.duplicate) words.unshift(s.word);
