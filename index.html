@@ -157,6 +157,47 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .rack-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .rack-actions .btn { width: auto; min-height: 44px; font-size: 14px; padding: 0 16px; }
 .word-row .w small { font-size: 12px; color: var(--ok-text); font-weight: 700; }
+.tile--stitch { grid-column: 1 / -1; min-height: 88px; background: var(--mint); color: var(--on-accent); cursor: pointer; }
+.st-hub { display: flex; flex-direction: column; gap: 12px; }
+.st-card { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 18px; border: 0; border-radius: 22px; background: var(--card); color: var(--text); text-align: left; font: inherit; cursor: pointer; }
+.st-card .ico { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; flex: none; font-family: var(--display); font-weight: 800; font-size: 22px; }
+.st-card .w { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.st-card b { font-family: var(--display); font-size: 19px; font-weight: 800; }
+.st-card small { font-size: 13px; color: var(--muted); }
+.st-card .st-state { flex: none; font-size: 13px; font-weight: 800; color: var(--accent-text); }
+.st-loading { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; padding: 28px 8px; }
+.st-loading img { width: 110px; height: auto; }
+.st-loading .spinner { width: 26px; height: 26px; color: var(--accent-text); }
+.st-wrap { display: flex; flex-direction: column; gap: 14px; }
+.st-board { display: flex; flex-direction: column; gap: 6px; align-self: center; width: 100%; max-width: calc(var(--n) * 58px); }
+.st-row { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 6px; }
+.st-t { aspect-ratio: 1; border-radius: 10px; border: 2px solid var(--line); display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: clamp(18px, 6vw, 26px); text-transform: uppercase; }
+.st-t.has { border-color: var(--muted); }
+.st-t.b, .st-key.b { background: var(--blue); border-color: var(--blue); color: #fff; outline: 1.5px dashed rgba(255,255,255,.85); outline-offset: -6px; }
+.st-t.y, .st-key.y { background: var(--yellow); border-color: var(--yellow); color: var(--on-accent); }
+.st-t.g, .st-key.g { background: var(--card-2); border-color: var(--card-2); color: var(--muted); }
+.st-row.shake { animation: shake .35s; }
+@keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+@media (prefers-reduced-motion: reduce) { .st-row.shake { animation: none; } }
+.st-hint { background: var(--card); border-radius: 16px; padding: 10px 14px; font-size: 15px; box-shadow: inset 0 0 0 1.5px var(--yellow); }
+.st-keys { display: flex; flex-direction: column; gap: 6px; }
+.st-keys .kr { display: flex; gap: 5px; justify-content: center; }
+.st-key { flex: 1; max-width: 44px; min-height: 52px; padding: 0; border: 0; border-radius: 8px; background: var(--card-2); color: var(--text); font: inherit; font-weight: 800; font-size: 15px; text-transform: uppercase; cursor: pointer; }
+.st-key.wide { max-width: 68px; flex: 1.5; font-size: 12px; }
+.st-found { display: flex; flex-direction: column; gap: 8px; }
+.st-found .row { display: flex; align-items: center; gap: 10px; background: var(--card); border-radius: 14px; padding: 8px 8px 8px 14px; }
+.st-found .row span { flex: 1; min-width: 0; font-size: 14px; overflow-wrap: anywhere; }
+.st-found .row b { font-size: 15px; }
+.st-found .row button { flex: none; min-height: 40px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--yellow); color: var(--on-accent); font: inherit; font-weight: 800; font-size: 13px; cursor: pointer; }
+.st-found .row button:disabled { background: var(--card-2); color: var(--muted); cursor: default; }
+.st-result { background: var(--card); border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.st-result .top-line { display: flex; align-items: center; gap: 12px; }
+.st-result img { width: 72px; height: auto; flex: none; }
+.st-result h2 { font-size: 24px; }
+.st-result .word { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.st-result .word b { font-family: var(--display); font-size: 30px; font-weight: 800; text-transform: lowercase; overflow-wrap: anywhere; }
+.st-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.st-actions .btn { flex: 1; min-width: 140px; }
 .empty { background: var(--card); border-radius: 22px; padding: 18px; display: flex; gap: 12px; align-items: center; }
 .empty img { width: 64px; height: auto; flex: none; }
 
@@ -484,6 +525,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       <div class="tiles">
         <button class="tile tile--blue" type="button" id="home-lemari"><b>Lemariku</b><small id="home-count">0 kata</small></button>
         <button class="tile tile--pink" type="button" id="home-fit"><b>Fit check</b><small id="home-fit-sub">Latihan 5 menit</small></button>
+        <button class="tile tile--stitch" type="button" id="home-stitch"><b>Wordstitch</b><small id="home-stitch-sub">Jahit huruf jadi kata · 2 puzzle hari ini</small></button>
       </div>
       </div>
       <div class="stack home-side" style="gap:10px">
@@ -742,6 +784,73 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   </section>
 
   <!-- End of a practice session (Fit check, Ngomong, Benerin) -->
+  <!-- Wordstitch: choose a puzzle -->
+  <section id="stitch" hidden aria-labelledby="stitch-title">
+    <div class="top">
+      <button class="round" type="button" data-go="home" aria-label="Kembali">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+    </div>
+    <div class="st-hub">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <h1 class="screen-title" id="stitch-title">Wordstitch</h1>
+        <span class="note">Jahit huruf jadi kata. 6 kali tebak, sehari sekali.</span>
+      </div>
+      <div class="st-loading" id="stitch-loading" role="status">
+        <img src="img/bibo-thinking.webp" width="320" height="396" alt="">
+        <span class="spinner" aria-hidden="true"></span>
+        <p id="stitch-loading-text">Bibo lagi nyiapin puzzle…</p>
+        <button class="btn btn--ghost" type="button" id="stitch-retry" hidden style="max-width:240px">Coba lagi</button>
+      </div>
+      <div class="st-hub" id="stitch-cards" hidden>
+        <button class="st-card" type="button" id="stitch-open-lemari">
+          <span class="ico" style="background:var(--blue);color:#fff">W</span>
+          <span class="w"><b>Wordstitch</b><small id="stitch-lemari-sub">Kata dari lemarimu</small></span>
+          <span class="st-state" id="stitch-lemari-state"></span>
+        </button>
+        <button class="st-card" type="button" id="stitch-open-daily">
+          <span class="ico" style="background:var(--yellow);color:var(--on-accent)">#</span>
+          <span class="w"><b id="stitch-daily-title">Wordstitch of the Day</b><small>Kata 5 huruf, sama untuk semua pemain</small></span>
+          <span class="st-state" id="stitch-daily-state"></span>
+        </button>
+      </div>
+      <div class="msg msg--error" id="stitch-msg" role="alert" hidden></div>
+    </div>
+  </section>
+
+  <!-- Wordstitch: the board -->
+  <section id="stitchplay" hidden aria-labelledby="sp-title">
+    <div class="st-wrap">
+      <div class="fit-top">
+        <button class="round" type="button" id="sp-close" aria-label="Kembali ke Wordstitch">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <h1 class="top-title" id="sp-title" style="flex:1;font-family:var(--ui);font-size:16px;letter-spacing:0;margin:0">Wordstitch</h1>
+        <span class="fit-pos" id="sp-pos"></span>
+      </div>
+      <div class="st-hint" id="sp-hint" hidden></div>
+      <div class="st-board" id="sp-board" aria-label="Papan tebakan"></div>
+      <div class="msg" id="sp-msg" role="status" aria-live="polite" hidden></div>
+      <div class="st-result" id="sp-result" hidden>
+        <div class="top-line"><img id="sp-bibo" src="img/bibo-clap.webp" width="420" height="431" alt=""><h2 id="sp-result-title"></h2></div>
+        <div class="word"><b id="sp-word"></b><button class="speak" type="button" id="sp-speak" aria-label="Dengarkan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 010 7"/></svg></button></div>
+        <span id="sp-meaning" style="font-weight:700"></span>
+        <span class="note" id="sp-note"></span>
+        <div class="msg" id="sp-save-msg" role="status" hidden style="white-space:pre-line"></div>
+        <div class="st-actions">
+          <button class="btn" type="button" id="sp-share">Bagikan hasil</button>
+          <button class="btn btn--ghost" type="button" id="sp-back">Puzzle lain</button>
+          <button class="btn btn--ghost" type="button" id="sp-retry" hidden>Coba simpan lagi</button>
+        </div>
+      </div>
+      <div class="stack" id="sp-found-box" hidden style="gap:8px">
+        <span class="section-label">Kamu menemukan kata baru! Mau tambahkan ke lemari?</span>
+        <div class="st-found" id="sp-found"></div>
+      </div>
+      <div class="st-keys" id="sp-keys" aria-label="Keyboard"></div>
+    </div>
+  </section>
+
   <section id="slay" hidden aria-labelledby="slay-title">
     <div class="slay-wrap">
       <img src="img/bibo-clap.webp" width="420" height="431" alt="Bibo bertepuk tangan" class="slay-bibo">
@@ -945,13 +1054,13 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   var racks = [], rackLinks = [], idleHours = 3, rackFilter = '', rackSort = 'found', draftKind = 'Buku', rackDeleteArmed = false;
   var RACK_KINDS = ['Buku', 'Series', 'Film'];
 
-  var SCREENS = ['landing', 'restore', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'speak', 'fix', 'slay', 'privacy'];
+  var SCREENS = ['landing', 'restore', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'speak', 'fix', 'slay', 'privacy', 'stitch', 'stitchplay'];
   var current = 'landing', privacyFrom = 'landing';
   function show(id) {
     SCREENS.forEach(function (s) { $(s).hidden = s !== id; });
     document.body.setAttribute('data-screen', id);
     current = id;
-    var nav = ['home', 'lemari', 'add', 'result', 'fit', 'speak', 'fix', 'slay'].indexOf(id) !== -1;
+    var nav = ['home', 'lemari', 'add', 'result', 'fit', 'speak', 'fix', 'slay', 'stitch'].indexOf(id) !== -1;
     if (id !== 'speak') stopListening();
     $('nav').hidden = !nav;
     $('app').classList.toggle('with-nav', nav);
@@ -962,8 +1071,9 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     window.scrollTo(0, 0);
   }
   function go(id) {
-    if (['home', 'add', 'lemari', 'fit', 'speak', 'fix'].indexOf(id) !== -1 && !me) { show('landing'); return; }
+    if (['home', 'add', 'lemari', 'fit', 'speak', 'fix', 'stitch'].indexOf(id) !== -1 && !me) { show('landing'); return; }
     if (id === 'add') openAdd();
+    else if (id === 'stitch') openStitch();
     else if (id === 'fit') startFit();
     else if (id === 'speak') startSpeak();
     else if (id === 'fix') startFix();
@@ -1285,6 +1395,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   $('home-drop').addEventListener('click', function () { go('add'); });
   $('home-lemari').addEventListener('click', function () { rackFilter = ''; go('lemari'); });
   $('home-fit').addEventListener('click', function () { go('fit'); });
+  $('home-stitch').addEventListener('click', function () { go('stitch'); });
   $('ring-fit-btn').addEventListener('click', function () { go('fit'); });
   $('ring-speak-btn').addEventListener('click', function () { go('speak'); });
   $('ring-fix-btn').addEventListener('click', function () { go('fix'); });
@@ -1451,6 +1562,241 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       msg($('lemari-msg'), 'Rak dihapus. Kata-katanya tetap di lemarimu.', 'ok');
     });
   });
+
+  /* ---------- Wordstitch: guess the word in 6 tries ---------- */
+  // Colours: b = right place (blue, stitched), y = in the word elsewhere (yellow), g = not in the word (grey).
+  var ST_TRIES = 6, stitch = null, stDict = null, stDictLoad = null, sp = null, stFound = [], stLookupBusy = false;
+  var ST_KEYS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+  function loadStitchDict() {
+    if (stDict) return Promise.resolve(stDict);
+    if (!stDictLoad) {
+      stDictLoad = fetch('words-en.txt').then(function (r) { if (!r.ok) throw new Error('dict'); return r.text(); }).then(function (t) {
+        stDict = new Set(t.split('\n')); return stDict;
+      });
+      stDictLoad.catch(function () { stDictLoad = null; });
+    }
+    return stDictLoad;
+  }
+  function stColors(guess, target) {
+    var out = [], left = {}, i;
+    for (i = 0; i < target.length; i++) { if (guess[i] === target[i]) out[i] = 'b'; else left[target[i]] = (left[target[i]] || 0) + 1; }
+    for (i = 0; i < guess.length; i++) { if (out[i]) continue; if (left[guess[i]]) { out[i] = 'y'; left[guess[i]]--; } else out[i] = 'g'; }
+    return out.join('');
+  }
+  function openStitch() {
+    show('stitch');
+    msg($('stitch-msg'), '', 'error');
+    $('stitch-cards').hidden = true; $('stitch-loading').hidden = false; $('stitch-retry').hidden = true;
+    $('stitch-loading-text').textContent = 'Bibo lagi nyiapin puzzle…';
+    var slow = setTimeout(function () {   // only when the word list is really downloading (first visit)
+      if (!stDict) $('stitch-loading-text').textContent = 'Bibo lagi menyiapkan benang dan jarum… Ini cuma lama saat pertama kali dibuka.';
+    }, 300);
+    Promise.all([api('getStitch', readToken()), loadStitchDict()]).then(function (res) {
+      clearTimeout(slow);
+      stitch = res[0];
+      renderStitchHub();
+    }, function (e) {
+      clearTimeout(slow);
+      if (e && SESSION_RE.test(e.message)) { failed(e, null); return; }
+      $('stitch-loading-text').textContent = e && e.message === 'dict' ? 'Kamus Wordstitch belum termuat. Cek koneksimu, lalu coba lagi.' : (e && e.message) || NET_MSG;
+      $('stitch-retry').hidden = false;
+    });
+  }
+  $('stitch-retry').addEventListener('click', openStitch);
+  function stScore(p) { return (p.won ? p.guesses.length : 'X') + '/' + ST_TRIES; }
+  function renderStitchHub() {
+    $('stitch-loading').hidden = true; $('stitch-cards').hidden = false;
+    var L = stitch.lemari, D = stitch.daily;
+    $('stitch-lemari-sub').textContent = L ? 'Kata dari lemarimu · ' + L.word.length + ' huruf' : 'Tambah kata 4–8 huruf dulu lewat New drop';
+    $('stitch-lemari-state').textContent = L && L.played ? '✓ ' + stScore(L.played) : L ? 'Main' : '';
+    $('stitch-daily-title').textContent = D ? 'Wordstitch of the Day #' + D.number : 'Wordstitch of the Day';
+    $('stitch-daily-state').textContent = D && D.played ? '✓ ' + stScore(D.played) : D ? 'Main' : '';
+    var done = (L && L.played ? 1 : 0) + (D && D.played ? 1 : 0);
+    $('home-stitch-sub').textContent = done === 2 ? 'Dua-duanya udah dijahit hari ini ✓' : 'Jahit huruf jadi kata · ' + (2 - done) + ' puzzle hari ini';
+  }
+  $('stitch-open-lemari').addEventListener('click', function () {
+    if (!stitch || !stitch.lemari) { msg($('stitch-msg'), 'Belum ada kata 4–8 huruf di lemarimu. Tambah lewat New drop dulu ya.', 'error'); return; }
+    startStitch('lemari');
+  });
+  $('stitch-open-daily').addEventListener('click', function () {
+    if (!stitch || !stitch.daily) { msg($('stitch-msg'), 'Wordstitch of the Day belum siap. Coba lagi nanti ya.', 'error'); return; }
+    startStitch('daily');
+  });
+  var spByMode = {};   // a game left half way is kept per mode for the rest of the day (this visit)
+  function startStitch(mode) {
+    var P = stitch[mode], prev = spByMode[mode];
+    if (prev && prev.day === stitch.day && prev.target === P.word && !prev.done && !P.played) sp = prev;
+    else {
+      sp = { day: stitch.day, mode: mode, target: P.word, meaning: P.meaning, word_id: P.word_id || null, number: P.number || null, guesses: [], cur: '', done: false, found: [] };
+      if (P.played) { sp.guesses = P.played.guesses.slice(); sp.done = true; }
+      spByMode[mode] = sp;
+    }
+    stFound = sp.found;
+    $('sp-title').textContent = mode === 'daily' ? 'Wordstitch of the Day #' + P.number : 'Wordstitch';
+    $('sp-result').hidden = true;
+    msg($('sp-msg'), ''); msg($('sp-save-msg'), '');
+    $('sp-board').style.setProperty('--n', P.word.length);
+    renderStitch(); renderFound();
+    show('stitchplay');
+    if (sp.done) showStitchResult(P.played ? P.played.won : sp.guesses.indexOf(sp.target) !== -1, !P.played);
+  }
+  function wrongCount() { return sp.guesses.filter(function (g) { return g !== sp.target; }).length; }
+  function renderStitch() {
+    var n = sp.target.length, board = $('sp-board'); board.textContent = '';
+    for (var r = 0; r < ST_TRIES; r++) {
+      var row = document.createElement('div'); row.className = 'st-row';
+      var g = sp.guesses[r], cols = g ? stColors(g, sp.target) : '', text = g || (r === sp.guesses.length && !sp.done ? sp.cur : '');
+      for (var c = 0; c < n; c++) {
+        var t = document.createElement('div');
+        t.className = 'st-t' + (g ? ' ' + cols[c] : text[c] ? ' has' : '');
+        t.textContent = text[c] || '';
+        row.appendChild(t);
+      }
+      row.setAttribute('aria-label', g ? g + ': ' + cols.split('').map(function (x) { return x === 'b' ? 'tepat' : x === 'y' ? 'ada' : 'tidak ada'; }).join(', ') : 'baris ' + (r + 1));
+      board.appendChild(row);
+    }
+    $('sp-pos').textContent = sp.done ? stScore({ won: sp.guesses.indexOf(sp.target) !== -1, guesses: sp.guesses }) : (sp.guesses.length + 1) + '/' + ST_TRIES;
+    var showHint = wrongCount() >= 3 && !sp.done;
+    $('sp-hint').hidden = !showHint;
+    if (showHint) $('sp-hint').textContent = sp.meaning ? 'Petunjuk: artinya “' + sp.meaning + '”' : 'Petunjuk: kata ini diawali huruf ' + sp.target[0].toUpperCase();
+    renderStitchKeys();
+  }
+  function renderStitchKeys() {
+    var best = {}, rank = { b: 3, y: 2, g: 1 };
+    sp.guesses.forEach(function (g) { var cols = stColors(g, sp.target); for (var i = 0; i < g.length; i++) if (!best[g[i]] || rank[cols[i]] > rank[best[g[i]]]) best[g[i]] = cols[i]; });
+    var box = $('sp-keys'); box.textContent = '';
+    box.hidden = sp.done;
+    ST_KEYS.forEach(function (line, li) {
+      var kr = document.createElement('div'); kr.className = 'kr';
+      var keys = line.split('');
+      if (li === 2) { keys.unshift('enter'); keys.push('del'); }
+      keys.forEach(function (k) {
+        var b = document.createElement('button'); b.type = 'button';
+        b.className = 'st-key' + (k.length > 1 ? ' wide' : '') + (best[k] ? ' ' + best[k] : '');
+        b.textContent = k === 'enter' ? 'Enter' : k === 'del' ? '⌫' : k;
+        b.setAttribute('data-key', k);
+        if (k === 'del') b.setAttribute('aria-label', 'Hapus huruf');
+        kr.appendChild(b);
+      });
+      box.appendChild(kr);
+    });
+  }
+  $('sp-keys').addEventListener('click', function (ev) { var b = ev.target.closest('[data-key]'); if (b) stitchKey(b.getAttribute('data-key')); });
+  document.addEventListener('keydown', function (ev) {
+    if (current !== 'stitchplay' || !sp || sp.done || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    if (!$('menu-sheet').hidden || !$('edit-sheet').hidden || !$('rack-sheet').hidden || !$('pw-sheet').hidden) return;
+    if (/^[a-zA-Z]$/.test(ev.key)) { stitchKey(ev.key.toLowerCase()); ev.preventDefault(); }
+    else if (ev.key === 'Backspace') { stitchKey('del'); ev.preventDefault(); }
+    else if (ev.key === 'Enter') { stitchKey('enter'); ev.preventDefault(); }
+  });
+  function stitchShake(text) {
+    msg($('sp-msg'), text, 'error');
+    var row = $('sp-board').children[sp.guesses.length];
+    if (row) { row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake'); }
+  }
+  function stitchKey(k) {
+    if (!sp || sp.done) return;
+    var n = sp.target.length;
+    if (k === 'del') { sp.cur = sp.cur.slice(0, -1); msg($('sp-msg'), ''); renderStitch(); return; }
+    if (k === 'enter') {
+      if (sp.cur.length < n) { stitchShake('Kurang huruf. Katanya ' + n + ' huruf.'); return; }
+      var g = sp.cur;
+      if (g !== sp.target && !stDict.has(g) && !hasWord(g)) { stitchShake('“' + g + '” bukan kata bahasa Inggris yang Bibo kenal.'); return; }
+      msg($('sp-msg'), '');
+      sp.guesses.push(g); sp.cur = '';
+      if (g !== sp.target && !hasWord(g) && !stFound.some(function (f) { return f.word === g; })) foundWord(g);
+      if (g === sp.target || sp.guesses.length >= ST_TRIES) { sp.done = true; renderStitch(); showStitchResult(g === sp.target, true); return; }
+      renderStitch();
+      return;
+    }
+    if (sp.cur.length < n) { sp.cur += k; renderStitch(); }
+  }
+  // a valid guess that is not in Lemariku: look up its meaning in the background and offer "+ Lemari"
+  function foundWord(word) {
+    var f = { word: word, meaning: null, state: 'wait' };
+    stFound.push(f); renderFound(); nextLookup();
+  }
+  function nextLookup() {
+    if (stLookupBusy) return;
+    var all = [];
+    Object.keys(spByMode).forEach(function (m) { all = all.concat(spByMode[m].found || []); });
+    var f = all.find(function (x) { return x.state === 'wait'; });
+    if (!f) return;
+    stLookupBusy = true; f.state = 'look'; renderFound();
+    api('lookupWord', readToken(), f.word, '').then(function (r) {
+      f.meaning = r.translation && r.translation.toLowerCase() !== f.word ? r.translation : '';
+      f.state = r.already_saved ? 'saved' : f.meaning ? 'ready' : 'none';
+    }, function () { f.state = 'none'; }).then(function () { stLookupBusy = false; renderFound(); nextLookup(); });
+  }
+  function renderFound() {
+    var shown = stFound.filter(function (f) { return f.state !== 'none'; });
+    $('sp-found-box').hidden = !shown.length;
+    var box = $('sp-found'); box.textContent = '';
+    shown.forEach(function (f) {
+      var row = document.createElement('div'); row.className = 'row';
+      var t = document.createElement('span');
+      var b = document.createElement('b'); b.textContent = f.word; t.appendChild(b);
+      t.appendChild(document.createTextNode(f.meaning ? ' = ' + f.meaning : ' · Bibo lagi cari artinya…'));
+      var add = document.createElement('button'); add.type = 'button';
+      add.textContent = f.state === 'saved' ? '✓ Di lemari' : '+ Lemari';
+      add.disabled = f.state !== 'ready';
+      add.setAttribute('aria-label', 'Tambah ' + f.word + ' ke lemari');
+      add.addEventListener('click', function () {
+        add.disabled = true; add.textContent = 'Menyimpan…';
+        api('saveWord', readToken(), { word: f.word, meaning: f.meaning, source: 'Wordstitch' }).then(function (s) {
+          if (!s.duplicate) words.unshift(s.word);
+          changed(); f.state = 'saved'; renderFound();
+        }, function (e) { failed(e, $('sp-msg')); add.disabled = false; add.textContent = '+ Lemari'; });
+      });
+      row.appendChild(t); row.appendChild(add); box.appendChild(row);
+    });
+  }
+  function showStitchResult(won, fresh) {
+    $('sp-result').hidden = false;
+    $('sp-hint').hidden = true;
+    $('sp-bibo').src = 'img/' + (won ? 'bibo-clap' : 'bibo-surprised') + '.webp';
+    $('sp-result-title').textContent = won ? (sp.guesses.length <= 2 ? 'Jahitan kilat!' : 'Jahitanmu rapi!') : 'Benangnya habis…';
+    $('sp-word').textContent = sp.target;
+    $('sp-meaning').textContent = sp.meaning ? 'Artinya: ' + sp.meaning : '';
+    $('sp-note').textContent = sp.mode === 'lemari' && !won ? 'Kata ini masuk “Masih nyoba”, jadi muncul duluan di Fit check.' : sp.mode === 'daily' ? 'Puzzle berikutnya besok. Sama untuk semua pemain.' : 'Kata lemarimu berikutnya besok.';
+    $('sp-retry').hidden = true;
+    if (fresh) saveStitch();
+  }
+  function saveStitch() {
+    msg($('sp-save-msg'), 'Menyimpan hasil…', '');
+    var mode = sp.mode, guesses = sp.guesses.slice(), wordId = sp.word_id;
+    api('submitStitch', readToken(), { mode: mode, guesses: guesses }).then(function (r) {
+      sp.saved = true;
+      stitch[mode].played = r.play;
+      stats = r.stats || stats;
+      if (r.word_status && wordId) words = words.map(function (w) { return w.word_id === wordId ? Object.assign({}, w, { status: r.word_status, updated_at: new Date().toISOString() }) : w; });
+      changed();
+      renderStitchHub();
+      msg($('sp-save-msg'), stats && stats.streak ? 'Tersimpan. Streak kamu: ' + stats.streak + ' hari.' : 'Tersimpan.', 'ok');
+    }, function (e) {
+      if (e && SESSION_RE.test(e.message)) { failed(e, null); return; }
+      msg($('sp-save-msg'), 'Hasilnya belum tersimpan: ' + e.message, 'error');
+      $('sp-retry').hidden = /sudah main/.test(e.message);
+    });
+  }
+  $('sp-retry').addEventListener('click', saveStitch);
+  $('sp-speak').addEventListener('click', function () { if (sp) speak(sp.target); });
+  function stitchShareText() {
+    var won = sp.guesses.indexOf(sp.target) !== -1;
+    var head = (sp.mode === 'daily' ? 'Wordstitch of the Day #' + sp.number : 'Wordstitch') + ' ' + stScore({ won: won, guesses: sp.guesses });
+    var EMO = { b: '🟦', y: '🟨', g: '⬜' };
+    var rows = sp.guesses.map(function (g) { return stColors(g, sp.target).split('').map(function (c) { return EMO[c]; }).join(''); });
+    return head + '\n' + rows.join('\n') + '\nunishverse.github.io/wordrobe';
+  }
+  $('sp-share').addEventListener('click', function () {
+    var text = stitchShareText();
+    if (navigator.share) { navigator.share({ text: text }).catch(function () { /* closed */ }); return; }
+    var done = function () { msg($('sp-save-msg'), 'Hasil disalin. Tempel di Story atau chat!', 'ok'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { msg($('sp-save-msg'), text, 'ok'); });
+    else msg($('sp-save-msg'), text, 'ok');
+  });
+  $('sp-back').addEventListener('click', function () { show('stitch'); if (stitch) renderStitchHub(); });
+  $('sp-close').addEventListener('click', function () { show('stitch'); if (stitch) renderStitchHub(); });
 
   /* ---------- Fit check ---------- */
   var ORDER = { revise: 0, 'new': 1, known: 2 };
