@@ -23,6 +23,8 @@ try { (function () { var p = localStorage.getItem('wr_theme') || 'dark';
   --accent-text: #FFD23F;    /* links and highlights written as text on the page */
   --ok-text: #7EE0B5;
   --flash: #F5F3EE; --flash-line: transparent;
+  --st-key: #57536A; --st-key-text: #FFFFFF;          /* Wordstitch: keys not used yet */
+  --st-absent: #24222C; --st-absent-text: #A9A4B5;    /* letters not in the word: clearly darker than unused keys */
   --display: 'Bricolage Grotesque', system-ui, sans-serif;
   --ui: 'Plus Jakarta Sans', system-ui, sans-serif;
   color-scheme: dark;
@@ -33,6 +35,8 @@ html[data-theme="light"] {
   --text: #1A1820; --muted: #6B6577; --soft: #47424F;
   --error: #C2185B; --accent-text: #8A5B00; --ok-text: #0B7A50;
   --flash: #FFFFFF; --flash-line: #DCD7E2;
+  --st-key: #E3DEE9; --st-key-text: #1A1820;
+  --st-absent: #706A7C; --st-absent-text: #FFFFFF;
   color-scheme: light;
 }
 /* the welcome illustration has a dark background baked in: show it as a rounded poster on light pages */
@@ -175,14 +179,14 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .st-t.has { border-color: var(--muted); }
 .st-t.b, .st-key.b { background: var(--blue); border-color: var(--blue); color: #fff; outline: 1.5px dashed rgba(255,255,255,.85); outline-offset: -6px; }
 .st-t.y, .st-key.y { background: var(--yellow); border-color: var(--yellow); color: var(--on-accent); }
-.st-t.g, .st-key.g { background: var(--card-2); border-color: var(--card-2); color: var(--muted); }
+.st-t.g, .st-key.g { background: var(--st-absent); border-color: var(--st-absent); color: var(--st-absent-text); }
 .st-row.shake { animation: shake .35s; }
 @keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
 @media (prefers-reduced-motion: reduce) { .st-row.shake { animation: none; } }
 .st-hint { background: var(--card); border-radius: 16px; padding: 10px 14px; font-size: 15px; box-shadow: inset 0 0 0 1.5px var(--yellow); }
 .st-keys { display: flex; flex-direction: column; gap: 6px; }
 .st-keys .kr { display: flex; gap: 5px; justify-content: center; }
-.st-key { flex: 1; max-width: 44px; min-height: 52px; padding: 0; border: 0; border-radius: 8px; background: var(--card-2); color: var(--text); font: inherit; font-weight: 800; font-size: 15px; text-transform: uppercase; cursor: pointer; }
+.st-key { flex: 1; max-width: 44px; min-height: 52px; padding: 0; border: 0; border-radius: 8px; background: var(--st-key); color: var(--st-key-text); font: inherit; font-weight: 800; font-size: 15px; text-transform: uppercase; cursor: pointer; }
 .st-key.wide { max-width: 68px; flex: 1.5; font-size: 12px; }
 .st-found { display: flex; flex-direction: column; gap: 8px; }
 .st-found .row { display: flex; align-items: center; gap: 10px; background: var(--card); border-radius: 14px; padding: 8px 8px 8px 14px; }
@@ -1783,10 +1787,13 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   $('sp-speak').addEventListener('click', function () { if (sp) speak(sp.target); });
   function stitchShareText() {
     var won = sp.guesses.indexOf(sp.target) !== -1;
-    var head = (sp.mode === 'daily' ? 'Wordstitch of the Day #' + sp.number : 'Wordstitch') + ' ' + stScore({ won: won, guesses: sp.guesses });
+    var score = stScore({ won: won, guesses: sp.guesses });
+    var head = sp.mode === 'daily' ? 'Wordstitch of the Day #' + sp.number + ' ' + score : 'Wordstitch ' + score + ' · kata dari lemariku';
+    var cta = sp.mode === 'daily' ? 'Bisa jahit lebih cepat dari aku? 🧵\nMain gratis 👉 unishverse.github.io/wordrobe'
+      : 'Jahit kata dari lemarimu sendiri, tiap hari 🧵\nCoba gratis 👉 unishverse.github.io/wordrobe';
     var EMO = { b: '🟦', y: '🟨', g: '⬜' };
     var rows = sp.guesses.map(function (g) { return stColors(g, sp.target).split('').map(function (c) { return EMO[c]; }).join(''); });
-    return head + '\n' + rows.join('\n') + '\nunishverse.github.io/wordrobe';
+    return head + '\n' + rows.join('\n') + '\n' + cta;
   }
   $('sp-share').addEventListener('click', function () {
     var text = stitchShareText();
