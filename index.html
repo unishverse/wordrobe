@@ -140,6 +140,10 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .trend-row { cursor: default; }
 .trend-add { flex: none; width: 44px; height: 44px; border-radius: 999px; border: 0; background: var(--yellow); color: var(--on-accent); font-size: 22px; font-weight: 800; line-height: 1; cursor: pointer; display: grid; place-items: center; }
 .trend-add:disabled { opacity: .6; cursor: default; }
+.nudge { background: var(--card); border-radius: 24px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+.nudge b { font-family: var(--display); font-size: 18px; }
+.nudge-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.nudge-actions .btn { flex: 1 1 160px; width: auto; }
 .rack-card { background: var(--card); border-radius: 24px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
 .rack-card b { font-family: var(--display); font-size: 19px; font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
 .rack-card .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
@@ -449,7 +453,23 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <button class="btn btn--ghost" type="submit" id="send-btn">Kirim kode</button>
         <button class="btn btn--trial" type="button" id="trial-btn">Coba gratis 7 hari</button>
         <p class="note" style="text-align:center">Pengguna baru? Coba semua fitur gratis selama 7 hari.</p>
+        <button class="link" type="button" id="to-username" style="align-self:center">Nggak mau pakai email? Daftar pakai username</button>
         <button class="link" type="button" data-privacy style="align-self:center">Privasi</button>
+      </form>
+
+      <form id="username-form" class="stack" novalidate hidden>
+        <div class="field">
+          <label for="uname">Username</label>
+          <input class="input" id="uname" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="21" placeholder="mis. dewi_kata" required>
+          <p class="note">3–20 karakter: huruf kecil, angka, titik atau garis bawah.</p>
+        </div>
+        <div class="field">
+          <label for="uname-pw">Password (minimal 8 karakter)</label>
+          <input class="input" id="uname-pw" type="password" autocomplete="new-password" minlength="8" required>
+        </div>
+        <p class="note">Ingat password-mu ya. Tanpa email, password nggak bisa direset sendiri (nanti bisa tambah email di Akun).</p>
+        <button class="btn btn--trial" type="submit" id="uname-btn">Mulai coba gratis 7 hari</button>
+        <button class="link" type="button" id="uname-back" style="align-self:center">Daftar pakai email</button>
       </form>
 
       <form id="code-form" class="stack" novalidate hidden>
@@ -465,8 +485,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
 
       <form id="password-form" class="stack" novalidate hidden>
         <div class="field">
-          <label for="pw-email">Email</label>
-          <input class="input" id="pw-email" type="email" inputmode="email" autocomplete="username" placeholder="nama@email.com" required>
+          <label for="pw-email">Email atau username</label>
+          <input class="input" id="pw-email" type="text" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="nama@email.com atau username" required>
         </div>
         <div class="field">
           <label for="pw">Password</label>
@@ -498,6 +518,14 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         </button>
       </div>
       <div class="msg msg--ok" id="home-msg" role="status" hidden></div>
+      <div class="nudge" id="email-nudge" hidden>
+        <b>Amankan lemarimu 🔒</b>
+        <p class="note">Tambahin email biar kamu tetap bisa masuk kalau lupa password atau ganti HP. Cuma buat kode masuk, nggak buat promo.</p>
+        <div class="nudge-actions">
+          <button class="btn" type="button" id="nudge-add">Tambah email</button>
+          <button class="btn btn--ghost" type="button" id="nudge-later">Nanti aja</button>
+        </div>
+      </div>
       <div class="home-grid">
       <div class="home-main">
       <div class="daily">
@@ -948,6 +976,31 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   </form>
 </div>
 
+<!-- Add an email (username accounts) -->
+<div class="sheet" id="email-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="email-sheet-title">
+  <div class="sheet-card">
+    <h2 id="email-sheet-title">Amankan lemarimu 🔒</h2>
+    <p class="note" id="email-sheet-note">Tambahin email biar kamu tetap bisa masuk kalau lupa password atau ganti HP. Cuma buat kode masuk, nggak buat promo.</p>
+    <form id="addemail-form" class="stack" novalidate>
+      <div class="field">
+        <label for="add-email">Email</label>
+        <input class="input" id="add-email" type="email" inputmode="email" autocomplete="email" placeholder="nama@email.com" required>
+      </div>
+      <button class="btn" type="submit" id="addemail-btn">Kirim kode</button>
+    </form>
+    <form id="addcode-form" class="stack" novalidate hidden>
+      <div class="field">
+        <label for="add-code">Kode 6 angka</label>
+        <input class="input input--code" id="add-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="••••••" required>
+      </div>
+      <button class="btn" type="submit" id="addcode-btn">Simpan email</button>
+      <button class="link" type="button" id="addcode-change" style="align-self:center">Ganti email</button>
+    </form>
+    <div class="msg msg--error" id="addemail-msg" role="alert" hidden></div>
+    <button class="btn btn--ghost" type="button" id="email-sheet-close">Nanti aja</button>
+  </div>
+</div>
+
 <!-- Account sheet -->
 <div class="sheet" id="menu-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="menu-title">
   <div class="sheet-card">
@@ -957,6 +1010,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       <span class="label" id="theme-label">Tampilan</span>
       <div class="chips" id="theme-chips" role="group" aria-labelledby="theme-label"></div>
     </div>
+    <button class="btn btn--ghost" type="button" id="menu-add-email" hidden>Tambah email</button>
     <button class="btn btn--ghost" type="button" id="menu-password">Atur password</button>
     <button class="btn btn--ghost" type="button" id="menu-logout">Keluar</button>
     <button class="link" type="button" data-privacy style="align-self:center">Privasi</button>
@@ -1120,8 +1174,11 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('email-form').hidden = step !== 'email';
     $('code-form').hidden = step !== 'code';
     $('password-form').hidden = step !== 'password';
+    $('username-form').hidden = step !== 'username';
+    $('signin-title').textContent = step === 'username' ? 'Bikin akun' : 'Masuk ke lemarimu';
     $('signin-bubble').textContent = step === 'code' ? 'Cek emailmu ya, kodenya sudah aku kirim.'
-      : step === 'password' ? 'Udah punya password? Masuk langsung di sini.' : 'Halo! Masukin emailmu dulu ya.';
+      : step === 'password' ? 'Udah punya password? Masuk langsung di sini.'
+      : step === 'username' ? 'Bikin username dan password, langsung bisa mulai.' : 'Halo! Masukin emailmu dulu ya.';
     msg($('signin-msg'), '');
   }
   function startCooldown(seconds) {
@@ -1153,10 +1210,29 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg($('signin-msg'), 'Tulis alamat email yang benar ya.', 'error'); return; }
     sendCode(email, $('send-btn'));
   });
+  /* a browser that already signed in once does not start another free trial (soft check: incognito or another browser skips it) */
+  var KNOWN_KEY = 'wr_known';
+  function knownDevice() { try { return localStorage.getItem(KNOWN_KEY) === '1'; } catch (e) { return false; } }
+  var KNOWN_MSG = 'Kamu sudah punya akun di HP ini. Masuk pakai email atau username-mu ya.';
   $('trial-btn').addEventListener('click', function () {
+    if (knownDevice()) { msg($('signin-msg'), KNOWN_MSG, 'error'); return; }
     var email = $('email').value.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg($('signin-msg'), 'Tulis emailmu dulu, lalu tekan Coba gratis 7 hari.', 'error'); $('email').focus(); return; }
     sendCode(email, $('trial-btn'), 'startTrial');
+  });
+  $('to-username').addEventListener('click', function () { signinStep('username'); $('uname').focus(); });
+  $('uname-back').addEventListener('click', function () { signinStep('email'); $('email').focus(); });
+  $('username-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (knownDevice()) { msg($('signin-msg'), KNOWN_MSG, 'error'); return; }
+    var name = $('uname').value.trim().toLowerCase().replace(/^@/, ''), pw = $('uname-pw').value;
+    if (!/^[a-z][a-z0-9._]{2,19}$/.test(name)) { msg($('signin-msg'), 'Username 3–20 karakter: huruf kecil, angka, titik atau garis bawah, diawali huruf.', 'error'); $('uname').focus(); return; }
+    if (pw.length < 8) { msg($('signin-msg'), 'Password minimal 8 karakter.', 'error'); $('uname-pw').focus(); return; }
+    if ($('uname-btn').disabled) return;
+    busy($('uname-btn'), true, 'Menyiapkan lemari…');
+    api('startTrialUsername', name, pw).then(function (r) {
+      busy($('uname-btn'), false); $('uname-pw').value = ''; signedIn(r);
+    }, function (e) { busy($('uname-btn'), false); msg($('signin-msg'), e.message, 'error'); });
   });
   $('resend-btn').addEventListener('click', function () { if (pendingEmail) sendCode(pendingEmail, $('resend-btn')); });
   $('change-email').addEventListener('click', function () { clearInterval(cooldownTimer); signinStep('email'); $('email').focus(); });
@@ -1182,7 +1258,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   $('password-form').addEventListener('submit', function (ev) {
     ev.preventDefault();
     var email = $('pw-email').value.trim().toLowerCase(), pw = $('pw').value;
-    if (!email || !pw) { msg($('signin-msg'), 'Isi email dan password dulu ya.', 'error'); return; }
+    if (!email || !pw) { msg($('signin-msg'), 'Isi email/username dan password dulu ya.', 'error'); return; }
     busy($('pw-btn'), true, 'Memeriksa…');
     api('loginWithPassword', email, pw).then(function (r) {
       busy($('pw-btn'), false); $('pw').value = ''; signedIn(r);
@@ -1191,6 +1267,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
 
   function signedIn(r) {
     saveToken(r.token);
+    try { localStorage.setItem(KNOWN_KEY, '1'); } catch (e) { /* soft check only */ }
     setMe(r.user, r.hasPassword);
     msg($('home-msg'), !r.isNew ? '' : r.user.access === 'trial' ? 'Coba gratis 7 hari dimulai. Selamat datang di Wordrobe!' : 'Selamat datang di Wordrobe!', 'ok');
     words = []; wordsLoaded = false; community = null; racks = []; rackLinks = []; rackFilter = '';
@@ -1200,7 +1277,9 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   function setMe(user, pw) {
     me = user; hasPassword = !!pw;
     $('home-hello').textContent = 'Halo, ' + (user.display_name || 'kamu') + '!';
-    $('menu-email').textContent = 'Masuk sebagai ' + user.email;
+    $('menu-email').textContent = 'Masuk sebagai ' + (user.email || '@' + user.username);
+    $('menu-add-email').hidden = !!user.email;
+    renderEmailNudge();
     var pill = $('trial-pill'), end = user.access === 'trial' ? Date.parse(user.trial_ends_at || '') : NaN;
     if (isFinite(end)) {
       var days = Math.max(0, Math.ceil((end - Date.now()) / 86400000));
@@ -1210,7 +1289,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   }
   function signedOut(text) {
     clearToken(); clearCache(); me = null; words = []; wordsLoaded = false; racks = []; rackLinks = []; rackFilter = '';
-    ['pw-sheet', 'menu-sheet', 'edit-sheet', 'rack-sheet'].forEach(function (s) { $(s).hidden = true; });
+    ['pw-sheet', 'menu-sheet', 'edit-sheet', 'rack-sheet', 'email-sheet'].forEach(function (s) { $(s).hidden = true; });
     show('signin'); signinStep('email');
     if (text) msg($('signin-msg'), text, 'error');
   }
@@ -1239,6 +1318,62 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       $('pw-sheet').hidden = true;
       msg($('home-msg'), 'Password tersimpan. Lain kali kamu bisa masuk pakai password.', 'ok');
     }, function (e) { busy($('setpw-btn'), false); failed(e, $('setpw-msg')); });
+  });
+
+  /* ---------- add an email (accounts made with a username) ---------- */
+  var NUDGE_KEY = 'wr_email_nudge', addEmailPending = '';
+  function nudgeState() { try { return JSON.parse(localStorage.getItem(NUDGE_KEY) || 'null') || { n: 0, until: 0 }; } catch (e) { return { n: 0, until: 0 }; } }
+  function renderEmailNudge() {
+    var box = $('email-nudge');
+    if (!me || me.email) { box.hidden = true; return; }
+    var st = nudgeState(), created = Date.parse(me.created_at || '');
+    var due = (wordsLoaded && words.length >= 5) || (isFinite(created) && Date.now() - created >= 3 * 86400000);
+    box.hidden = !(due && st.n < 3 && Date.now() >= (st.until || 0));
+  }
+  function openEmailSheet() {
+    $('email-sheet').hidden = false;
+    $('addemail-form').hidden = false; $('addcode-form').hidden = true;
+    $('add-email').value = ''; $('add-code').value = '';
+    msg($('addemail-msg'), '', 'error');
+    $('add-email').focus();
+  }
+  $('nudge-add').addEventListener('click', openEmailSheet);
+  $('nudge-later').addEventListener('click', function () {
+    var st = nudgeState();
+    st.n = (st.n || 0) + 1; st.until = Date.now() + 7 * 86400000;
+    try { localStorage.setItem(NUDGE_KEY, JSON.stringify(st)); } catch (e) { /* this visit only */ }
+    $('email-nudge').hidden = true;
+  });
+  $('menu-add-email').addEventListener('click', function () { $('menu-sheet').hidden = true; openEmailSheet(); });
+  $('email-sheet-close').addEventListener('click', function () { $('email-sheet').hidden = true; });
+  $('addcode-change').addEventListener('click', function () { $('addcode-form').hidden = true; $('addemail-form').hidden = false; $('add-email').focus(); });
+  $('addemail-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var email = $('add-email').value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg($('addemail-msg'), 'Tulis alamat email yang benar ya.', 'error'); return; }
+    if ($('addemail-btn').disabled) return;
+    busy($('addemail-btn'), true, 'Mengirim…');
+    api('requestAddEmail', readToken(), email).then(function (r) {
+      busy($('addemail-btn'), false);
+      addEmailPending = email;
+      $('addemail-form').hidden = true; $('addcode-form').hidden = false;
+      msg($('addemail-msg'), r.message + ' (' + email + ')', 'ok');
+      $('add-code').value = ''; $('add-code').focus();
+    }, function (e) { busy($('addemail-btn'), false); failed(e, $('addemail-msg')); });
+  });
+  $('add-code').addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 6); });
+  $('addcode-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var code = $('add-code').value.trim();
+    if (!/^\d{6}$/.test(code)) { msg($('addemail-msg'), 'Kodenya 6 angka ya.', 'error'); return; }
+    if ($('addcode-btn').disabled) return;
+    busy($('addcode-btn'), true, 'Menyimpan…');
+    api('verifyAddEmail', readToken(), addEmailPending, code).then(function (r) {
+      busy($('addcode-btn'), false);
+      $('email-sheet').hidden = true;
+      setMe(r.user, hasPassword);
+      msg($('home-msg'), 'Email tersimpan. Sekarang kamu juga bisa masuk pakai email.', 'ok');
+    }, function (e) { busy($('addcode-btn'), false); failed(e, $('addemail-msg')); });
   });
 
   /* ---------- theme (kept on this device only) ---------- */
@@ -1275,7 +1410,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   });
   document.addEventListener('keydown', function (ev) {
     if (ev.key !== 'Escape') return;
-    ['menu-sheet', 'pw-sheet', 'edit-sheet', 'rack-sheet'].forEach(function (s) { $(s).hidden = true; });
+    ['menu-sheet', 'pw-sheet', 'edit-sheet', 'rack-sheet', 'email-sheet'].forEach(function (s) { $(s).hidden = true; });
   });
 
   /* ---------- words ---------- */
@@ -1283,10 +1418,10 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   var CACHE_KEY = 'wr_cache', wordsVersion = 0;
   function saveCache() {
     if (!me || !wordsLoaded) return;
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ email: me.email, words: words, stats: stats, racks: racks, links: rackLinks, idle_hours: idleHours })); } catch (e) { /* full or unavailable */ }
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ user_id: me.user_id, words: words, stats: stats, racks: racks, links: rackLinks, idle_hours: idleHours })); } catch (e) { /* full or unavailable */ }
   }
   function readCache() {
-    try { var c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); return c && me && c.email === me.email && Array.isArray(c.words) ? c : null; } catch (e) { return null; }
+    try { var c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); return c && me && c.user_id === me.user_id && Array.isArray(c.words) ? c : null; } catch (e) { return null; }
   }
   function clearCache() { try { localStorage.removeItem(CACHE_KEY); } catch (e) { /* ignore */ } }
   function changed() { wordsVersion++; saveCache(); }   // after every local change, so a refresh started earlier cannot undo it
@@ -1377,6 +1512,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('home-fit-sub').textContent = !words.length ? 'Tambah kata dulu' : todo ? todo + ' kata perlu dilatih' : 'Ulang semua kata';
     renderTrending();
     renderRackCard();
+    renderEmailNudge();
   }
   function renderLemari() {
     var rack = rackFilter ? rackById(rackFilter) : null;
@@ -1688,7 +1824,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   $('sp-keys').addEventListener('click', function (ev) { var b = ev.target.closest('[data-key]'); if (b) stitchKey(b.getAttribute('data-key')); });
   document.addEventListener('keydown', function (ev) {
     if (current !== 'stitchplay' || !sp || sp.done || ev.ctrlKey || ev.metaKey || ev.altKey) return;
-    if (!$('menu-sheet').hidden || !$('edit-sheet').hidden || !$('rack-sheet').hidden || !$('pw-sheet').hidden) return;
+    if (!$('menu-sheet').hidden || !$('edit-sheet').hidden || !$('rack-sheet').hidden || !$('pw-sheet').hidden || !$('email-sheet').hidden) return;
     if (/^[a-zA-Z]$/.test(ev.key)) { stitchKey(ev.key.toLowerCase()); ev.preventDefault(); }
     else if (ev.key === 'Backspace') { stitchKey('del'); ev.preventDefault(); }
     else if (ev.key === 'Enter') { stitchKey('enter'); ev.preventDefault(); }
@@ -1863,7 +1999,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   $('fit-revise').addEventListener('click', function () { answer('revise'); });
   $('fit-close').addEventListener('click', function () { if (results.length) finishPractice(); else go('home'); });
   document.addEventListener('keydown', function (ev) {
-    if ($('fit').hidden || !$('edit-sheet').hidden || !$('rack-sheet').hidden || !$('menu-sheet').hidden || !$('pw-sheet').hidden) return;
+    if ($('fit').hidden || !$('edit-sheet').hidden || !$('rack-sheet').hidden || !$('menu-sheet').hidden || !$('pw-sheet').hidden || !$('email-sheet').hidden) return;
     if (ev.key === 'ArrowRight') { ev.preventDefault(); answer('known'); }
     else if (ev.key === 'ArrowLeft') { ev.preventDefault(); answer('revise'); }
     else if (ev.key === ' ' || ev.key === 'Spacebar') { ev.preventDefault(); if (!ev.repeat) flip(); }   // also when a button has focus: Space must never re-press Slay
