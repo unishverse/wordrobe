@@ -118,6 +118,27 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .trend-row { cursor: default; }
 .trend-add { flex: none; width: 44px; height: 44px; border-radius: 999px; border: 0; background: var(--yellow); color: var(--ink); font-size: 22px; font-weight: 800; line-height: 1; cursor: pointer; display: grid; place-items: center; }
 .trend-add:disabled { opacity: .6; cursor: default; }
+.rack-card { background: var(--card); border-radius: 24px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.rack-card b { font-family: var(--display); font-size: 19px; font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
+.rack-card .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.rack-card .btn { width: auto; min-height: 46px; }
+.rack-live { box-shadow: inset 0 0 0 2px var(--mint); }
+.rack-live .kicker { font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--mint); }
+.rack-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--card); border-radius: 16px; padding: 6px 6px 6px 14px; box-shadow: inset 0 0 0 1.5px var(--mint); margin-bottom: 14px; }
+.rack-banner span { font-weight: 700; font-size: 14px; min-width: 0; overflow-wrap: anywhere; }
+.rack-banner .link, .rack-card .link { min-height: 44px; color: var(--yellow); }
+.rack-recent { display: flex; flex-direction: column; gap: 6px; }
+.rack-recent button { display: flex; justify-content: space-between; gap: 10px; width: 100%; min-height: 44px; padding: 10px 14px; border: 0; border-radius: 14px; background: var(--card-2); color: var(--text); text-align: left; cursor: pointer; font: inherit; font-size: 15px; }
+.rack-recent button span { min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
+.rack-recent button small { flex: none; color: var(--yellow); font-weight: 800; font-size: 13px; }
+.chips--scroll { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.chips--scroll .chip { flex: none; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip--sm { min-height: 40px; padding: 0 14px; font-size: 13px; }
+.rack-panel { background: var(--card); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.rack-panel h2 { font-size: 22px; overflow-wrap: anywhere; }
+.rack-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.rack-actions .btn { width: auto; min-height: 44px; font-size: 14px; padding: 0 16px; }
+.word-row .w small { font-size: 12px; color: var(--mint); font-weight: 700; }
 .empty { background: var(--card); border-radius: 22px; padding: 18px; display: flex; gap: 12px; align-items: center; }
 .empty img { width: 64px; height: auto; flex: none; }
 
@@ -437,6 +458,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           </button>
         </div>
       </div>
+      <div class="rack-card" id="rack-card"></div>
       <button class="drop-btn" type="button" id="home-drop">
         <span class="plus" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
         <span><b>New drop</b><span>Masukin kata baru ke lemari</span></span>
@@ -470,6 +492,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       </button>
       <h1 class="top-title" id="add-title" style="font-family:var(--ui);font-size:16px;letter-spacing:0">New drop</h1>
     </div>
+    <div class="rack-banner" id="add-rack" hidden><span id="add-rack-text"></span><button class="link" type="button" id="add-rack-end">Selesai</button></div>
     <form class="stack" id="add-form" novalidate style="gap:20px">
       <div class="bubble-row">
         <img src="img/bibo-thinking.webp" width="320" height="396" alt="Bibo sedang berpikir" style="width:64px">
@@ -485,7 +508,11 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <textarea class="input" id="add-sentence" rows="3" maxlength="300" placeholder="mis. This view is breathtaking!"></textarea>
         <span class="note">Dengan kalimatnya, kamu bisa lihat artinya sesuai konteks.</span>
       </div>
-      <div class="field">
+      <div class="field" id="add-loc-field" hidden>
+        <label for="add-loc"><span id="add-loc-label">Halaman/bab</span> <span class="opt">(opsional)</span></label>
+        <input class="input" id="add-loc" type="text" maxlength="30" autocomplete="off" placeholder="mis. hal. 45">
+      </div>
+      <div class="field" id="add-src-field">
         <span class="label" id="src-label">Ketemu di mana?</span>
         <div class="chips" id="add-sources" role="group" aria-labelledby="src-label"></div>
         <input class="input" id="add-source-own" type="text" maxlength="20" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="mis. Podcast" aria-label="Tulis sendiri (1 kata)" hidden>
@@ -548,7 +575,31 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       </div>
       <div class="toast" id="saved-toast" role="status" hidden>
         <img src="img/bibo-jump.webp" width="320" height="295" alt="Bibo melompat senang">
-        <span><b>+1 kata masuk lemari!</b><span>Nanti kita latihan bareng ya.</span></span>
+        <span><b id="saved-toast-title">+1 kata masuk lemari!</b><span id="saved-toast-text">Nanti kita latihan bareng ya.</span></span>
+      </div>
+      <div class="chips chips--scroll" id="lemari-racks" role="group" aria-label="Pilih rak" hidden></div>
+      <div class="rack-panel" id="rack-panel" hidden>
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+          <span class="note" id="rack-panel-kind"></span>
+          <h2 id="rack-panel-title"></h2>
+        </div>
+        <div class="chips" id="rack-sort" role="group" aria-label="Urutkan">
+          <button class="chip chip--sm" type="button" data-sort="found">Urutan ketemu</button>
+          <button class="chip chip--sm" type="button" data-sort="az">A–Z</button>
+          <button class="chip chip--sm" type="button" data-sort="status">Status</button>
+        </div>
+        <div class="rack-actions">
+          <button class="btn" type="button" id="rack-practice">Latih kata di rak ini</button>
+          <button class="btn btn--ghost" type="button" id="rack-toggle"></button>
+          <button class="btn btn--ghost" type="button" id="rack-rename">Ganti nama</button>
+          <button class="btn btn--danger" type="button" id="rack-delete">Hapus rak</button>
+        </div>
+        <form class="stack" id="rack-rename-form" novalidate hidden style="gap:10px">
+          <label class="sr-only" for="rack-rename-input">Nama rak baru</label>
+          <input class="input" id="rack-rename-input" type="text" maxlength="60" autocomplete="off">
+          <div class="rack-actions"><button class="btn" type="submit" id="rack-rename-save">Simpan</button><button class="btn btn--ghost" type="button" id="rack-rename-cancel">Batal</button></div>
+        </form>
+        <div class="msg msg--error" id="rack-msg" role="alert" hidden></div>
       </div>
       <div class="field" id="lemari-search-field">
         <label for="lemari-search" class="label">Cari di lemari</label>
@@ -778,6 +829,32 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   </div>
 </div>
 
+<!-- Rak: start or resume a watch/read session -->
+<div class="sheet" id="rack-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="rack-sheet-title">
+  <form class="sheet-card" id="rack-form" novalidate>
+    <div class="bubble-row">
+      <img src="img/bibo-wave.webp" width="320" height="257" alt="" style="width:64px">
+      <h2 id="rack-sheet-title">Lagi nonton atau baca apa hari ini?</h2>
+    </div>
+    <div class="field">
+      <label for="rack-title">Judul</label>
+      <input class="input" id="rack-title" type="text" maxlength="60" autocomplete="off" placeholder="mis. Atomic Habits">
+    </div>
+    <div class="field">
+      <span class="label" id="rack-kind-label">Jenisnya</span>
+      <div class="chips" id="rack-kinds" role="group" aria-labelledby="rack-kind-label"></div>
+    </div>
+    <div class="field" id="rack-recent-field" hidden>
+      <span class="label">Lanjut yang kemarin</span>
+      <div class="rack-recent" id="rack-recent"></div>
+    </div>
+    <p class="note">Kata yang kamu simpan selama sesi ini otomatis masuk ke raknya. Sesi selesai sendiri kalau 3 jam tidak ada kata baru.</p>
+    <div class="msg msg--error" id="rack-sheet-msg" role="alert" hidden></div>
+    <button class="btn" type="submit" id="rack-start">Ajak Bibo</button>
+    <button class="btn btn--ghost" type="button" id="rack-cancel">Batal</button>
+  </form>
+</div>
+
 <!-- Edit word sheet -->
 <div class="sheet" id="edit-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="edit-title">
   <form class="sheet-card" id="edit-form" novalidate>
@@ -799,6 +876,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       <textarea class="input" id="edit-sentence" rows="3" maxlength="300"></textarea>
     </div>
     <p class="note" id="edit-source"></p>
+    <p class="note" id="edit-racks" hidden></p>
     <div class="msg msg--error" id="edit-msg" role="alert" hidden></div>
     <button class="btn" type="submit" id="edit-save">Simpan</button>
     <button class="btn btn--danger" type="button" id="edit-delete">Hapus dari lemari</button>
@@ -842,6 +920,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   var traps = null, recognizer = null, listening = false, cardTries = 0, cardDone = false, cardOk = false;
   var FIT_MAX = 20, RING = 169.6;
   var community = null, communityAt = 0;
+  var racks = [], rackLinks = [], idleHours = 3, rackFilter = '', rackSort = 'found', draftKind = 'Buku', rackDeleteArmed = false;
+  var RACK_KINDS = ['Buku', 'Series', 'Film'];
 
   var SCREENS = ['landing', 'restore', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'speak', 'fix', 'slay', 'privacy'];
   var current = 'landing', privacyFrom = 'landing';
@@ -977,7 +1057,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     saveToken(r.token);
     setMe(r.user, r.hasPassword);
     msg($('home-msg'), !r.isNew ? '' : r.user.access === 'trial' ? 'Coba gratis 7 hari dimulai. Selamat datang di Wordrobe!' : 'Selamat datang di Wordrobe!', 'ok');
-    words = []; wordsLoaded = false; community = null;
+    words = []; wordsLoaded = false; community = null; racks = []; rackLinks = []; rackFilter = '';
     go('home');
     loadWords();
   }
@@ -993,8 +1073,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     } else pill.hidden = true;
   }
   function signedOut(text) {
-    clearToken(); me = null; words = []; wordsLoaded = false;
-    ['pw-sheet', 'menu-sheet', 'edit-sheet'].forEach(function (s) { $(s).hidden = true; });
+    clearToken(); me = null; words = []; wordsLoaded = false; racks = []; rackLinks = []; rackFilter = '';
+    ['pw-sheet', 'menu-sheet', 'edit-sheet', 'rack-sheet'].forEach(function (s) { $(s).hidden = true; });
     show('signin'); signinStep('email');
     if (text) msg($('signin-msg'), text, 'error');
   }
@@ -1031,19 +1111,19 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   $('menu-password').addEventListener('click', function () { $('menu-sheet').hidden = true; openPasswordSheet(true); });
   $('menu-logout').addEventListener('click', function () {
     var t = readToken();
-    clearToken(); me = null; words = []; wordsLoaded = false; $('menu-sheet').hidden = true;
+    clearToken(); me = null; words = []; wordsLoaded = false; racks = []; rackLinks = []; rackFilter = ''; $('menu-sheet').hidden = true;
     show('landing');
     if (t) api('logout', t).catch(function () { /* the token is gone on this device anyway */ });
   });
   document.addEventListener('keydown', function (ev) {
     if (ev.key !== 'Escape') return;
-    ['menu-sheet', 'pw-sheet', 'edit-sheet'].forEach(function (s) { $(s).hidden = true; });
+    ['menu-sheet', 'pw-sheet', 'edit-sheet', 'rack-sheet'].forEach(function (s) { $(s).hidden = true; });
   });
 
   /* ---------- words ---------- */
   function loadWords() {
     return api('listWords', readToken()).then(function (r) {
-      words = r.words || []; wordsLoaded = true; stats = r.stats || stats;
+      words = r.words || []; wordsLoaded = true; stats = r.stats || stats; applyRacks(r);
       if (!$('home').hidden) renderHome();
       if (!$('lemari').hidden) renderLemari();
       loadCommunity();
@@ -1083,13 +1163,14 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       list.appendChild(row);
     });
   }
-  function wordRow(w) {
+  function wordRow(w, loc) {
     var b = document.createElement('button');
     b.type = 'button'; b.className = 'word-row';
     var box = document.createElement('span'); box.className = 'w';
     var t = document.createElement('b'); t.textContent = w.word;
     var m = document.createElement('span'); m.textContent = w.meaning;
     box.appendChild(t); box.appendChild(m);
+    if (loc) { var l = document.createElement('small'); l.textContent = loc; box.appendChild(l); }
     var st = STATUS[w.status] || STATUS['new'];
     var tag = document.createElement('span'); tag.className = 'tag ' + st[1]; tag.textContent = st[0];
     b.appendChild(box); b.appendChild(tag);
@@ -1113,30 +1194,200 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     var todo = words.filter(function (w) { return w.status !== 'known'; }).length;
     $('home-fit-sub').textContent = !words.length ? 'Tambah kata dulu' : todo ? todo + ' kata perlu dilatih' : 'Ulang semua kata';
     renderTrending();
+    renderRackCard();
   }
   function renderLemari() {
+    var rack = rackFilter ? rackById(rackFilter) : null;
+    if (rackFilter && !rack) rackFilter = '';
     var q = $('lemari-search').value.trim().toLowerCase();
-    var shown = !q ? words : words.filter(function (w) { return (w.word + ' ' + w.meaning).toLowerCase().indexOf(q) !== -1; });
-    var known = words.filter(function (w) { return w.status === 'known'; }).length;
-    $('lemari-count').textContent = wordsLoaded ? words.length + ' kata · ' + known + ' udah slay' : 'Memuat…';
-    $('lemari-search-field').hidden = words.length < 6;
+    var base = rack ? rackWords(rack.rack_id) : words;
+    var shown = !q ? base : base.filter(function (w) { return (w.word + ' ' + w.meaning).toLowerCase().indexOf(q) !== -1; });
+    var known = base.filter(function (w) { return w.status === 'known'; }).length;
+    $('lemari-count').textContent = wordsLoaded ? base.length + ' kata · ' + known + ' udah slay' : 'Memuat…';
+    $('lemari-search-field').hidden = base.length < 6;
+    renderRackChips();
+    renderRackPanel(rack, base.length);
     var list = $('lemari-list'); list.textContent = '';
-    shown.forEach(function (w) { list.appendChild(wordRow(w)); });
+    shown.forEach(function (w) { list.appendChild(wordRow(w, rack ? locationOf(rack.rack_id, w.word_id) : '')); });
     $('lemari-empty').hidden = !wordsLoaded || shown.length > 0;
-    $('lemari-empty-text').textContent = words.length ? 'Tidak ada kata yang cocok.' : 'Lemarimu masih kosong. Tekan + untuk New drop.';
+    $('lemari-empty-text').textContent = rack && !base.length ? 'Rak ini masih kosong. Simpan kata lewat New drop selama sesinya jalan.'
+      : words.length ? 'Tidak ada kata yang cocok.' : 'Lemarimu masih kosong. Tekan + untuk New drop.';
   }
   $('lemari-search').addEventListener('input', renderLemari);
   $('home-drop').addEventListener('click', function () { go('add'); });
-  $('home-lemari').addEventListener('click', function () { go('lemari'); });
+  $('home-lemari').addEventListener('click', function () { rackFilter = ''; go('lemari'); });
   $('home-fit').addEventListener('click', function () { go('fit'); });
   $('ring-fit-btn').addEventListener('click', function () { go('fit'); });
   $('ring-speak-btn').addEventListener('click', function () { go('speak'); });
   $('ring-fix-btn').addEventListener('click', function () { go('fix'); });
 
+  /* ---------- Rak: watch/read session + its word list ---------- */
+  var LOC_LABEL = { Buku: 'Halaman/bab', Series: 'Episode', Film: 'Menit/adegan' };
+  var LOC_HINT = { Buku: 'mis. hal. 45', Series: 'mis. S1 Eps 3', Film: 'mis. menit 40' };
+  var KIND_SOURCE = { Buku: 'Buku', Series: 'Nonton', Film: 'Nonton' };
+  function applyRacks(r) {
+    if (!r || !r.racks) return;
+    racks = r.racks; rackLinks = r.links || []; idleHours = r.idle_hours || idleHours;
+  }
+  function rackById(id) { return racks.find(function (x) { return x.rack_id === id; }) || null; }
+  // active = open and used within the idle window (checked again here, the page may have stayed open for hours)
+  function activeRack() {
+    return racks.find(function (x) { return x.active && !x.ended && Date.now() - Date.parse(x.last_used_at) < idleHours * 3600000; }) || null;
+  }
+  function rackLabel(x) { return (x.kind === 'Buku' ? '📖 Lagi baca: ' : '🎬 Lagi nonton: ') + x.title; }
+  function rackCount(id) { return rackLinks.filter(function (l) { return l.rack_id === id; }).length; }
+  function locationOf(rackId, wordId, exists) {
+    var l = rackLinks.find(function (x) { return x.rack_id === rackId && x.word_id === wordId; });
+    return exists ? !!l : l ? l.location : '';
+  }
+  function rackWords(id) {
+    var byId = {}; words.forEach(function (w) { byId[w.word_id] = w; });
+    var links = rackLinks.filter(function (l) { return l.rack_id === id && byId[l.word_id]; });
+    var ORD = { revise: 0, 'new': 1, known: 2 };
+    links.sort(function (a, b) {
+      if (rackSort === 'az') return byId[a.word_id].word.toLowerCase() < byId[b.word_id].word.toLowerCase() ? -1 : 1;
+      if (rackSort === 'status') { var d = ORD[byId[a.word_id].status] - ORD[byId[b.word_id].status]; if (d) return d; }
+      return a.added_at < b.added_at ? -1 : a.added_at > b.added_at ? 1 : 0;
+    });
+    return links.map(function (l) { return byId[l.word_id]; });
+  }
+  function renderRackCard() {
+    var box = $('rack-card'); box.textContent = '';
+    var rack = activeRack();
+    box.className = 'rack-card' + (rack ? ' rack-live' : '');
+    if (rack) {
+      var k = document.createElement('span'); k.className = 'kicker'; k.textContent = rack.kind === 'Buku' ? 'Lagi baca' : 'Lagi nonton';
+      var t = document.createElement('b'); t.textContent = rack.title;
+      var row = document.createElement('div'); row.className = 'row';
+      var n = document.createElement('span'); n.className = 'note'; n.textContent = rackCount(rack.rack_id) + ' kata di rak ini';
+      var acts = document.createElement('span');
+      var open = document.createElement('button'); open.type = 'button'; open.className = 'link'; open.textContent = 'Lihat rak'; open.id = 'rack-card-open';
+      open.addEventListener('click', function () { rackFilter = rack.rack_id; go('lemari'); });
+      var end = document.createElement('button'); end.type = 'button'; end.className = 'link'; end.textContent = 'Selesai'; end.id = 'rack-card-end';
+      end.addEventListener('click', function () { endRackNow(rack.rack_id, end); });
+      acts.appendChild(open); acts.appendChild(end);
+      row.appendChild(n); row.appendChild(acts);
+      box.appendChild(k); box.appendChild(t); box.appendChild(row);
+      return;
+    }
+    var q = document.createElement('b'); q.textContent = 'Lagi nonton atau baca apa hari ini?';
+    var r2 = document.createElement('div'); r2.className = 'row';
+    var go1 = document.createElement('button'); go1.type = 'button'; go1.className = 'btn'; go1.textContent = 'Ajak Bibo'; go1.id = 'rack-card-start';
+    go1.addEventListener('click', openRackSheet);
+    r2.appendChild(go1);
+    var last = racks[0];
+    if (last) {
+      var res = document.createElement('button'); res.type = 'button'; res.className = 'link'; res.id = 'rack-card-resume';
+      res.textContent = 'Lanjut ' + last.title;
+      res.addEventListener('click', function () { rackCall('resumeRack', [last.rack_id], null, $('home-msg')); });
+      r2.appendChild(res);
+    }
+    box.appendChild(q); box.appendChild(r2);
+  }
+  function renderRackChips() {
+    var box = $('lemari-racks'); box.textContent = '';
+    box.hidden = !racks.length;
+    [{ rack_id: '', title: 'Semua' }].concat(racks).forEach(function (x) {
+      var c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = x.title;
+      c.setAttribute('aria-pressed', x.rack_id === rackFilter ? 'true' : 'false');
+      c.addEventListener('click', function () { rackFilter = x.rack_id; rackDeleteArmed = false; $('rack-rename-form').hidden = true; msg($('lemari-msg'), ''); msg($('rack-msg'), ''); renderLemari(); });
+      box.appendChild(c);
+    });
+  }
+  function renderRackPanel(rack, n) {
+    $('rack-panel').hidden = !rack;
+    $('lemari-title').textContent = rack ? 'Rak' : 'Lemariku';
+    if (!rack) return;
+    var live = activeRack() && activeRack().rack_id === rack.rack_id;
+    $('rack-panel-kind').textContent = rack.kind + (live ? ' · sesi lagi jalan' : '');
+    $('rack-panel-title').textContent = rack.title;
+    Array.prototype.forEach.call($('rack-sort').children, function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-sort') === rackSort ? 'true' : 'false'); });
+    $('rack-practice').disabled = !n;
+    $('rack-toggle').textContent = live ? 'Selesai sesi' : (rack.kind === 'Buku' ? 'Lanjut baca' : 'Lanjut nonton');
+    $('rack-delete').textContent = rackDeleteArmed ? 'Yakin? Tekan lagi' : 'Hapus rak';
+  }
+  function rackCall(fn, args, btn, msgEl, then) {
+    if (btn) busy(btn, true);
+    return api.apply(null, [fn, readToken()].concat(args)).then(function (r) {
+      if (btn) busy(btn, false);
+      applyRacks(r);
+      if (then) then(r);
+      if (!$('home').hidden) renderHome();
+      if (!$('lemari').hidden) renderLemari();
+      return r;
+    }, function (e) { if (btn) busy(btn, false); failed(e, msgEl); });
+  }
+  function endRackNow(id, btn) { rackCall('endRack', [id], btn, $('home').hidden ? $('rack-msg') : $('home-msg')); }
+  function openRackSheet() {
+    $('rack-title').value = ''; draftKind = 'Buku';
+    msg($('rack-sheet-msg'), '', 'error');
+    renderKinds();
+    var box = $('rack-recent'); box.textContent = '';
+    racks.slice(0, 4).forEach(function (x) {
+      var b = document.createElement('button'); b.type = 'button';
+      var t = document.createElement('span'); t.textContent = x.title + ' · ' + x.kind;
+      var go2 = document.createElement('small'); go2.textContent = 'Lanjut';
+      b.appendChild(t); b.appendChild(go2);
+      b.addEventListener('click', function () { rackCall('resumeRack', [x.rack_id], null, $('rack-sheet-msg'), function () { $('rack-sheet').hidden = true; }); });
+      box.appendChild(b);
+    });
+    $('rack-recent-field').hidden = !racks.length;
+    $('rack-sheet').hidden = false;
+    $('rack-title').focus();
+  }
+  function renderKinds() {
+    var box = $('rack-kinds'); box.textContent = '';
+    RACK_KINDS.forEach(function (k) {
+      var c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = k;
+      c.setAttribute('aria-pressed', k === draftKind ? 'true' : 'false');
+      c.addEventListener('click', function () { draftKind = k; renderKinds(); });
+      box.appendChild(c);
+    });
+  }
+  $('rack-cancel').addEventListener('click', function () { $('rack-sheet').hidden = true; });
+  $('rack-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var title = $('rack-title').value.trim();
+    if (!title) { msg($('rack-sheet-msg'), 'Tulis judulnya dulu ya.', 'error'); $('rack-title').focus(); return; }
+    rackCall('startRack', [{ title: title, kind: draftKind }], $('rack-start'), $('rack-sheet-msg'), function () { $('rack-sheet').hidden = true; });
+  });
+  $('add-rack-end').addEventListener('click', function () { var x = activeRack(); if (x) rackCall('endRack', [x.rack_id], null, $('add-msg'), openAdd); });
+  $('rack-sort').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-sort]'); if (!b) return;
+    rackSort = b.getAttribute('data-sort'); renderLemari();
+  });
+  $('rack-practice').addEventListener('click', function () { if (rackFilter) startFit(rackFilter); });
+  $('rack-toggle').addEventListener('click', function () {
+    var x = rackById(rackFilter); if (!x) return;
+    var live = activeRack() && activeRack().rack_id === x.rack_id;
+    rackCall(live ? 'endRack' : 'resumeRack', [x.rack_id], $('rack-toggle'), $('rack-msg'));
+  });
+  $('rack-rename').addEventListener('click', function () {
+    var x = rackById(rackFilter); if (!x) return;
+    $('rack-rename-form').hidden = false; $('rack-rename-input').value = x.title; $('rack-rename-input').focus();
+  });
+  $('rack-rename-cancel').addEventListener('click', function () { $('rack-rename-form').hidden = true; });
+  $('rack-rename-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var t = $('rack-rename-input').value.trim();
+    if (!t) { msg($('rack-msg'), 'Tulis judulnya dulu ya.', 'error'); return; }
+    rackCall('renameRack', [rackFilter, t], $('rack-rename-save'), $('rack-msg'), function () { $('rack-rename-form').hidden = true; msg($('rack-msg'), ''); });
+  });
+  $('rack-delete').addEventListener('click', function () {
+    if (!rackFilter) return;
+    if (!rackDeleteArmed) { rackDeleteArmed = true; renderLemari(); return; }
+    rackDeleteArmed = false;
+    var id = rackFilter;
+    rackCall('deleteRack', [id], $('rack-delete'), $('rack-msg'), function () {
+      rackFilter = '';
+      msg($('lemari-msg'), 'Rak dihapus. Kata-katanya tetap di lemarimu.', 'ok');
+    });
+  });
+
   /* ---------- Fit check ---------- */
   var ORDER = { revise: 0, 'new': 1, known: 2 };
-  function practiceDeck(max) {
-    return words.slice().sort(function (a, b) {
+  function practiceDeck(max, pool) {
+    return (pool || words).slice().sort(function (a, b) {
       var d = (ORDER[a.status] == null ? 1 : ORDER[a.status]) - (ORDER[b.status] == null ? 1 : ORDER[b.status]);
       return d || (a.updated_at < b.updated_at ? -1 : a.updated_at > b.updated_at ? 1 : 0);
     }).slice(0, max);
@@ -1145,10 +1396,11 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     el.textContent = '';
     for (var i = 0; i < n; i++) { var s = document.createElement('i'); if (i < done) s.className = 'done'; el.appendChild(s); }
   }
-  function startFit() {
+  function startFit(rackId) {
     if (!wordsLoaded) { msg($('home-msg'), 'Lemarimu masih dimuat, coba lagi sebentar.', 'ok'); go('home'); return; }
     if (!words.length) { renderHome(); show('home'); msg($('home-msg'), 'Lemarimu masih kosong. Tambah kata lewat New drop dulu, baru Fit check.', 'ok'); return; }
-    deck = practiceDeck(FIT_MAX);
+    deck = practiceDeck(FIT_MAX, rackId ? rackWords(rackId) : null);
+    if (!deck.length) { msg($('rack-msg'), 'Rak ini belum ada katanya.', 'error'); return; }
     mode = 'fit'; pos = 0; results = []; lastAnswer = ''; flipped = false; saving = false;
     renderFit();
     show('fit');
@@ -1190,7 +1442,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   $('fit-revise').addEventListener('click', function () { answer('revise'); });
   $('fit-close').addEventListener('click', function () { if (results.length) finishPractice(); else go('home'); });
   document.addEventListener('keydown', function (ev) {
-    if ($('fit').hidden || !$('edit-sheet').hidden || !$('menu-sheet').hidden || !$('pw-sheet').hidden) return;
+    if ($('fit').hidden || !$('edit-sheet').hidden || !$('rack-sheet').hidden || !$('menu-sheet').hidden || !$('pw-sheet').hidden) return;
     if (ev.key === 'ArrowRight') { ev.preventDefault(); answer('known'); }
     else if (ev.key === 'ArrowLeft') { ev.preventDefault(); answer('revise'); }
     else if (ev.key === ' ' || ev.key === 'Spacebar') { ev.preventDefault(); if (!ev.repeat) flip(); }   // also when a button has focus: Space must never re-press Slay
@@ -1469,6 +1721,15 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     return $('add-source-own').value.replace(/[^\p{L}\p{N}-]/gu, '').slice(0, 20) || 'Lainnya';
   }
   function openAdd() {
+    var rack = activeRack();
+    $('add-rack').hidden = !rack;
+    $('add-loc-field').hidden = !rack;
+    $('add-src-field').hidden = !!rack;
+    if (rack) {
+      $('add-rack-text').textContent = rackLabel(rack);
+      $('add-loc-label').textContent = LOC_LABEL[rack.kind] || LOC_LABEL.Buku;
+      $('add-loc').placeholder = LOC_HINT[rack.kind] || LOC_HINT.Buku;
+    }
     renderSources();
     msg($('add-msg'), '', 'error');
     renderSuggest();
@@ -1518,25 +1779,38 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('res-def').textContent = r.definition || '';
     $('res-ex').textContent = r.example ? '“' + r.example + '”' : '';
     $('res-ex').hidden = !r.example;
+    var rack = activeRack();
+    r.toRack = !!(r.already_saved && rack && !locationOf(rack.rack_id, r.already_saved.word_id, true));
     msg($('res-msg'), r.already_saved ? 'Kata ini sudah ada di lemarimu, dengan arti: ' + r.already_saved.meaning : '', 'error');
-    $('res-save').textContent = r.already_saved ? 'Lihat di lemari' : 'Masukin lemari';
+    $('res-save').textContent = r.toRack ? 'Masukin rak ' + rack.title : r.already_saved ? 'Lihat di lemari' : rack ? 'Masukin lemari & rak' : 'Masukin lemari';
     show('result');
   }
   $('res-speak').addEventListener('click', function () { if (lastLookup) speak(lastLookup.word); });
   $('res-save').addEventListener('click', function () {
     var r = lastLookup; if (!r) return;
-    if (r.already_saved) { go('lemari'); openEdit(r.already_saved.word_id); return; }
-    var meaning = $('res-meaning').value.trim();
+    if (r.already_saved && !r.toRack) { go('lemari'); openEdit(r.already_saved.word_id); return; }
+    var meaning = r.toRack ? r.already_saved.meaning : $('res-meaning').value.trim();
     if (!meaning) { msg($('res-msg'), 'Tulis artinya dulu ya.', 'error'); $('res-meaning').focus(); return; }
+    var rack = activeRack();
+    var data = { word: r.word, meaning: meaning, sentence: r.sentence, sentence_translation: r.sentence_translation, source: rack ? KIND_SOURCE[rack.kind] : chosenSource() };
+    if (rack) { data.rack_id = rack.rack_id; data.location = $('add-loc').value.trim(); }
     busy($('res-save'), true, 'Menyimpan…');
-    api('saveWord', readToken(), { word: r.word, meaning: meaning, sentence: r.sentence, sentence_translation: r.sentence_translation, source: chosenSource() })
+    api('saveWord', readToken(), data)
       .then(function (s) {
         busy($('res-save'), false);
         if (!s.duplicate) words.unshift(s.word);
         wordsLoaded = true;
-        $('add-word').value = ''; $('add-sentence').value = '';
+        var link = s.rack_link, inRack = link ? rackById(link.rack_id) : null;
+        if (link) {
+          if (link.linked) rackLinks.push({ rack_id: link.rack_id, word_id: s.word.word_id, location: link.location, added_at: link.added_at });
+          if (inRack) inRack.last_used_at = link.added_at;
+          rackFilter = link.rack_id;
+        }
+        $('add-word').value = ''; $('add-sentence').value = ''; $('add-loc').value = '';
         go('lemari');
-        $('saved-toast').hidden = !!s.duplicate;
+        $('saved-toast-title').textContent = inRack ? (s.duplicate ? 'Masuk rak ' : '+1 kata masuk rak ') + inRack.title + '!' : '+1 kata masuk lemari!';
+        $('saved-toast-text').textContent = s.duplicate ? 'Katanya udah ada di lemari, jadi cuma ditambahkan ke rak ini.' : 'Nanti kita latihan bareng ya.';
+        $('saved-toast').hidden = !!s.duplicate && !(link && link.linked);
       }, function (e) { busy($('res-save'), false); failed(e, $('res-msg')); });
   });
 
@@ -1551,6 +1825,11 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('edit-meaning').value = w.meaning;
     $('edit-sentence').value = w.sentence || '';
     $('edit-source').textContent = 'Ketemu di: ' + (w.source || 'Lainnya') + (w.sentence_translation ? ' · ' + w.sentence_translation : '');
+    var inRacks = rackLinks.filter(function (l) { return l.word_id === w.word_id && rackById(l.rack_id); }).map(function (l) {
+      return rackById(l.rack_id).title + (l.location ? ' (' + l.location + ')' : '');
+    });
+    $('edit-racks').textContent = inRacks.length ? 'Ada di rak: ' + inRacks.join(', ') : '';
+    $('edit-racks').hidden = !inRacks.length;
     $('edit-delete').textContent = 'Hapus dari lemari';
     msg($('edit-msg'), '', 'error');
     $('edit-sheet').hidden = false;
@@ -1580,6 +1859,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     api('deleteWord', readToken(), id).then(function () {
       busy($('edit-delete'), false);
       words = words.filter(function (w) { return w.word_id !== id; });
+      rackLinks = rackLinks.filter(function (l) { return l.word_id !== id; });
       closeEdit(); renderLemari(); renderHome();
     }, function (e) { busy($('edit-delete'), false); failed(e, $('edit-msg')); });
   });
