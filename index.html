@@ -173,6 +173,14 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .st-card b { font-family: var(--display); font-size: 19px; font-weight: 800; }
 .st-card small { font-size: 13px; color: var(--muted); }
 .st-card .st-state { flex: none; font-size: 13px; font-weight: 800; color: var(--accent-text); }
+.game-card { display: flex; flex-direction: column; width: 100%; padding: 0; border: 0; border-radius: 24px; overflow: hidden; background: var(--card); color: var(--text); text-align: left; font: inherit; cursor: pointer; }
+.game-card .thumb { background: var(--card-2); padding: 10px 8px; display: grid; place-items: center; }
+.game-thumb { width: 100%; max-width: 360px; height: auto; display: block; }
+.game-card .row { display: flex; align-items: center; gap: 12px; padding: 14px 18px 16px; }
+.game-card .w { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.game-card b { font-family: var(--display); font-size: 21px; font-weight: 800; }
+.game-card small { font-size: 13px; color: var(--muted); }
+.game-card .st-state { flex: none; font-size: 13px; font-weight: 800; color: var(--accent-text); }
 .st-loading { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; padding: 28px 8px; }
 .st-loading img { width: 110px; height: auto; }
 .st-loading .spinner { width: 26px; height: 26px; color: var(--accent-text); }
@@ -834,14 +842,14 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   <!-- Wordstitch: choose a puzzle -->
   <section id="stitch" hidden aria-labelledby="stitch-title">
     <div class="top">
-      <button class="round" type="button" data-go="home" aria-label="Kembali">
+      <button class="round" type="button" id="stitch-up" aria-label="Kembali">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
       </button>
     </div>
     <div class="st-hub">
       <div style="display:flex;flex-direction:column;gap:4px">
         <h1 class="screen-title" id="stitch-title">Mini games</h1>
-        <span class="note">Tiap puzzle bisa dimainkan sehari sekali.</span>
+        <span class="note" id="stitch-note">Tiap puzzle bisa dimainkan sehari sekali.</span>
       </div>
       <div class="st-loading" id="stitch-loading" role="status">
         <img src="img/bibo-thinking.webp" width="320" height="396" alt="">
@@ -850,6 +858,17 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <button class="btn btn--ghost" type="button" id="stitch-retry" hidden style="max-width:240px">Coba lagi</button>
       </div>
       <div class="st-hub" id="stitch-cards" hidden>
+       <div class="st-hub" id="games-list">
+        <button class="game-card" type="button" id="game-stitch">
+          <span class="thumb"><svg class="game-thumb" viewBox="0 0 320 110" aria-hidden="true"><rect x="85" y="11" width="26" height="26" rx="5" style="fill:var(--st-absent)"/><text x="98" y="29.2" text-anchor="middle" style="fill:var(--st-absent-text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">B</text><rect x="116" y="11" width="26" height="26" rx="5" style="fill:var(--yellow)"/><text x="129" y="29.2" text-anchor="middle" style="fill:var(--on-accent)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">R</text><rect x="147" y="11" width="26" height="26" rx="5" style="fill:var(--st-absent)"/><text x="160" y="29.2" text-anchor="middle" style="fill:var(--st-absent-text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">A</text><rect x="178" y="11" width="26" height="26" rx="5" style="fill:var(--st-absent)"/><text x="191" y="29.2" text-anchor="middle" style="fill:var(--st-absent-text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">V</text><rect x="209" y="11" width="26" height="26" rx="5" style="fill:var(--st-absent)"/><text x="222" y="29.2" text-anchor="middle" style="fill:var(--st-absent-text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">E</text><rect x="85" y="42" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="88.5" y="45.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="98" y="60.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">W</text><rect x="116" y="42" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="119.5" y="45.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="129" y="60.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">O</text><rect x="147" y="42" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="150.5" y="45.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="160" y="60.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">R</text><rect x="178" y="42" width="26" height="26" rx="5" style="fill:var(--st-absent)"/><text x="191" y="60.2" text-anchor="middle" style="fill:var(--st-absent-text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">L</text><rect x="209" y="42" width="26" height="26" rx="5" style="fill:var(--yellow)"/><text x="222" y="60.2" text-anchor="middle" style="fill:var(--on-accent)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">D</text><rect x="85" y="73" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="88.5" y="76.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="98" y="91.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">W</text><rect x="116" y="73" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="119.5" y="76.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="129" y="91.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">O</text><rect x="147" y="73" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="150.5" y="76.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="160" y="91.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">R</text><rect x="178" y="73" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="181.5" y="76.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="191" y="91.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">D</text><rect x="209" y="73" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="212.5" y="76.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="222" y="91.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">S</text><path d="M18 92 C 40 40, 60 100, 79 82" fill="none" stroke="var(--yellow)" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/><g transform="translate(262 22) rotate(35)"><rect x="-2.5" y="0" width="5" height="44" rx="2.5" style="fill:var(--muted)"/><ellipse cx="0" cy="6" rx="1.2" ry="3" style="fill:var(--card-2)"/></g><path d="M262 22 C 285 10, 300 40, 288 64" fill="none" stroke="var(--yellow)" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/></svg></span>
+          <span class="row"><span class="w"><b>Wordstitch</b><small>Jahit huruf jadi kata · 6 kali tebak</small></span><span class="st-state" id="game-stitch-state"></span></span>
+        </button>
+        <button class="game-card" type="button" id="game-remix">
+          <span class="thumb"><svg class="game-thumb" viewBox="0 0 320 110" aria-hidden="true"><rect x="112.5" y="7.5" width="20" height="20" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="122.5" y="21.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">C</text><rect x="137.5" y="7.5" width="20" height="20" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="147.5" y="21.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">O</text><rect x="162.5" y="7.5" width="20" height="20" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="172.5" y="21.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">L</text><rect x="187.5" y="7.5" width="20" height="20" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="197.5" y="21.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">D</text><rect x="112.5" y="32.5" width="20" height="20" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="122.5" y="46.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">C</text><rect x="137.5" y="32.5" width="20" height="20" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="147.5" y="46.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">O</text><rect x="162.5" y="32.5" width="20" height="20" rx="5" style="fill:var(--yellow)"/><text x="172.5" y="46.5" text-anchor="middle" style="fill:var(--on-accent)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">R</text><rect x="187.5" y="32.5" width="20" height="20" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="197.5" y="46.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">D</text><rect x="112.5" y="57.5" width="20" height="20" rx="5" style="fill:var(--yellow)"/><text x="122.5" y="71.5" text-anchor="middle" style="fill:var(--on-accent)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">W</text><rect x="137.5" y="57.5" width="20" height="20" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="147.5" y="71.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">O</text><rect x="162.5" y="57.5" width="20" height="20" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="172.5" y="71.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">R</text><rect x="187.5" y="57.5" width="20" height="20" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="197.5" y="71.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">D</text><rect x="112.5" y="82.5" width="20" height="20" rx="5" style="fill:var(--blue)"/><rect x="116" y="86" width="13" height="13" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="122.5" y="96.5" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">W</text><rect x="137.5" y="82.5" width="20" height="20" rx="5" style="fill:var(--card)" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="3 2.5"/><text x="147.5" y="96.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">A</text><rect x="162.5" y="82.5" width="20" height="20" rx="5" style="fill:var(--blue)"/><rect x="166" y="86" width="13" height="13" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="172.5" y="96.5" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">R</text><rect x="187.5" y="82.5" width="20" height="20" rx="5" style="fill:var(--card)" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="3 2.5"/><text x="197.5" y="96.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">M</text><line x1="90.5" y1="5.5" x2="90.5" y2="104.5" stroke="var(--pink)" stroke-width="3" stroke-linecap="round"/><line x1="98.5" y1="5.5" x2="98.5" y2="104.5" stroke="var(--pink)" stroke-width="3" stroke-linecap="round"/><line x1="90.5" y1="9.5" x2="98.5" y2="9.5" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="90.5" y1="32.25" x2="98.5" y2="32.25" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="90.5" y1="55" x2="98.5" y2="55" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="90.5" y1="77.75" x2="98.5" y2="77.75" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="90.5" y1="100.5" x2="98.5" y2="100.5" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="221.5" y1="5.5" x2="221.5" y2="104.5" stroke="var(--pink)" stroke-width="3" stroke-linecap="round"/><line x1="229.5" y1="5.5" x2="229.5" y2="104.5" stroke="var(--pink)" stroke-width="3" stroke-linecap="round"/><line x1="221.5" y1="9.5" x2="229.5" y2="9.5" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="221.5" y1="32.25" x2="229.5" y2="32.25" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="221.5" y1="55" x2="229.5" y2="55" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="221.5" y1="77.75" x2="229.5" y2="77.75" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="221.5" y1="100.5" x2="229.5" y2="100.5" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><text x="56" y="62" text-anchor="middle" style="fill:var(--muted)" font-family="Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">1 huruf</text><text x="56" y="76" text-anchor="middle" style="fill:var(--muted)" font-family="Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">per langkah</text></svg></span>
+          <span class="row"><span class="w"><b>WordRemix</b><small>Ganti 1 huruf sampai jadi kata tujuan</small></span><span class="st-state" id="game-remix-state"></span></span>
+        </button>
+       </div>
+       <div class="st-hub" id="stitch-versions" hidden>
         <button class="st-card" type="button" id="stitch-open-lemari">
           <span class="ico" style="background:var(--blue);color:#fff">W</span>
           <span class="w"><b>Wordstitch</b><small id="stitch-lemari-sub">Kata dari lemarimu</small></span>
@@ -860,6 +879,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <span class="w"><b id="stitch-daily-title">Wordstitch of the Day</b><small>Kata 5 huruf, sama untuk semua pemain</small></span>
           <span class="st-state" id="stitch-daily-state"></span>
         </button>
+       </div>
+       <div class="st-hub" id="remix-versions" hidden>
         <button class="st-card" type="button" id="rx-open-ez">
           <span class="ico" style="background:var(--pink);color:var(--on-accent);font-size:17px">Ez</span>
           <span class="w"><b id="rx-ez-title">WordRemix Ez</b><small id="rx-ez-sub">Ganti 1 huruf sampai jadi kata tujuan · 4 huruf</small></span>
@@ -870,6 +891,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <span class="w"><b id="rx-master-title">WordRemix Master</b><small id="rx-master-sub">Ganti 1 huruf sampai jadi kata tujuan · 5 huruf</small></span>
           <span class="st-state" id="rx-master-state"></span>
         </button>
+       </div>
       </div>
       <div class="msg msg--error" id="stitch-msg" role="alert" hidden></div>
     </div>
@@ -879,7 +901,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   <section id="stitchplay" hidden aria-labelledby="sp-title">
     <div class="st-wrap">
       <div class="fit-top">
-        <button class="round" type="button" id="sp-close" aria-label="Kembali ke Mini games">
+        <button class="round" type="button" id="sp-close" aria-label="Kembali ke Wordstitch">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
         <h1 class="top-title" id="sp-title" style="flex:1;font-family:var(--ui);font-size:16px;letter-spacing:0;margin:0">Wordstitch</h1>
@@ -912,7 +934,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   <section id="remixplay" hidden aria-labelledby="rx-title">
     <div class="st-wrap">
       <div class="fit-top">
-        <button class="round" type="button" id="rx-close" aria-label="Kembali ke Mini games">
+        <button class="round" type="button" id="rx-close" aria-label="Kembali ke WordRemix">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
         <h1 class="top-title" id="rx-title" style="flex:1;font-family:var(--ui);font-size:16px;letter-spacing:0;margin:0">WordRemix</h1>
@@ -1784,7 +1806,23 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     for (i = 0; i < guess.length; i++) { if (out[i]) continue; if (left[guess[i]]) { out[i] = 'y'; left[guess[i]]--; } else out[i] = 'g'; }
     return out.join('');
   }
+  // Mini games hub: 'all' = one card per game; 'stitch' / 'remix' = the versions of that game
+  var hubView = 'all';
+  var HUB = { all: ['Mini games', 'Tiap puzzle bisa dimainkan sehari sekali.'], stitch: ['Wordstitch', 'Jahit huruf jadi kata. 6 kali tebak, sehari sekali.'],
+    remix: ['WordRemix', 'Ganti 1 huruf tiap langkah sampai jadi kata tujuan. Makin sedikit langkah, makin keren.'] };
+  function setHubView(v) {
+    hubView = v;
+    $('stitch-title').textContent = HUB[v][0]; $('stitch-note').textContent = HUB[v][1];
+    $('games-list').hidden = v !== 'all'; $('stitch-versions').hidden = v !== 'stitch'; $('remix-versions').hidden = v !== 'remix';
+    $('stitch-up').setAttribute('aria-label', v === 'all' ? 'Kembali ke Beranda' : 'Kembali ke Mini games');
+    msg($('stitch-msg'), '', 'error');
+  }
+  function backToHub(v) { setHubView(v); show('stitch'); if (stitch) renderStitchHub(); }
+  $('stitch-up').addEventListener('click', function () { if (hubView !== 'all') setHubView('all'); else go('home'); });
+  $('game-stitch').addEventListener('click', function () { setHubView('stitch'); });
+  $('game-remix').addEventListener('click', function () { setHubView('remix'); });
   function openStitch() {
+    setHubView('all');
     show('stitch');
     msg($('stitch-msg'), '', 'error');
     $('stitch-cards').hidden = true; $('stitch-loading').hidden = false; $('stitch-retry').hidden = true;
@@ -1818,6 +1856,10 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       $('rx-' + lv + '-title').textContent = 'WordRemix ' + (lv === 'ez' ? 'Ez' : 'Master') + (P ? ' #' + P.number : '');
       $('rx-' + lv + '-sub').textContent = P ? P.start.toUpperCase() + ' → ' + P.end.toUpperCase() + ' · ganti 1 huruf tiap langkah' : 'Puzzle hari ini belum siap';
       $('rx-' + lv + '-state').textContent = P && P.played ? '✓ ' + rxScore(P.played) : P ? 'Main' : '';
+    });
+    [['stitch', [L, D]], ['remix', [X.ez, X.master]]].forEach(function (g) {
+      var have = g[1].filter(Boolean), n = have.filter(function (p) { return p.played; }).length;
+      $('game-' + g[0] + '-state').textContent = !have.length ? '' : n === have.length ? '✓ ' + n + '/' + have.length : n ? n + '/' + have.length : 'Main';
     });
     var done = all.filter(function (p) { return p.played; }).length;
     $('home-stitch-sub').textContent = all.length && done === all.length ? 'Semua puzzle hari ini beres ✓' : 'Wordstitch & WordRemix · ' + (all.length - done) + ' puzzle hari ini';
@@ -2008,8 +2050,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { msg($('sp-save-msg'), text, 'ok'); });
     else msg($('sp-save-msg'), text, 'ok');
   });
-  $('sp-back').addEventListener('click', function () { show('stitch'); if (stitch) renderStitchHub(); });
-  $('sp-close').addEventListener('click', function () { show('stitch'); if (stitch) renderStitchHub(); });
+  $('sp-back').addEventListener('click', function () { backToHub('stitch'); });
+  $('sp-close').addEventListener('click', function () { backToHub('stitch'); });
 
   /* ---------- WordRemix: change one letter per move until the start word becomes the target ---------- */
   var rx = null, rxByLevel = {}, RX_LEVEL = { ez: 'Ez', master: 'Master' };
@@ -2212,8 +2254,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { msg($('rx-save-msg'), text, 'ok'); });
     else msg($('rx-save-msg'), text, 'ok');
   });
-  $('rx-back').addEventListener('click', function () { show('stitch'); if (stitch) renderStitchHub(); });
-  $('rx-close').addEventListener('click', function () { show('stitch'); if (stitch) renderStitchHub(); });
+  $('rx-back').addEventListener('click', function () { backToHub('remix'); });
+  $('rx-close').addEventListener('click', function () { backToHub('remix'); });
 
   /* ---------- Fit check ---------- */
   var ORDER = { revise: 0, 'new': 1, known: 2 };
