@@ -206,6 +206,21 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .st-result .word b { font-family: var(--display); font-size: 30px; font-weight: 800; text-transform: lowercase; overflow-wrap: anywhere; }
 .st-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .st-actions .btn { flex: 1; min-width: 140px; }
+/* WordRemix: a word ladder (chain of words, current word editable one letter at a time, target below) */
+.rx-goal { display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; font-size: 15px; text-transform: uppercase; }
+.rx-chain { display: flex; flex-direction: column; gap: 6px; align-self: center; width: 100%; max-width: calc(var(--n) * 58px); }
+.rx-past { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 6px; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; opacity: .62; }
+.rx-past:disabled { cursor: default; }
+.rx-past .st-t { aspect-ratio: auto; height: 38px; font-size: 18px; }
+.rx-cur .st-t { cursor: pointer; background: var(--card); color: var(--text); font: inherit; font-family: var(--display); font-weight: 800; font-size: clamp(18px, 6vw, 26px); text-transform: uppercase; padding: 0; }
+.rx-cur .st-t.sel { border-color: var(--yellow); box-shadow: 0 0 0 3px var(--yellow); }
+.rx-cur .st-t.chg { background: var(--yellow); border-color: var(--yellow); color: var(--on-accent); }
+.rx-target-label { font-size: 12px; font-weight: 800; color: var(--muted); text-align: center; letter-spacing: .04em; }
+.rx-target .st-t { border-style: dashed; border-color: var(--muted); }
+.rx-target .st-t.b { border-style: solid; }
+.rx-tools { display: flex; gap: 10px; }
+.rx-tools .btn { flex: 1; }
+.rx-path { font-weight: 800; text-transform: uppercase; overflow-wrap: anywhere; }
 .empty { background: var(--card); border-radius: 22px; padding: 18px; display: flex; gap: 12px; align-items: center; }
 .empty img { width: 64px; height: auto; flex: none; }
 
@@ -557,7 +572,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       <div class="tiles">
         <button class="tile tile--blue" type="button" id="home-lemari"><b>Lemariku</b><small id="home-count">0 kata</small></button>
         <button class="tile tile--pink" type="button" id="home-fit"><b>Fit check</b><small id="home-fit-sub">Latihan 5 menit</small></button>
-        <button class="tile tile--stitch" type="button" id="home-stitch"><b>Wordstitch</b><small id="home-stitch-sub">Jahit huruf jadi kata · 2 puzzle hari ini</small></button>
+        <button class="tile tile--stitch" type="button" id="home-stitch"><b>Mini games</b><small id="home-stitch-sub">Wordstitch &amp; WordRemix · 4 puzzle hari ini</small></button>
       </div>
       </div>
       <div class="stack home-side" style="gap:10px">
@@ -825,8 +840,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     </div>
     <div class="st-hub">
       <div style="display:flex;flex-direction:column;gap:4px">
-        <h1 class="screen-title" id="stitch-title">Wordstitch</h1>
-        <span class="note">Jahit huruf jadi kata. 6 kali tebak, sehari sekali.</span>
+        <h1 class="screen-title" id="stitch-title">Mini games</h1>
+        <span class="note">Tiap puzzle bisa dimainkan sehari sekali.</span>
       </div>
       <div class="st-loading" id="stitch-loading" role="status">
         <img src="img/bibo-thinking.webp" width="320" height="396" alt="">
@@ -845,6 +860,16 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <span class="w"><b id="stitch-daily-title">Wordstitch of the Day</b><small>Kata 5 huruf, sama untuk semua pemain</small></span>
           <span class="st-state" id="stitch-daily-state"></span>
         </button>
+        <button class="st-card" type="button" id="rx-open-ez">
+          <span class="ico" style="background:var(--pink);color:var(--on-accent);font-size:17px">Ez</span>
+          <span class="w"><b id="rx-ez-title">WordRemix Ez</b><small id="rx-ez-sub">Ganti 1 huruf sampai jadi kata tujuan · 4 huruf</small></span>
+          <span class="st-state" id="rx-ez-state"></span>
+        </button>
+        <button class="st-card" type="button" id="rx-open-master">
+          <span class="ico" style="background:var(--yellow);color:var(--on-accent);font-size:15px">Pro</span>
+          <span class="w"><b id="rx-master-title">WordRemix Master</b><small id="rx-master-sub">Ganti 1 huruf sampai jadi kata tujuan · 5 huruf</small></span>
+          <span class="st-state" id="rx-master-state"></span>
+        </button>
       </div>
       <div class="msg msg--error" id="stitch-msg" role="alert" hidden></div>
     </div>
@@ -854,7 +879,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   <section id="stitchplay" hidden aria-labelledby="sp-title">
     <div class="st-wrap">
       <div class="fit-top">
-        <button class="round" type="button" id="sp-close" aria-label="Kembali ke Wordstitch">
+        <button class="round" type="button" id="sp-close" aria-label="Kembali ke Mini games">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
         <h1 class="top-title" id="sp-title" style="flex:1;font-family:var(--ui);font-size:16px;letter-spacing:0;margin:0">Wordstitch</h1>
@@ -880,6 +905,42 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <div class="st-found" id="sp-found"></div>
       </div>
       <div class="st-keys" id="sp-keys" aria-label="Keyboard"></div>
+    </div>
+  </section>
+
+  <!-- WordRemix: change one letter at a time until the start word becomes the target -->
+  <section id="remixplay" hidden aria-labelledby="rx-title">
+    <div class="st-wrap">
+      <div class="fit-top">
+        <button class="round" type="button" id="rx-close" aria-label="Kembali ke Mini games">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <h1 class="top-title" id="rx-title" style="flex:1;font-family:var(--ui);font-size:16px;letter-spacing:0;margin:0">WordRemix</h1>
+        <span class="fit-pos" id="rx-pos"></span>
+      </div>
+      <div class="rx-goal" id="rx-goal"></div>
+      <span class="note" id="rx-howto" style="text-align:center">Tap satu huruf, pilih huruf baru, lalu Enter. Tiap langkah harus kata bahasa Inggris. Tap kata di atas untuk balik.</span>
+      <div class="rx-chain" id="rx-chain" aria-label="Jalur kata"></div>
+      <div class="msg" id="rx-msg" role="status" aria-live="polite" hidden></div>
+      <div class="st-result" id="rx-result" hidden>
+        <div class="top-line"><img id="rx-bibo" src="img/bibo-clap.webp" width="420" height="431" alt=""><h2 id="rx-result-title"></h2></div>
+        <span id="rx-result-line" style="font-weight:700"></span>
+        <span class="note" id="rx-path-label" hidden>Salah satu jalur terpendek:</span>
+        <span class="rx-path" id="rx-path" hidden></span>
+        <span class="note" id="rx-note"></span>
+        <div class="msg" id="rx-save-msg" role="status" hidden style="white-space:pre-line"></div>
+        <div class="st-actions">
+          <button class="btn" type="button" id="rx-share">Bagikan hasil</button>
+          <button class="btn btn--ghost" type="button" id="rx-back">Puzzle lain</button>
+          <button class="btn btn--ghost" type="button" id="rx-retry" hidden>Coba simpan lagi</button>
+        </div>
+      </div>
+      <div class="stack" id="rx-found-box" hidden style="gap:8px">
+        <span class="section-label">Kamu menemukan kata baru! Mau tambahkan ke lemari?</span>
+        <div class="st-found" id="rx-found"></div>
+      </div>
+      <div class="st-keys" id="rx-keys" aria-label="Keyboard"></div>
+      <div class="rx-tools" id="rx-tools"><button class="btn btn--ghost" type="button" id="rx-giveup">Nyerah</button></div>
     </div>
   </section>
 
@@ -1112,7 +1173,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   var racks = [], rackLinks = [], idleHours = 3, rackFilter = '', rackSort = 'found', draftKind = 'Buku', rackDeleteArmed = false;
   var RACK_KINDS = ['Buku', 'Series', 'Film'];
 
-  var SCREENS = ['landing', 'restore', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'speak', 'fix', 'slay', 'privacy', 'stitch', 'stitchplay'];
+  var SCREENS = ['landing', 'restore', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'speak', 'fix', 'slay', 'privacy', 'stitch', 'stitchplay', 'remixplay'];
   var current = 'landing', privacyFrom = 'landing';
   function show(id) {
     SCREENS.forEach(function (s) { $(s).hidden = s !== id; });
@@ -1751,8 +1812,15 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('stitch-lemari-state').textContent = L && L.played ? '✓ ' + stScore(L.played) : L ? 'Main' : '';
     $('stitch-daily-title').textContent = D ? 'Wordstitch of the Day #' + D.number : 'Wordstitch of the Day';
     $('stitch-daily-state').textContent = D && D.played ? '✓ ' + stScore(D.played) : D ? 'Main' : '';
-    var done = (L && L.played ? 1 : 0) + (D && D.played ? 1 : 0);
-    $('home-stitch-sub').textContent = done === 2 ? 'Dua-duanya udah dijahit hari ini ✓' : 'Jahit huruf jadi kata · ' + (2 - done) + ' puzzle hari ini';
+    var X = stitch.remix || {}, all = [L, D, X.ez, X.master].filter(Boolean);
+    ['ez', 'master'].forEach(function (lv) {
+      var P = X[lv];
+      $('rx-' + lv + '-title').textContent = 'WordRemix ' + (lv === 'ez' ? 'Ez' : 'Master') + (P ? ' #' + P.number : '');
+      $('rx-' + lv + '-sub').textContent = P ? P.start.toUpperCase() + ' → ' + P.end.toUpperCase() + ' · ganti 1 huruf tiap langkah' : 'Puzzle hari ini belum siap';
+      $('rx-' + lv + '-state').textContent = P && P.played ? '✓ ' + rxScore(P.played) : P ? 'Main' : '';
+    });
+    var done = all.filter(function (p) { return p.played; }).length;
+    $('home-stitch-sub').textContent = all.length && done === all.length ? 'Semua puzzle hari ini beres ✓' : 'Wordstitch & WordRemix · ' + (all.length - done) + ' puzzle hari ini';
   }
   $('stitch-open-lemari').addEventListener('click', function () {
     if (!stitch || !stitch.lemari) { msg($('stitch-msg'), 'Belum ada kata 4–8 huruf di lemarimu. Tambah lewat New drop dulu ya.', 'error'); return; }
@@ -1772,12 +1840,12 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       spByMode[mode] = sp;
     }
     stFound = sp.found;
+    show('stitchplay');
     $('sp-title').textContent = mode === 'daily' ? 'Wordstitch of the Day #' + P.number : 'Wordstitch';
     $('sp-result').hidden = true;
     msg($('sp-msg'), ''); msg($('sp-save-msg'), '');
     $('sp-board').style.setProperty('--n', P.word.length);
     renderStitch(); renderFound();
-    show('stitchplay');
     if (sp.done) showStitchResult(P.played ? P.played.won : sp.guesses.indexOf(sp.target) !== -1, !P.played);
   }
   function wrongCount() { return sp.guesses.filter(function (g) { return g !== sp.target; }).length; }
@@ -1860,6 +1928,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     if (stLookupBusy) return;
     var all = [];
     Object.keys(spByMode).forEach(function (m) { all = all.concat(spByMode[m].found || []); });
+    Object.keys(rxByLevel).forEach(function (m) { all = all.concat(rxByLevel[m].found || []); });
     var f = all.find(function (x) { return x.state === 'wait'; });
     if (!f) return;
     stLookupBusy = true; f.state = 'look'; renderFound();
@@ -1869,9 +1938,10 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     }, function () { f.state = 'none'; }).then(function () { stLookupBusy = false; renderFound(); nextLookup(); });
   }
   function renderFound() {
+    var pre = current === 'remixplay' ? 'rx' : 'sp', src = pre === 'rx' ? 'WordRemix' : 'Wordstitch', note = $(pre + '-msg');
     var shown = stFound.filter(function (f) { return f.state !== 'none'; });
-    $('sp-found-box').hidden = !shown.length;
-    var box = $('sp-found'); box.textContent = '';
+    $(pre + '-found-box').hidden = !shown.length;
+    var box = $(pre + '-found'); box.textContent = '';
     shown.forEach(function (f) {
       var row = document.createElement('div'); row.className = 'row';
       var t = document.createElement('span');
@@ -1883,10 +1953,10 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       add.setAttribute('aria-label', 'Tambah ' + f.word + ' ke lemari');
       add.addEventListener('click', function () {
         add.disabled = true; add.textContent = 'Menyimpan…';
-        api('saveWord', readToken(), { word: f.word, meaning: f.meaning, source: 'Wordstitch' }).then(function (s) {
+        api('saveWord', readToken(), { word: f.word, meaning: f.meaning, source: src }).then(function (s) {
           if (!s.duplicate) words.unshift(s.word);
           changed(); f.state = 'saved'; renderFound();
-        }, function (e) { failed(e, $('sp-msg')); add.disabled = false; add.textContent = '+ Lemari'; });
+        }, function (e) { failed(e, note); add.disabled = false; add.textContent = '+ Lemari'; });
       });
       row.appendChild(t); row.appendChild(add); box.appendChild(row);
     });
@@ -1940,6 +2010,210 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   });
   $('sp-back').addEventListener('click', function () { show('stitch'); if (stitch) renderStitchHub(); });
   $('sp-close').addEventListener('click', function () { show('stitch'); if (stitch) renderStitchHub(); });
+
+  /* ---------- WordRemix: change one letter per move until the start word becomes the target ---------- */
+  var rx = null, rxByLevel = {}, RX_LEVEL = { ez: 'Ez', master: 'Master' };
+  function rxApart(a, b) { var d = 0; for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) d++; return a.length === b.length && d === 1; }
+  function rxScore(p) { return p.solved ? p.moves + ' langkah' : 'nyerah'; }
+  // the chain shown after a trail: a move from an earlier word means the learner went back to it
+  function rxChain(start, trail) {
+    var chain = [start];
+    trail.forEach(function (w) {
+      if (!rxApart(chain[chain.length - 1], w)) {
+        for (var i = chain.length - 1; i >= 0; i--) if (rxApart(chain[i], w)) { chain = chain.slice(0, i + 1); break; }
+      }
+      chain.push(w);
+    });
+    return chain;
+  }
+  function rxOpen(level) {
+    var P = stitch && stitch.remix && stitch.remix[level];
+    if (!P) { msg($('stitch-msg'), 'WordRemix hari ini belum siap. Coba lagi nanti ya.', 'error'); return; }
+    var prev = rxByLevel[level];
+    if (prev && prev.day === stitch.day && prev.start === P.start && prev.end === P.end && !prev.done && !P.played) rx = prev;
+    else {
+      rx = { day: stitch.day, level: level, number: P.number, start: P.start, end: P.end, par: P.par, trail: [], chain: [P.start], pos: 0, cand: null,
+        done: false, solved: false, path: [], found: [], giveupArmed: false };
+      if (P.played) { rx.trail = P.played.trail.slice(); rx.chain = rxChain(P.start, rx.trail); rx.done = true; rx.solved = P.played.solved; rx.path = P.played.path || []; }
+      rxByLevel[level] = rx;
+    }
+    stFound = rx.found;
+    show('remixplay');
+    $('rx-title').textContent = 'WordRemix ' + RX_LEVEL[level] + ' #' + P.number;
+    $('rx-result').hidden = true;
+    msg($('rx-msg'), ''); msg($('rx-save-msg'), '');
+    $('rx-chain').style.setProperty('--n', P.start.length);
+    renderRemix(); renderFound();
+    if (rx.done) rxResult(!P.played);
+  }
+  $('rx-open-ez').addEventListener('click', function () { rxOpen('ez'); });
+  $('rx-open-master').addEventListener('click', function () { rxOpen('master'); });
+  function rxTile(ch, cls) { var t = document.createElement('div'); t.className = 'st-t' + (cls ? ' ' + cls : ''); t.textContent = ch; return t; }
+  function renderRemix() {
+    var n = rx.start.length, box = $('rx-chain'); box.textContent = '';
+    var cur = rx.chain[rx.chain.length - 1];
+    $('rx-goal').textContent = rx.start + ' → ' + rx.end;
+    rx.chain.forEach(function (w, i) {
+      if (i === rx.chain.length - 1 && !rx.done) return;
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'rx-past';
+      b.disabled = rx.done || i === rx.chain.length - 1;
+      b.setAttribute('aria-label', 'Balik ke ' + w);
+      for (var c = 0; c < n; c++) b.appendChild(rxTile(w[c], w[c] === rx.end[c] ? 'b' : 'has'));
+      b.addEventListener('click', function () { rxBack(i); });
+      box.appendChild(b);
+    });
+    if (!rx.done) {
+      var row = document.createElement('div'); row.className = 'st-row rx-cur'; row.id = 'rx-cur';
+      var shownWord = rx.cand || cur;
+      for (var c = 0; c < n; c++) {
+        var t = document.createElement('button'); t.type = 'button';
+        var changedHere = rx.cand && rx.cand[c] !== cur[c];
+        t.className = 'st-t' + (c === rx.pos ? ' sel' : '') + (changedHere ? ' chg' : '');
+        t.textContent = shownWord[c];
+        t.setAttribute('aria-label', 'Huruf ' + (c + 1) + ': ' + shownWord[c] + (c === rx.pos ? ', dipilih' : ''));
+        t.setAttribute('data-pos', c);
+        row.appendChild(t);
+      }
+      box.appendChild(row);
+    }
+    var lab = document.createElement('div'); lab.className = 'rx-target-label'; lab.textContent = 'TUJUAN'; box.appendChild(lab);
+    var tr = document.createElement('div'); tr.className = 'st-row rx-target'; tr.setAttribute('aria-label', 'Kata tujuan: ' + rx.end);
+    var last = rx.chain[rx.chain.length - 1];
+    for (var k = 0; k < n; k++) tr.appendChild(rxTile(rx.end[k], last[k] === rx.end[k] ? 'b' : ''));
+    box.appendChild(tr);
+    $('rx-pos').textContent = rx.trail.length + ' langkah' + (rx.par ? ' · par ' + rx.par : '');
+    $('rx-howto').hidden = rx.done;
+    $('rx-tools').hidden = rx.done;
+    $('rx-giveup').textContent = rx.giveupArmed ? 'Yakin nyerah? Tap lagi' : 'Nyerah';
+    renderRemixKeys();
+  }
+  function renderRemixKeys() {
+    var box = $('rx-keys'); box.textContent = ''; box.hidden = rx.done;
+    ST_KEYS.forEach(function (line, li) {
+      var kr = document.createElement('div'); kr.className = 'kr';
+      var keys = line.split('');
+      if (li === 2) { keys.unshift('enter'); keys.push('del'); }
+      keys.forEach(function (k) {
+        var b = document.createElement('button'); b.type = 'button';
+        b.className = 'st-key' + (k.length > 1 ? ' wide' : '');
+        b.textContent = k === 'enter' ? 'Enter' : k === 'del' ? '⌫' : k;
+        b.setAttribute('data-key', k);
+        if (k === 'del') b.setAttribute('aria-label', 'Batalkan huruf');
+        kr.appendChild(b);
+      });
+      box.appendChild(kr);
+    });
+  }
+  $('rx-keys').addEventListener('click', function (ev) { var b = ev.target.closest('[data-key]'); if (b) remixKey(b.getAttribute('data-key')); });
+  $('rx-chain').addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-pos]');
+    if (!t || !rx || rx.done) return;
+    rx.pos = Number(t.getAttribute('data-pos')); rx.cand = null; msg($('rx-msg'), ''); renderRemix();
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (current !== 'remixplay' || !rx || rx.done || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    if (!$('menu-sheet').hidden || !$('edit-sheet').hidden || !$('rack-sheet').hidden || !$('pw-sheet').hidden || !$('email-sheet').hidden) return;
+    if (/^[a-zA-Z]$/.test(ev.key)) { remixKey(ev.key.toLowerCase()); ev.preventDefault(); }
+    else if (ev.key === 'Backspace') { remixKey('del'); ev.preventDefault(); }
+    else if (ev.key === 'Enter') { remixKey('enter'); ev.preventDefault(); }
+    else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') {
+      rx.pos = (rx.pos + (ev.key === 'ArrowLeft' ? -1 : 1) + rx.start.length) % rx.start.length; rx.cand = null; renderRemix(); ev.preventDefault();
+    }
+  });
+  function remixShake(text) {
+    msg($('rx-msg'), text, 'error');
+    var row = $('rx-cur');
+    if (row) { row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake'); }
+  }
+  function remixKey(k) {
+    if (!rx || rx.done) return;
+    var cur = rx.chain[rx.chain.length - 1];
+    rx.giveupArmed = false;
+    if (k === 'del') { rx.cand = null; msg($('rx-msg'), ''); renderRemix(); return; }
+    if (k === 'enter') {
+      var w = rx.cand;
+      if (!w) { remixShake('Ganti satu huruf dulu: tap hurufnya, lalu pilih huruf baru.'); return; }
+      if (rx.chain.indexOf(w) !== -1) { remixShake('“' + w + '” sudah ada di jalurmu.'); return; }
+      if (w !== rx.end && !stDict.has(w) && !hasWord(w)) { remixShake('“' + w + '” bukan kata bahasa Inggris yang Bibo kenal.'); return; }
+      msg($('rx-msg'), '');
+      rx.trail.push(w); rx.chain.push(w); rx.cand = null;
+      if (w !== rx.end && !hasWord(w) && !stFound.some(function (f) { return f.word === w; })) foundWord(w);
+      if (w === rx.end) { rx.done = true; rx.solved = true; renderRemix(); rxResult(true); return; }
+      renderRemix();
+      return;
+    }
+    if (k === cur[rx.pos]) { rx.cand = null; renderRemix(); return; }
+    rx.cand = cur.slice(0, rx.pos) + k + cur.slice(rx.pos + 1);
+    msg($('rx-msg'), ''); renderRemix();
+  }
+  function rxBack(i) {
+    if (!rx || rx.done || i >= rx.chain.length - 1) return;
+    rx.chain = rx.chain.slice(0, i + 1); rx.cand = null; rx.giveupArmed = false;
+    msg($('rx-msg'), 'Balik ke “' + rx.chain[i] + '”. Langkah yang sudah dipakai tetap dihitung.', '');
+    renderRemix();
+  }
+  $('rx-giveup').addEventListener('click', function () {
+    if (!rx || rx.done) return;
+    if (!rx.giveupArmed) { rx.giveupArmed = true; renderRemix(); return; }
+    rx.done = true; rx.solved = false; renderRemix(); rxResult(true);
+  });
+  function rxResult(fresh) {
+    $('rx-result').hidden = false;
+    var par = rx.par, m = rx.trail.length;
+    $('rx-bibo').src = 'img/' + (rx.solved ? 'bibo-clap' : 'bibo-surprised') + '.webp';
+    $('rx-result-title').textContent = !rx.solved ? 'Nyerah dulu…' : par && m <= par ? 'Remix sempurna!' : par && m <= par + 2 ? 'Remix-mu rapi!' : 'Akhirnya jadi!';
+    $('rx-result-line').textContent = rx.solved ? rx.start.toUpperCase() + ' → ' + rx.end.toUpperCase() + ' dalam ' + m + ' langkah' + (par ? ' (par ' + par + ')' : '') : rx.start.toUpperCase() + ' → ' + rx.end.toUpperCase() + ' belum jadi kali ini.';
+    rxShowPath();
+    $('rx-note').textContent = 'Puzzle berikutnya besok. Sama untuk semua pemain.';
+    $('rx-retry').hidden = true;
+    if (fresh) saveRemix();
+  }
+  function rxShowPath() {
+    var show1 = !!(rx.path && rx.path.length && (!rx.solved || (rx.par && rx.trail.length > rx.par)));
+    $('rx-path-label').hidden = !show1; $('rx-path').hidden = !show1;
+    $('rx-path').textContent = show1 ? rx.path.join(' → ') : '';
+  }
+  function saveRemix() {
+    msg($('rx-save-msg'), 'Menyimpan hasil…', '');
+    var me1 = rx, level = rx.level;
+    api('submitRemix', readToken(), { level: level, trail: rx.trail.slice(), gave_up: !rx.solved }).then(function (r) {
+      me1.saved = true; me1.path = r.play.path || []; me1.par = r.play.par || me1.par;
+      if (stitch.remix && stitch.remix[level]) stitch.remix[level].played = r.play;
+      stats = r.stats || stats;
+      var rev = r.revised || [];
+      if (rev.length) words = words.map(function (w) { return rev.indexOf(w.word_id) !== -1 ? Object.assign({}, w, { status: 'revise', updated_at: new Date().toISOString() }) : w; });
+      changed();
+      renderStitchHub();
+      if (rx === me1) {
+        rxShowPath();
+        if (rev.length) $('rx-note').textContent = 'Kata dari lemarimu di puzzle ini masuk “Masih nyoba”, jadi muncul duluan di Fit check.';
+      }
+      msg($('rx-save-msg'), stats && stats.streak ? 'Tersimpan. Streak kamu: ' + stats.streak + ' hari.' : 'Tersimpan.', 'ok');
+    }, function (e) {
+      if (e && SESSION_RE.test(e.message)) { failed(e, null); return; }
+      msg($('rx-save-msg'), 'Hasilnya belum tersimpan: ' + e.message, 'error');
+      $('rx-retry').hidden = /sudah main/.test(e.message);
+    });
+  }
+  $('rx-retry').addEventListener('click', saveRemix);
+  function remixShareText() {
+    var head = 'WordRemix #' + rx.number + ' · ' + RX_LEVEL[rx.level];
+    var cta = 'Bisa remix lebih cepat dari aku? 🎧\nMain gratis 👉 unishverse.github.io/wordrobe';
+    if (!rx.solved) return head + '\n' + rx.start.toUpperCase() + ' → ' + rx.end.toUpperCase() + ' · nyerah 🏳️\n' + cta;
+    var m = rx.trail.length, par = rx.par || m, sq = '';
+    for (var i = 0; i < Math.min(m, 15); i++) sq += i < par ? '🟦' : '🟨';
+    if (m > 15) sq += ' +' + (m - 15);
+    return head + '\n' + rx.start.toUpperCase() + ' → ' + rx.end.toUpperCase() + ' · ' + m + ' langkah' + (rx.par ? ' (par ' + rx.par + ')' : '') + '\n' + sq + '\n' + cta;
+  }
+  $('rx-share').addEventListener('click', function () {
+    var text = remixShareText();
+    if (navigator.share) { navigator.share({ text: text }).catch(function () { /* closed */ }); return; }
+    var done = function () { msg($('rx-save-msg'), 'Hasil disalin. Tempel di Story atau chat!', 'ok'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { msg($('rx-save-msg'), text, 'ok'); });
+    else msg($('rx-save-msg'), text, 'ok');
+  });
+  $('rx-back').addEventListener('click', function () { show('stitch'); if (stitch) renderStitchHub(); });
+  $('rx-close').addEventListener('click', function () { show('stitch'); if (stitch) renderStitchHub(); });
 
   /* ---------- Fit check ---------- */
   var ORDER = { revise: 0, 'new': 1, known: 2 };
