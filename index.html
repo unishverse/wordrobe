@@ -57,7 +57,6 @@ button, input, textarea { font: inherit; }
 .btn:disabled { opacity: .55; cursor: default; }
 .btn--ghost { background: var(--card-2); color: var(--text); }
 .btn--trial { background: transparent; color: var(--ok-text); box-shadow: inset 0 0 0 1.5px var(--ok-text); }
-.trial-pill { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 800; color: var(--on-accent); background: var(--mint); border-radius: 999px; padding: 3px 10px; }
 .btn--danger { background: transparent; color: var(--error); box-shadow: inset 0 0 0 1.5px var(--error); }
 .link { background: none; border: 0; padding: 8px 4px; min-height: 44px; color: var(--accent-text); font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .brand { display: flex; align-items: center; gap: 10px; }
@@ -474,8 +473,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         </div>
         <button class="btn" type="button" id="to-password">Masuk pakai password</button>
         <button class="btn btn--ghost" type="submit" id="send-btn">Kirim kode</button>
-        <button class="btn btn--trial" type="button" id="trial-btn">Coba gratis 7 hari</button>
-        <p class="note" style="text-align:center">Pengguna baru? Coba semua fitur gratis selama 7 hari.</p>
+        <button class="btn btn--trial" type="button" id="trial-btn">Daftar gratis</button>
+        <p class="note" style="text-align:center">Pengguna baru? Tulis emailmu, lalu tekan Daftar gratis. Semua fitur gratis.</p>
         <button class="link" type="button" id="to-username" style="align-self:center">Nggak mau pakai email? Daftar pakai username</button>
         <button class="link" type="button" data-privacy style="align-self:center">Privasi</button>
       </form>
@@ -491,7 +490,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <input class="input" id="uname-pw" type="password" autocomplete="new-password" minlength="8" required>
         </div>
         <p class="note">Ingat password-mu ya. Tanpa email, password nggak bisa direset sendiri (nanti bisa tambah email di Akun).</p>
-        <button class="btn btn--trial" type="submit" id="uname-btn">Mulai coba gratis 7 hari</button>
+        <button class="btn btn--trial" type="submit" id="uname-btn">Bikin akun</button>
         <button class="link" type="button" id="uname-back" style="align-self:center">Daftar pakai email</button>
       </form>
 
@@ -533,7 +532,6 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <div style="min-width:0">
             <p class="note" id="home-hello">Halo!</p>
             <h1 id="home-title">Ada kata baru<br>hari ini?</h1>
-            <span class="trial-pill" id="trial-pill" hidden></span>
           </div>
         </div>
         <button class="round" type="button" id="menu-btn" aria-label="Akun">
@@ -1161,7 +1159,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   'use strict';
   var API_URL = 'https://script.google.com/macros/s/AKfycbzc09FoJGw5y0o5tERsPI7bcXgeDhEqrOnwstaUCqmxyiOiROfVJxODNy7DmpAg41gu8g/exec';
   var NET_MSG = 'Koneksi bermasalah. Cek internetmu lalu coba lagi.';
-  var SESSION_RE = /Sesi kamu sudah habis|Masa coba gratis/;
+  var SESSION_RE = /Sesi kamu sudah habis/;
   var TOKEN_KEY = 'wr_token';
   var SOURCES = ['Nonton', 'Medsos', 'Buku', 'Lainnya'];
   var STATUS = { 'new': ['Baru', 'tag--new'], revise: ['Masih nyoba', 'tag--revise'], known: ['Udah slay', 'tag--known'] };
@@ -1293,21 +1291,15 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg($('signin-msg'), 'Tulis alamat email yang benar ya.', 'error'); return; }
     sendCode(email, $('send-btn'));
   });
-  /* a browser that already signed in once does not start another free trial (soft check: incognito or another browser skips it) */
-  var KNOWN_KEY = 'wr_known';
-  function knownDevice() { try { return localStorage.getItem(KNOWN_KEY) === '1'; } catch (e) { return false; } }
-  var KNOWN_MSG = 'Kamu sudah punya akun di HP ini. Masuk pakai email atau username-mu ya.';
   $('trial-btn').addEventListener('click', function () {
-    if (knownDevice()) { msg($('signin-msg'), KNOWN_MSG, 'error'); return; }
     var email = $('email').value.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg($('signin-msg'), 'Tulis emailmu dulu, lalu tekan Coba gratis 7 hari.', 'error'); $('email').focus(); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg($('signin-msg'), 'Tulis emailmu dulu, lalu tekan Daftar gratis.', 'error'); $('email').focus(); return; }
     sendCode(email, $('trial-btn'), 'startTrial');
   });
   $('to-username').addEventListener('click', function () { signinStep('username'); $('uname').focus(); });
   $('uname-back').addEventListener('click', function () { signinStep('email'); $('email').focus(); });
   $('username-form').addEventListener('submit', function (ev) {
     ev.preventDefault();
-    if (knownDevice()) { msg($('signin-msg'), KNOWN_MSG, 'error'); return; }
     var name = $('uname').value.trim().toLowerCase().replace(/^@/, ''), pw = $('uname-pw').value;
     if (!/^[a-z][a-z0-9._]{2,19}$/.test(name)) { msg($('signin-msg'), 'Username 3–20 karakter: huruf kecil, angka, titik atau garis bawah, diawali huruf.', 'error'); $('uname').focus(); return; }
     if (pw.length < 8) { msg($('signin-msg'), 'Password minimal 8 karakter.', 'error'); $('uname-pw').focus(); return; }
@@ -1350,9 +1342,9 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
 
   function signedIn(r) {
     saveToken(r.token);
-    try { localStorage.setItem(KNOWN_KEY, '1'); } catch (e) { /* soft check only */ }
+    try { localStorage.removeItem('wr_known'); } catch (e) { /* old one-trial-per-browser mark, no longer used */ }
     setMe(r.user, r.hasPassword);
-    msg($('home-msg'), !r.isNew ? '' : r.user.access === 'trial' ? 'Coba gratis 7 hari dimulai. Selamat datang di Wordrobe!' : 'Selamat datang di Wordrobe!', 'ok');
+    msg($('home-msg'), !r.isNew ? '' : 'Selamat datang di Wordrobe!', 'ok');
     words = []; wordsLoaded = false; community = null; racks = []; rackLinks = []; rackFilter = '';
     go('home');
     loadWords();
@@ -1363,12 +1355,6 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('menu-email').textContent = 'Masuk sebagai ' + (user.email || '@' + user.username);
     $('menu-add-email').hidden = !!user.email;
     renderEmailNudge();
-    var pill = $('trial-pill'), end = user.access === 'trial' ? Date.parse(user.trial_ends_at || '') : NaN;
-    if (isFinite(end)) {
-      var days = Math.max(0, Math.ceil((end - Date.now()) / 86400000));
-      pill.textContent = days <= 1 ? 'Coba gratis: hari terakhir' : 'Coba gratis: sisa ' + days + ' hari';
-      pill.hidden = false;
-    } else pill.hidden = true;
   }
   function signedOut(text) {
     clearToken(); clearCache(); me = null; words = []; wordsLoaded = false; racks = []; rackLinks = []; rackFilter = '';
@@ -2038,7 +2024,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     var score = stScore({ won: won, guesses: sp.guesses });
     var head = sp.mode === 'daily' ? 'Wordstitch of the Day #' + sp.number + ' ' + score : 'Wordstitch ' + score + ' · kata dari lemariku';
     var cta = sp.mode === 'daily' ? 'Bisa jahit lebih cepat dari aku? 🧵\nMain gratis 👉 unishverse.github.io/wordrobe'
-      : 'Jahit kata dari lemarimu sendiri, tiap hari 🧵\nCoba gratis 👉 unishverse.github.io/wordrobe';
+      : 'Jahit kata dari lemarimu sendiri, tiap hari 🧵\nMain gratis 👉 unishverse.github.io/wordrobe';
     var EMO = { b: '🟦', y: '🟨', g: '⬜' };
     var rows = sp.guesses.map(function (g) { return stColors(g, sp.target).split('').map(function (c) { return EMO[c]; }).join(''); });
     return head + '\n' + rows.join('\n') + '\n' + cta;
