@@ -9,6 +9,11 @@ try { (function () { var p = localStorage.getItem('wr_theme') || 'dark';
   if (p === 'light' || (p === 'system' && window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches)) {
     document.documentElement.setAttribute('data-theme', 'light'); document.getElementById('theme-color').setAttribute('content', '#FAF8F3'); } })(); } catch (e) { /* default dark */ }</script>
 <title>Wordrobe</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Wordrobe">
 <meta name="description" content="Fit check your vocab. Simpan kata bahasa Inggris yang kamu temukan dan latihan bareng Bibo.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23277BC0'/%3E%3Cg fill='none' stroke='white' stroke-width='2' stroke-linecap='round'%3E%3Crect x='6' y='5' width='12' height='14' rx='1.5'/%3E%3Cpath d='M12 5v14M10 11v2M14 11v2'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -97,6 +102,9 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .spinner { width: 18px; height: 18px; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+@keyframes screen-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.screen-in { animation: screen-in .18s ease-out; }
+@media (prefers-reduced-motion: reduce) { .screen-in { animation: none; } }
 
 /* landing */
 #landing { flex: 1; display: flex; flex-direction: column; gap: 20px; background: var(--ink-2); margin: calc(-1 * max(24px, env(safe-area-inset-top))) -20px calc(-1 * max(24px, env(safe-area-inset-bottom)));
@@ -1091,6 +1099,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       <span class="label" id="theme-label">Tampilan</span>
       <div class="chips" id="theme-chips" role="group" aria-labelledby="theme-label"></div>
     </div>
+    <button class="btn btn--ghost" type="button" id="menu-install" hidden>Pasang ke layar utama</button>
+    <p class="note" id="menu-install-note" hidden>Di Safari: ketuk tombol Bagikan, lalu pilih "Tambah ke Layar Utama".</p>
     <button class="btn btn--ghost" type="button" id="menu-add-email" hidden>Tambah email</button>
     <button class="btn btn--ghost" type="button" id="menu-password">Atur password</button>
     <button class="btn btn--ghost" type="button" id="menu-logout">Keluar</button>
@@ -1166,7 +1176,22 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   var $ = function (id) { return document.getElementById(id); };
 
   /* ---------- server ---------- */
+  // call timings (milliseconds per server call): window.wrTimings (last 60) and window.wrTimingSummary()
+  var timings = window.wrTimings = [];
+  window.wrTimingSummary = function () {
+    var by = {};
+    timings.forEach(function (t) { var b = by[t.fn] || (by[t.fn] = { calls: 0, avg: 0, max: 0, failed: 0 }); b.avg = (b.avg * b.calls + t.ms) / (b.calls + 1); b.calls++; if (t.ms > b.max) b.max = t.ms; if (!t.ok) b.failed++; });
+    Object.keys(by).forEach(function (k) { by[k].avg = Math.round(by[k].avg); });
+    return by;
+  };
   function api(fn) {
+    var t0 = Date.now();
+    var p = apiRaw.apply(null, arguments);
+    var note = function (ok) { timings.push({ fn: fn, ms: Date.now() - t0, ok: ok }); if (timings.length > 60) timings.shift(); };
+    p.then(function () { note(true); }, function () { note(false); });
+    return p;
+  }
+  function apiRaw(fn) {
     var args = Array.prototype.slice.call(arguments, 1);
     return fetch(API_URL, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ fn: fn, args: args }) })
@@ -1196,9 +1221,11 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   var SCREENS = ['landing', 'restore', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'speak', 'fix', 'slay', 'privacy', 'stitch', 'stitchplay', 'remixplay'];
   var current = 'landing', privacyFrom = 'landing';
   function show(id) {
+    var was = current;
     SCREENS.forEach(function (s) { $(s).hidden = s !== id; });
     document.body.setAttribute('data-screen', id);
     current = id;
+    if (id !== was) { var el = $(id); el.classList.remove('screen-in'); void el.offsetWidth; el.classList.add('screen-in'); }
     var nav = ['home', 'lemari', 'add', 'result', 'fit', 'speak', 'fix', 'slay', 'stitch'].indexOf(id) !== -1;
     if (id !== 'speak') stopListening();
     $('nav').hidden = !nav;
@@ -1208,7 +1235,35 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('nav-add').setAttribute('aria-current', id === 'add' || id === 'result' ? 'page' : 'false');
     if (id !== 'lemari') $('saved-toast').hidden = true;
     window.scrollTo(0, 0);
+    syncHistory();
   }
+  /* Back button / swipe-back: one extra history entry while a deeper screen or a sheet is open, so Back closes it instead of leaving the app */
+  var SHEET_IDS = ['menu-sheet', 'pw-sheet', 'email-sheet', 'rack-sheet', 'edit-sheet'], BASE_SCREENS = ['home', 'landing', 'restore', 'signin'], skipPop = false;
+  function sheetOpen() { return SHEET_IDS.some(function (i) { var e = $(i); return e && !e.hidden; }); }
+  try { if (history.state && history.state.wr) history.replaceState(null, ''); } catch (e) { /* a reload keeps the old marker: start clean */ }
+  function syncHistory() {
+    try {
+      var deep = BASE_SCREENS.indexOf(current) === -1 || sheetOpen(), has = !!(history.state && history.state.wr);
+      if (deep && !has) history.pushState({ wr: 1 }, '');
+      else if (!deep && has && !skipPop) { skipPop = true; setTimeout(function () { skipPop = false; }, 500); history.back(); }
+    } catch (e) { /* history unavailable: Back leaves the page as before */ }
+  }
+  window.addEventListener('popstate', function () {
+    if (skipPop) { skipPop = false; syncHistory(); return; }
+    var open = SHEET_IDS.filter(function (i) { return !$(i).hidden; });
+    if (open.length) open.forEach(function (i) { $(i).hidden = true; });
+    else if (current === 'privacy') $('privacy-back').click();
+    else if (current === 'stitchplay') $('sp-close').click();
+    else if (current === 'remixplay') $('rx-close').click();
+    else if (current === 'stitch') $('stitch-up').click();
+    else if (BASE_SCREENS.indexOf(current) === -1) { var b = $(current).querySelector('[data-go]'); if (b) b.click(); else go('home'); }
+    syncHistory();
+  });
+  if (window.MutationObserver) {
+    var sheetWatch = new MutationObserver(function () { syncHistory(); });
+    SHEET_IDS.forEach(function (i) { var e = document.getElementById(i); if (e) sheetWatch.observe(e, { attributes: true, attributeFilter: ['hidden'] }); });
+  }
+  function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) { /* not supported */ } }
   function go(id) {
     if (['home', 'add', 'lemari', 'fit', 'speak', 'fix', 'stitch'].indexOf(id) !== -1 && !me) { show('landing'); return; }
     if (id === 'add') openAdd();
@@ -1512,7 +1567,20 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       if (!$('home').hidden) renderHome();
       if (!$('lemari').hidden) renderLemari();
       loadCommunity();
+      setTimeout(prefetch, 1200);
     }, function (e) { failed(e, null); });
+  }
+  /* once per visit, a moment after the home screen: get the next screens' data so tapping them feels instant */
+  var prefetched = false, stitchPre = null;
+  function prefetch() {
+    if (prefetched || !me) return;
+    prefetched = true;
+    var lean = navigator.connection && navigator.connection.saveData;   // data saver: skip the big word list
+    var uid = me.user_id;
+    if (!lean) loadStitchDict().then(function () {
+      api('getStitch', readToken()).then(function (r) { stitchPre = { data: r, at: Date.now(), uid: uid }; }, function () {});
+    }, function () {});
+    if (!traps) fetchTraps().catch(function () {});
   }
   /* shared dictionary: typing suggestions + "Lagi rame" (optional: a failure only hides them) */
   function loadCommunity() {
@@ -1811,6 +1879,9 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     setHubView('all');
     show('stitch');
     msg($('stitch-msg'), '', 'error');
+    if (stitchPre && me && stitchPre.uid === me.user_id && stDict && Date.now() - stitchPre.at < 60000) {   // fetched in the background a moment ago
+      stitch = stitchPre.data; stitchPre = null; renderStitchHub(); return;
+    }
     $('stitch-cards').hidden = true; $('stitch-loading').hidden = false; $('stitch-retry').hidden = true;
     $('stitch-loading-text').textContent = 'Bibo lagi nyiapin puzzle…';
     var slow = setTimeout(function () {   // only when the word list is really downloading (first visit)
@@ -1928,7 +1999,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   function stitchShake(text) {
     msg($('sp-msg'), text, 'error');
     var row = $('sp-board').children[sp.guesses.length];
-    if (row) { row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake'); }
+    buzz([25, 35, 25]); if (row) { row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake'); }
   }
   function stitchKey(k) {
     if (!sp || sp.done) return;
@@ -2151,7 +2222,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   function remixShake(text) {
     msg($('rx-msg'), text, 'error');
     var row = $('rx-cur');
-    if (row) { row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake'); }
+    buzz([25, 35, 25]); if (row) { row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake'); }
   }
   function remixKey(k) {
     if (!rx || rx.done) return;
@@ -2293,6 +2364,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   function answer(res) {
     if (!deck[pos]) return;
     results.push({ word_id: deck[pos].word_id, result: res });
+    buzz(res === 'known' ? 12 : [18, 30, 18]);
     lastAnswer = res; flipped = false; pos++;
     if (pos >= deck.length) finishPractice(); else renderFit();
   }
@@ -2499,11 +2571,16 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('fix-words').textContent = '';
     $('fix-feedback').hidden = true; $('fix-next').hidden = true;
     msg($('fix-msg'), 'Memuat soal…', '');
-    api('getTraps', readToken()).then(function (r) {
-      traps = (r.traps || []).filter(function (t) { return trapSpan(t.sentence, t.wrong_part); });
+    fetchTraps().then(function () {
       msg($('fix-msg'), '', '');
       beginFix();
     }, function (e) { failed(e, $('fix-msg')); });
+  }
+  function fetchTraps() {
+    return api('getTraps', readToken()).then(function (r) {
+      traps = (r.traps || []).filter(function (t) { return trapSpan(t.sentence, t.wrong_part); });
+      return traps;
+    });
   }
   function beginFix() {
     if (!traps.length) { show('fix'); msg($('fix-msg'), 'Soal Benerin belum tersedia. Coba lagi nanti ya.', 'error'); return; }
@@ -2726,6 +2803,22 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       closeEdit(); renderLemari(); renderHome();
     }, function (e) { busy($('edit-delete'), false); failed(e, $('edit-msg')); });
   });
+
+  /* ---------- installable web app: service worker + "Pasang ke layar utama" ---------- */
+  var installEvt = null;
+  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  if (!standalone) {
+    window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; $('menu-install').hidden = false; });
+    if (/iphone|ipad|ipod/i.test(navigator.userAgent)) $('menu-install').hidden = false;
+  }
+  window.addEventListener('appinstalled', function () { installEvt = null; $('menu-install').hidden = true; $('menu-install-note').hidden = true; });
+  $('menu-install').addEventListener('click', function () {
+    if (installEvt) { installEvt.prompt(); installEvt = null; $('menu-install').hidden = true; }
+    else $('menu-install-note').hidden = false;
+  });
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* the app works without it */ }); });
+  }
 
   /* ---------- start: restore the session if there is one ---------- */
   // With a saved token the learner goes straight home; sign-in only when the session really ended.
