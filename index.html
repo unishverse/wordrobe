@@ -1211,7 +1211,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   /* ---------- state ---------- */
   var me = null, hasPassword = false, pendingEmail = '', cooldownTimer = null, notice = '';
   var words = [], wordsLoaded = false, draftSource = 'Medsos', lastLookup = null, editing = null, deleteArmed = false;
-  var stats = null, deck = [], pos = 0, flipped = false, results = [], lastAnswer = '', saving = false, mode = 'fit';
+  var stats = null, deck = [], pos = 0, flipped = false, results = [], lastAnswer = '', saving = false, mode = 'fit', unsaved = [], flushing = false;
   var traps = null, recognizer = null, listening = false, cardTries = 0, cardDone = false, cardOk = false;
   var FIT_MAX = 10, RING = 169.6;
   var community = null, communityAt = 0;
@@ -1412,7 +1412,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     renderEmailNudge();
   }
   function signedOut(text) {
-    clearToken(); clearCache(); me = null; words = []; wordsLoaded = false; racks = []; rackLinks = []; rackFilter = '';
+    clearToken(); clearCache(); unsaved = []; me = null; words = []; wordsLoaded = false; racks = []; rackLinks = []; rackFilter = '';
     ['pw-sheet', 'menu-sheet', 'edit-sheet', 'rack-sheet', 'email-sheet'].forEach(function (s) { $(s).hidden = true; });
     show('signin'); signinStep('email');
     if (text) msg($('signin-msg'), text, 'error');
@@ -1528,7 +1528,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   $('menu-password').addEventListener('click', function () { $('menu-sheet').hidden = true; openPasswordSheet(true); });
   $('menu-logout').addEventListener('click', function () {
     var t = readToken();
-    clearToken(); clearCache(); me = null; words = []; wordsLoaded = false; racks = []; rackLinks = []; rackFilter = ''; $('menu-sheet').hidden = true;
+    clearToken(); clearCache(); unsaved = []; me = null; words = []; wordsLoaded = false; racks = []; rackLinks = []; rackFilter = ''; $('menu-sheet').hidden = true;
     show('landing');
     if (t) api('logout', t).catch(function () { /* the token is gone on this device anyway */ });
   });
@@ -1542,10 +1542,13 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   var CACHE_KEY = 'wr_cache', wordsVersion = 0;
   function saveCache() {
     if (!me || !wordsLoaded) return;
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ user_id: me.user_id, words: words, stats: stats, racks: racks, links: rackLinks, idle_hours: idleHours })); } catch (e) { /* full or unavailable */ }
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ user_id: me.user_id, me: me, hasPassword: hasPassword, words: words, stats: stats, racks: racks, links: rackLinks, idle_hours: idleHours })); } catch (e) { /* full or unavailable */ }
   }
   function readCache() {
     try { var c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); return c && me && c.user_id === me.user_id && Array.isArray(c.words) ? c : null; } catch (e) { return null; }
+  }
+  function peekCache() {   // before sign-in is confirmed: the last copy of this device, if it has the learner too
+    try { var c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); return c && c.me && c.me.user_id && c.user_id === c.me.user_id && Array.isArray(c.words) ? c : null; } catch (e) { return null; }
   }
   function clearCache() { try { localStorage.removeItem(CACHE_KEY); } catch (e) { /* ignore */ } }
   function changed() { wordsVersion++; saveCache(); }   // after every local change, so a refresh started earlier cannot undo it
@@ -1577,9 +1580,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     prefetched = true;
     var lean = navigator.connection && navigator.connection.saveData;   // data saver: skip the big word list
     var uid = me.user_id;
-    if (!lean) loadStitchDict().then(function () {
-      api('getStitch', readToken()).then(function (r) { stitchPre = { data: r, at: Date.now(), uid: uid }; }, function () {});
-    }, function () {});
+    api('getStitch', readToken()).then(function (r) { stitchPre = { data: r, at: Date.now(), uid: uid }; }, function () {});
+    if (!lean) loadStitchDict().catch(function () {});
     if (!traps) fetchTraps().catch(function () {});
   }
   /* shared dictionary: typing suggestions + "Lagi rame" (optional: a failure only hides them) */
@@ -1842,7 +1844,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
 
   /* ---------- Wordstitch: guess the word in 6 tries ---------- */
   // Colours: b = right place (blue, stitched), y = in the word elsewhere (yellow), g = not in the word (grey).
-  var ST_TRIES = 6, stitch = null, stDict = null, stDictLoad = null, sp = null, stFound = [], stLookupBusy = false;
+  var ST_TRIES = 6, stitch = null, stDict = null, stDictLoad = null, dictWait = false, sp = null, stFound = [], stLookupBusy = false;
   var ST_KEYS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
   function loadStitchDict() {
     if (stDict) return Promise.resolve(stDict);
@@ -1879,22 +1881,18 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     setHubView('all');
     show('stitch');
     msg($('stitch-msg'), '', 'error');
-    if (stitchPre && me && stitchPre.uid === me.user_id && stDict && Date.now() - stitchPre.at < 60000) {   // fetched in the background a moment ago
+    if (stitchPre && me && stitchPre.uid === me.user_id && Date.now() - stitchPre.at < 60000) {   // fetched in the background a moment ago
       stitch = stitchPre.data; stitchPre = null; renderStitchHub(); return;
     }
     $('stitch-cards').hidden = true; $('stitch-loading').hidden = false; $('stitch-retry').hidden = true;
     $('stitch-loading-text').textContent = 'Bibo lagi nyiapin puzzle…';
-    var slow = setTimeout(function () {   // only when the word list is really downloading (first visit)
-      if (!stDict) $('stitch-loading-text').textContent = 'Bibo lagi menyiapkan benang dan jarum… Ini cuma lama saat pertama kali dibuka.';
-    }, 300);
-    Promise.all([api('getStitch', readToken()), loadStitchDict()]).then(function (res) {
-      clearTimeout(slow);
-      stitch = res[0];
+    loadStitchDict().catch(function () { /* needed only when a guess is checked */ });   // the hub itself does not need the word list
+    api('getStitch', readToken()).then(function (r) {
+      stitch = r;
       renderStitchHub();
     }, function (e) {
-      clearTimeout(slow);
       if (e && SESSION_RE.test(e.message)) { failed(e, null); return; }
-      $('stitch-loading-text').textContent = e && e.message === 'dict' ? 'Kamus Wordstitch belum termuat. Cek koneksimu, lalu coba lagi.' : (e && e.message) || NET_MSG;
+      $('stitch-loading-text').textContent = (e && e.message) || NET_MSG;
       $('stitch-retry').hidden = false;
     });
   }
@@ -2008,6 +2006,14 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     if (k === 'enter') {
       if (sp.cur.length < n) { stitchShake('Kurang huruf. Katanya ' + n + ' huruf.'); return; }
       var g = sp.cur;
+      if (g !== sp.target && !hasWord(g) && !stDict) {   // word list not here yet (first visit): wait for it, then send the same guess
+        if (dictWait) return;
+        dictWait = true; msg($('sp-msg'), 'Bibo lagi nyiapin kamus…', '');
+        var cs = sp;
+        loadStitchDict().then(function () { dictWait = false; if (sp === cs && !cs.done) stitchKey('enter'); },
+          function () { dictWait = false; stitchShake('Kamus belum termuat. Cek koneksimu, lalu coba lagi.'); });
+        return;
+      }
       if (g !== sp.target && !stDict.has(g) && !hasWord(g)) { stitchShake('“' + g + '” bukan kata bahasa Inggris yang Bibo kenal.'); return; }
       msg($('sp-msg'), '');
       sp.guesses.push(g); sp.cur = '';
@@ -2233,6 +2239,14 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       var w = rx.cand;
       if (!w) { remixShake('Ganti satu huruf dulu: tap hurufnya, lalu pilih huruf baru.'); return; }
       if (rx.chain.indexOf(w) !== -1) { remixShake('“' + w + '” sudah ada di jalurmu.'); return; }
+      if (w !== rx.end && !hasWord(w) && !stDict) {   // word list not here yet (first visit): wait for it, then send the same word
+        if (dictWait) return;
+        dictWait = true; msg($('rx-msg'), 'Bibo lagi nyiapin kamus…', '');
+        var cr = rx;
+        loadStitchDict().then(function () { dictWait = false; if (rx === cr && !cr.done) remixKey('enter'); },
+          function () { dictWait = false; remixShake('Kamus belum termuat. Cek koneksimu, lalu coba lagi.'); });
+        return;
+      }
       if (w !== rx.end && !stDict.has(w) && !hasWord(w)) { remixShake('“' + w + '” bukan kata bahasa Inggris yang Bibo kenal.'); return; }
       msg($('rx-msg'), '');
       rx.trail.push(w); rx.chain.push(w); rx.cand = null;
@@ -2400,35 +2414,67 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('slay-revise').textContent = results.length - good;
     $('slay-streak').hidden = true;
     $('slay-retry').hidden = true;
+    if (mode === 'fit') {   // same rule as the server (last answer wins), so the next round already sees the new statuses
+      var st = {}, now = new Date().toISOString();
+      results.forEach(function (r) { st[r.word_id] = r.result; });
+      words = words.map(function (w) { return st[w.word_id] ? Object.assign({}, w, { status: st[w.word_id], updated_at: now }) : w; });
+      changed();
+    }
     show('slay');
     savePractice();
   }
+  function applySaved(forMode, r) {
+    if (forMode === 'fit') {
+      var upd = r.updated || {};
+      words = words.map(function (w) { return upd[w.word_id] ? Object.assign({}, w, { status: upd[w.word_id], updated_at: new Date().toISOString() }) : w; });
+    }
+    stats = r.stats || stats;
+    changed();
+  }
+  /* rounds whose save failed after the learner had already moved on: tried again later, never dropped */
+  function flushUnsaved() {
+    if (flushing || !unsaved.length || !me) return;
+    flushing = true;
+    var job = unsaved[0];
+    api(job.fn, readToken(), job.sent).then(function (r) {
+      flushing = false; unsaved.shift(); applySaved(job.mode, r); flushUnsaved();
+    }, function (e) {
+      flushing = false;
+      if (e && SESSION_RE.test(e.message)) { failed(e, null); return; }
+      setTimeout(flushUnsaved, 15000);
+    });
+  }
+  window.addEventListener('online', flushUnsaved);
   function savePractice() {
     if (saving || !results.length) return;
     saving = true;
-    var d = DONE[mode], sent = results.slice(), forMode = mode;
+    var d = DONE[mode], batch = results, sent = results.slice(), forMode = mode;
     msg($('slay-msg'), 'Menyimpan hasil latihan…', '');
     $('slay-retry').hidden = true;
+    flushUnsaved();
     api(d.fn, readToken(), sent).then(function (r) {
+      applySaved(forMode, r);
+      if (results !== batch) return;   // the next round already started: its own state stays untouched
       saving = false;
-      if (forMode === 'fit') {
-        var upd = r.updated || {};
-        words = words.map(function (w) { return upd[w.word_id] ? Object.assign({}, w, { status: upd[w.word_id], updated_at: new Date().toISOString() }) : w; });
-      }
-      stats = r.stats || stats;
-      changed();
       results = [];
       msg($('slay-msg'), '', '');
-      if (stats && stats.streak) { $('slay-streak').textContent = 'Streak kamu: ' + stats.streak + ' hari berturut-turut.'; $('slay-streak').hidden = false; }
+      if (current === 'slay' && stats && stats.streak) { $('slay-streak').textContent = 'Streak kamu: ' + stats.streak + ' hari berturut-turut.'; $('slay-streak').hidden = false; }
     }, function (e) {
-      saving = false;
+      var away = results !== batch || current !== 'slay';
+      if (results === batch) saving = false;
       if (e && SESSION_RE.test(e.message)) { failed(e, null); return; }
+      if (away) {
+        unsaved.push({ fn: d.fn, sent: sent, mode: forMode });
+        if (results === batch) results = [];
+        setTimeout(flushUnsaved, 8000);
+        return;
+      }
       msg($('slay-msg'), 'Hasilnya belum tersimpan: ' + e.message, 'error');
       $('slay-retry').hidden = false;
     });
   }
   $('slay-retry').addEventListener('click', savePractice);
-  $('slay-again').addEventListener('click', function () { if (results.length) { savePractice(); return; } go(mode); });
+  $('slay-again').addEventListener('click', function () { if (results.length && !saving) { savePractice(); return; } go(mode); });   // a save still running does not block the next round
   $('slay-home').addEventListener('click', function () { if (results.length && !saving) savePractice(); go('home'); });
 
   /* ---------- Ngomong ---------- */
@@ -2825,17 +2871,30 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   function restoreSession() {
     var token = readToken();
     if (!token) { show('landing'); return; }
-    $('restore-text').textContent = 'Bibo lagi buka lemarimu…';
-    $('restore-spin').hidden = false; $('restore-actions').hidden = true;
-    show('restore');
+    var pk = peekCache();
+    if (pk) {   // open at once from the saved copy; the server confirms the session and refreshes in parallel
+      setMe(pk.me, pk.hasPassword);
+      go('home');
+      loadWords();
+    } else {
+      $('restore-text').textContent = 'Bibo lagi buka lemarimu…';
+      $('restore-spin').hidden = false; $('restore-actions').hidden = true;
+      show('restore');
+    }
     api('getMe', token).then(function (r) {
       if (readToken() !== token) return;   // signed in or out meanwhile
+      if (pk && r.user.user_id !== pk.me.user_id) {   // another learner's copy: drop it
+        clearCache(); words = []; wordsLoaded = false; racks = []; rackLinks = []; rackFilter = '';
+        setMe(r.user, r.hasPassword); renderHome(); loadWords();
+        return;
+      }
       setMe(r.user, r.hasPassword);
       if (current === 'restore') go('home');
-      loadWords();
+      if (!pk) loadWords();
     }, function (e) {
       if (readToken() !== token) return;
       if (SESSION_RE.test(e.message)) { signedOut(e.message); return; }
+      if (pk) return;   // offline or slow: the saved copy keeps working
       $('restore-text').textContent = e.message;
       $('restore-spin').hidden = true; $('restore-actions').hidden = false;
       $('restore-retry').focus();
