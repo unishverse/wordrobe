@@ -15,7 +15,7 @@ try { (function () { var p = localStorage.getItem('wr_theme') || 'dark';
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Wordrobe">
 <meta name="description" content="Fit check your vocab. Simpan kata bahasa Inggris yang kamu temukan dan latihan bareng Bibo.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23277BC0'/%3E%3Cg fill='none' stroke='white' stroke-width='2' stroke-linecap='round'%3E%3Crect x='6' y='5' width='12' height='14' rx='1.5'/%3E%3Cpath d='M12 5v14M10 11v2M14 11v2'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="48x48" href="img/favicon-48.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap">
@@ -65,7 +65,8 @@ button, input, textarea { font: inherit; }
 .btn--danger { background: transparent; color: var(--error); box-shadow: inset 0 0 0 1.5px var(--error); }
 .link { background: none; border: 0; padding: 8px 4px; min-height: 44px; color: var(--accent-text); font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .brand { display: flex; align-items: center; gap: 10px; }
-.brand-mark { width: 38px; height: 38px; border-radius: 11px; background: var(--blue); display: grid; place-items: center; flex: none; }
+.brand-mark { width: 44px; height: 44px; display: grid; place-items: center; flex: none; }
+.brand-mark img { width: 44px; height: 44px; display: block; }
 .brand-name { font-family: var(--display); font-weight: 800; font-size: 25px; letter-spacing: -0.5px; }
 .stack { display: flex; flex-direction: column; gap: 16px; }
 .field { display: flex; flex-direction: column; gap: 8px; }
@@ -167,6 +168,10 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .chips--scroll { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
 .chips--scroll .chip { flex: none; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chip--sm { min-height: 40px; padding: 0 14px; font-size: 13px; }
+.chip--letter { min-width: 40px; padding: 0 10px; font-family: var(--display); font-weight: 800; }
+.chip--letter:disabled { opacity: .35; cursor: default; }
+.az-head { font-family: var(--display); font-weight: 800; font-size: 20px; color: var(--muted); margin: 8px 4px -2px; }
+.more-btn { align-self: center; }
 .rack-panel { background: var(--card); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .rack-panel h2 { font-size: 22px; overflow-wrap: anywhere; }
 .rack-actions { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -428,7 +433,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   <section id="landing" aria-labelledby="landing-title">
     <div class="brand">
       <span class="brand-mark" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M9.5 11v2M14.5 11v2"/></svg>
+        <img src="img/logo-mark.png" width="44" height="44" alt="">
       </span>
       <span class="brand-name">Wordrobe</span>
     </div>
@@ -722,11 +727,17 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         </form>
         <div class="msg msg--error" id="rack-msg" role="alert" hidden></div>
       </div>
+      <div class="chips" id="lemari-sort" role="group" aria-label="Urutkan lemari">
+        <button class="chip chip--sm" type="button" data-lsort="new" aria-pressed="true">Terbaru</button>
+        <button class="chip chip--sm" type="button" data-lsort="az" aria-pressed="false">A–Z</button>
+      </div>
+      <div class="chips chips--scroll" id="lemari-letters" role="group" aria-label="Pilih huruf" hidden></div>
       <div class="field" id="lemari-search-field">
         <label for="lemari-search" class="label">Cari di lemari</label>
         <input class="input" id="lemari-search" type="search" autocomplete="off" placeholder="ketik kata atau arti">
       </div>
       <div class="list" id="lemari-list"></div>
+      <button class="btn btn--ghost more-btn" type="button" id="lemari-more" hidden></button>
       <div class="empty" id="lemari-empty" hidden>
         <img src="img/bibo-thinking.webp" width="320" height="396" alt="">
         <p class="note" style="color:var(--soft)" id="lemari-empty-text">Lemarimu masih kosong. Tekan + untuk New drop.</p>
@@ -1028,7 +1039,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
 <nav class="nav" id="nav" aria-label="Menu utama" hidden>
   <div class="nav-inner">
     <div class="brand nav-brand" aria-hidden="true">
-      <span class="brand-mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M9.5 11v2M14.5 11v2"/></svg></span>
+      <span class="brand-mark"><img src="img/logo-mark.png" width="44" height="44" alt=""></span>
       <span class="brand-name">Wordrobe</span>
     </div>
     <button class="nav-btn" type="button" data-go="home" id="nav-home">
@@ -1215,7 +1226,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   var traps = null, recognizer = null, listening = false, cardTries = 0, cardDone = false, cardOk = false;
   var FIT_MAX = 10, RING = 169.6;
   var community = null, communityAt = 0;
-  var racks = [], rackLinks = [], idleHours = 3, rackFilter = '', rackSort = 'found', draftKind = 'Buku', rackDeleteArmed = false;
+  var racks = [], rackLinks = [], idleHours = 3, rackFilter = '', rackSort = 'found', lemSort = 'new', lemLetter = '', lemLimit = 10, LEM_STEP = 10, draftKind = 'Buku', rackDeleteArmed = false;
   var RACK_KINDS = ['Buku', 'Series', 'Film'];
 
   var SCREENS = ['landing', 'restore', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'speak', 'fix', 'slay', 'privacy', 'stitch', 'stitchplay', 'remixplay'];
@@ -1271,7 +1282,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     else if (id === 'fit') startFit();
     else if (id === 'speak') startSpeak();
     else if (id === 'fix') startFix();
-    else if (id === 'lemari') { renderLemari(); show('lemari'); }
+    else if (id === 'lemari') { if (current !== 'lemari') resetLemariView(); renderLemari(); show('lemari'); }
     else if (id === 'home') { renderHome(); show('home'); }
     else show(id);
   }
@@ -1658,19 +1669,67 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     if (rackFilter && !rack) rackFilter = '';
     var q = $('lemari-search').value.trim().toLowerCase();
     var base = rack ? rackWords(rack.rack_id) : words;
-    var shown = !q ? base : base.filter(function (w) { return (w.word + ' ' + w.meaning).toLowerCase().indexOf(q) !== -1; });
+    var found = !q ? base : base.filter(function (w) { return (w.word + ' ' + w.meaning).toLowerCase().indexOf(q) !== -1; });
+    var az = rack ? rackSort === 'az' : lemSort === 'az';
+    if (az && !rack) found = found.slice().sort(function (a, b) { return azKey(a) < azKey(b) ? -1 : azKey(a) > azKey(b) ? 1 : 0; });
+    if (az && lemLetter && !found.some(function (w) { return letterOf(w) === lemLetter; }) && !q) lemLetter = '';
+    var shown = az && lemLetter ? found.filter(function (w) { return letterOf(w) === lemLetter; }) : found;
     var known = base.filter(function (w) { return w.status === 'known'; }).length;
     $('lemari-count').textContent = wordsLoaded ? base.length + ' kata · ' + known + ' udah slay' : 'Memuat…';
     $('lemari-search-field').hidden = base.length < 6;
     renderRackChips();
     renderRackPanel(rack, base.length);
+    $('lemari-sort').hidden = !!rack || base.length < 2;
+    Array.prototype.forEach.call($('lemari-sort').children, function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-lsort') === lemSort ? 'true' : 'false'); });
+    renderLetters(az ? found : null);
     var list = $('lemari-list'); list.textContent = '';
-    shown.forEach(function (w) { list.appendChild(wordRow(w, rack ? locationOf(rack.rack_id, w.word_id) : '')); });
+    var head = '';
+    shown.slice(0, lemLimit).forEach(function (w) {
+      if (az && !lemLetter && letterOf(w) !== head) {   // dictionary heading between letter groups
+        head = letterOf(w);
+        var hd = document.createElement('h2'); hd.className = 'az-head'; hd.textContent = head; list.appendChild(hd);
+      }
+      list.appendChild(wordRow(w, rack ? locationOf(rack.rack_id, w.word_id) : ''));
+    });
+    var rest = shown.length - lemLimit;
+    $('lemari-more').hidden = rest <= 0;
+    if (rest > 0) $('lemari-more').textContent = 'Tampilkan ' + Math.min(LEM_STEP, rest) + ' lagi (sisa ' + rest + ')';
     $('lemari-empty').hidden = !wordsLoaded || shown.length > 0;
     $('lemari-empty-text').textContent = rack && !base.length ? 'Rak ini masih kosong. Simpan kata lewat New drop selama sesinya jalan.'
       : words.length ? 'Tidak ada kata yang cocok.' : 'Lemarimu masih kosong. Tekan + untuk New drop.';
   }
-  $('lemari-search').addEventListener('input', renderLemari);
+  $('lemari-search').addEventListener('input', function () { lemLimit = LEM_STEP; renderLemari(); });
+  /* dictionary view: sort by the English word, letters A–Z, words that start with no letter under # */
+  function azKey(w) { return String(w.word || '').toLowerCase(); }
+  function letterOf(w) { var c = azKey(w).charAt(0).toUpperCase(); return c >= 'A' && c <= 'Z' ? c : '#'; }
+  function renderLetters(list) {
+    var box = $('lemari-letters'); box.textContent = '';
+    box.hidden = !list || !list.length;
+    if (box.hidden) return;
+    var have = {}; list.forEach(function (w) { have[letterOf(w)] = true; });
+    ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '#'].forEach(function (L) {
+      if (L === '#' && !have['#']) return;
+      var c = document.createElement('button'); c.type = 'button'; c.className = 'chip chip--sm' + (L ? ' chip--letter' : '');
+      c.textContent = L || 'Semua'; c.setAttribute('data-letter', L);
+      c.setAttribute('aria-pressed', L === lemLetter ? 'true' : 'false');
+      if (L) { c.disabled = !have[L]; c.setAttribute('aria-label', 'Huruf ' + L); }
+      box.appendChild(c);
+    });
+    var on = box.querySelector('[aria-pressed="true"]'); if (on && on.scrollIntoView && lemLetter) on.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+  $('lemari-letters').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-letter]'); if (!b || b.disabled) return;
+    lemLetter = b.getAttribute('data-letter'); lemLimit = LEM_STEP; renderLemari();
+  });
+  $('lemari-sort').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-lsort]'); if (!b) return;
+    lemSort = b.getAttribute('data-lsort'); lemLetter = ''; lemLimit = LEM_STEP; renderLemari();
+  });
+  $('lemari-more').addEventListener('click', function () {
+    lemLimit += LEM_STEP; renderLemari();
+    if (!$('lemari-more').hidden) $('lemari-more').focus();
+  });
+  function resetLemariView() { lemSort = 'new'; lemLetter = ''; lemLimit = LEM_STEP; $('lemari-search').value = ''; }
   $('home-drop').addEventListener('click', function () { go('add'); });
   $('home-lemari').addEventListener('click', function () { rackFilter = ''; go('lemari'); });
   $('home-fit').addEventListener('click', function () { go('fit'); });
@@ -1748,7 +1807,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     [{ rack_id: '', title: 'Semua' }].concat(racks).forEach(function (x) {
       var c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = x.title;
       c.setAttribute('aria-pressed', x.rack_id === rackFilter ? 'true' : 'false');
-      c.addEventListener('click', function () { rackFilter = x.rack_id; rackDeleteArmed = false; $('rack-rename-form').hidden = true; msg($('lemari-msg'), ''); msg($('rack-msg'), ''); renderLemari(); });
+      c.addEventListener('click', function () { rackFilter = x.rack_id; lemLetter = ''; lemLimit = LEM_STEP; rackDeleteArmed = false; $('rack-rename-form').hidden = true; msg($('lemari-msg'), ''); msg($('rack-msg'), ''); renderLemari(); });
       box.appendChild(c);
     });
   }
@@ -1812,7 +1871,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   $('add-rack-end').addEventListener('click', function () { var x = activeRack(); if (x) rackCall('endRack', [x.rack_id], null, $('add-msg'), openAdd); });
   $('rack-sort').addEventListener('click', function (ev) {
     var b = ev.target.closest('[data-sort]'); if (!b) return;
-    rackSort = b.getAttribute('data-sort'); renderLemari();
+    rackSort = b.getAttribute('data-sort'); lemLetter = ''; lemLimit = LEM_STEP; renderLemari();
   });
   $('rack-practice').addEventListener('click', function () { if (rackFilter) startFit(rackFilter); });
   $('rack-toggle').addEventListener('click', function () {

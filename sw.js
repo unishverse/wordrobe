@@ -2,7 +2,7 @@
    - index.html / navigations: network first (3 s), cached copy only as a fallback, so a deploy reaches users at once
    - img/*, words-en.txt: cache first (bump VERSION when an image or the word list changes)
    - everything else on this origin, and Google Fonts: stale while revalidate */
-var VERSION = 'wr-sw-1';
+var VERSION = 'wr-sw-2';
 var PAGES = VERSION + '-pages', FILES = VERSION + '-files';
 
 self.addEventListener('install', function (e) { self.skipWaiting(); });
