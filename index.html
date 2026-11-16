@@ -28,7 +28,7 @@ try { (function () { var p = localStorage.getItem('wr_theme') || 'dark';
   --accent-text: #FFD23F;    /* links and highlights written as text on the page */
   --ok-text: #7EE0B5;
   --flash: #F5F3EE; --flash-line: transparent;
-  --st-key: #57536A; --st-key-text: #FFFFFF;          /* Wordstitch: keys not used yet */
+  --st-key: #57536A; --st-key-text: #FFFFFF;          /* WordStitch: keys not used yet */
   --st-absent: #24222C; --st-absent-text: #A9A4B5;    /* letters not in the word: clearly darker than unused keys */
   --display: 'Bricolage Grotesque', system-ui, sans-serif;
   --ui: 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -266,6 +266,8 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .sl-row .pts { flex: none; font-weight: 800; }
 .sl-row .pts.ok { color: var(--ok-text); }
 .sl-row .pts.no { color: var(--error); }
+.sl-row .add { flex: none; min-height: 40px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--yellow); color: var(--on-accent); font: inherit; font-weight: 800; font-size: 13px; cursor: pointer; }
+.sl-row .add:disabled { background: var(--card); color: var(--muted); cursor: default; }
 .empty { background: var(--card); border-radius: 22px; padding: 18px; display: flex; gap: 12px; align-items: center; }
 .empty img { width: 64px; height: auto; flex: none; }
 
@@ -881,7 +883,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   </section>
 
   <!-- End of a practice session (Fit check, Ngomong, Benerin) -->
-  <!-- Wordstitch: choose a puzzle -->
+  <!-- WordStitch: choose a puzzle -->
   <section id="stitch" hidden aria-labelledby="stitch-title">
     <div class="top">
       <button class="round" type="button" id="stitch-up" aria-label="Kembali">
@@ -903,26 +905,26 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
        <div class="st-hub" id="games-list">
         <button class="game-card" type="button" id="game-stitch">
           <span class="thumb"><svg class="game-thumb" viewBox="0 0 320 110" aria-hidden="true"><rect x="85" y="11" width="26" height="26" rx="5" style="fill:var(--st-absent)"/><text x="98" y="29.2" text-anchor="middle" style="fill:var(--st-absent-text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">B</text><rect x="116" y="11" width="26" height="26" rx="5" style="fill:var(--yellow)"/><text x="129" y="29.2" text-anchor="middle" style="fill:var(--on-accent)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">R</text><rect x="147" y="11" width="26" height="26" rx="5" style="fill:var(--st-absent)"/><text x="160" y="29.2" text-anchor="middle" style="fill:var(--st-absent-text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">A</text><rect x="178" y="11" width="26" height="26" rx="5" style="fill:var(--st-absent)"/><text x="191" y="29.2" text-anchor="middle" style="fill:var(--st-absent-text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">V</text><rect x="209" y="11" width="26" height="26" rx="5" style="fill:var(--st-absent)"/><text x="222" y="29.2" text-anchor="middle" style="fill:var(--st-absent-text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">E</text><rect x="85" y="42" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="88.5" y="45.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="98" y="60.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">W</text><rect x="116" y="42" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="119.5" y="45.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="129" y="60.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">O</text><rect x="147" y="42" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="150.5" y="45.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="160" y="60.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">R</text><rect x="178" y="42" width="26" height="26" rx="5" style="fill:var(--st-absent)"/><text x="191" y="60.2" text-anchor="middle" style="fill:var(--st-absent-text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">L</text><rect x="209" y="42" width="26" height="26" rx="5" style="fill:var(--yellow)"/><text x="222" y="60.2" text-anchor="middle" style="fill:var(--on-accent)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">D</text><rect x="85" y="73" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="88.5" y="76.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="98" y="91.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">W</text><rect x="116" y="73" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="119.5" y="76.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="129" y="91.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">O</text><rect x="147" y="73" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="150.5" y="76.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="160" y="91.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">R</text><rect x="178" y="73" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="181.5" y="76.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="191" y="91.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">D</text><rect x="209" y="73" width="26" height="26" rx="5" style="fill:var(--blue)"/><rect x="212.5" y="76.5" width="19" height="19" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2" stroke-dasharray="2.5 2"/><text x="222" y="91.2" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14.3">S</text><path d="M18 92 C 40 40, 60 100, 79 82" fill="none" stroke="var(--yellow)" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/><g transform="translate(262 22) rotate(35)"><rect x="-2.5" y="0" width="5" height="44" rx="2.5" style="fill:var(--muted)"/><ellipse cx="0" cy="6" rx="1.2" ry="3" style="fill:var(--card-2)"/></g><path d="M262 22 C 285 10, 300 40, 288 64" fill="none" stroke="var(--yellow)" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/></svg></span>
-          <span class="row"><span class="w"><b>Wordstitch</b><small>Jahit huruf jadi kata · 6 kali tebak</small></span><span class="st-state" id="game-stitch-state"></span></span>
+          <span class="row"><span class="w"><b>WordStitch</b><small>Jahit huruf jadi kata · 6 kali tebak</small></span><span class="st-state" id="game-stitch-state"></span></span>
         </button>
         <button class="game-card" type="button" id="game-remix">
           <span class="thumb"><svg class="game-thumb" viewBox="0 0 320 110" aria-hidden="true"><rect x="120" y="5" width="17" height="17" rx="4" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="128.5" y="17.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">C</text><rect x="141" y="5" width="17" height="17" rx="4" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="149.5" y="17.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">O</text><rect x="162" y="5" width="17" height="17" rx="4" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="170.5" y="17.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">L</text><rect x="183" y="5" width="17" height="17" rx="4" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="191.5" y="17.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">D</text><rect x="120" y="26" width="17" height="17" rx="4" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="128.5" y="38.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">C</text><rect x="141" y="26" width="17" height="17" rx="4" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="149.5" y="38.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">O</text><rect x="162" y="26" width="17" height="17" rx="4" style="fill:var(--yellow)"/><text x="170.5" y="38.5" text-anchor="middle" style="fill:var(--on-accent)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">R</text><rect x="183" y="26" width="17" height="17" rx="4" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="191.5" y="38.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">D</text><rect x="120" y="47" width="17" height="17" rx="4" style="fill:var(--yellow)"/><text x="128.5" y="59.5" text-anchor="middle" style="fill:var(--on-accent)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">W</text><rect x="141" y="47" width="17" height="17" rx="4" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="149.5" y="59.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">O</text><rect x="162" y="47" width="17" height="17" rx="4" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="170.5" y="59.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">R</text><rect x="183" y="47" width="17" height="17" rx="4" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="191.5" y="59.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">D</text><rect x="120" y="68" width="17" height="17" rx="4" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="128.5" y="80.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">W</text><rect x="141" y="68" width="17" height="17" rx="4" style="fill:var(--yellow)"/><text x="149.5" y="80.5" text-anchor="middle" style="fill:var(--on-accent)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">A</text><rect x="162" y="68" width="17" height="17" rx="4" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="170.5" y="80.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">R</text><rect x="183" y="68" width="17" height="17" rx="4" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><text x="191.5" y="80.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">D</text><rect x="120" y="89" width="17" height="17" rx="4" style="fill:var(--blue)"/><rect x="123" y="92" width="11" height="11" rx="2.5" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="128.5" y="101.5" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">W</text><rect x="141" y="89" width="17" height="17" rx="4" style="fill:var(--blue)"/><rect x="144" y="92" width="11" height="11" rx="2.5" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="149.5" y="101.5" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">A</text><rect x="162" y="89" width="17" height="17" rx="4" style="fill:var(--blue)"/><rect x="165" y="92" width="11" height="11" rx="2.5" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="170.5" y="101.5" text-anchor="middle" style="fill:#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">R</text><rect x="183" y="89" width="17" height="17" rx="4" style="fill:var(--card)" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="3 2.5"/><text x="191.5" y="101.5" text-anchor="middle" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="10">M</text><line x1="90.5" y1="5.5" x2="90.5" y2="104.5" stroke="var(--pink)" stroke-width="3" stroke-linecap="round"/><line x1="98.5" y1="5.5" x2="98.5" y2="104.5" stroke="var(--pink)" stroke-width="3" stroke-linecap="round"/><line x1="90.5" y1="13.5" x2="98.5" y2="13.5" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="90.5" y1="34.5" x2="98.5" y2="34.5" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="90.5" y1="55.5" x2="98.5" y2="55.5" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="90.5" y1="76.5" x2="98.5" y2="76.5" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="90.5" y1="97.5" x2="98.5" y2="97.5" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="221.5" y1="5.5" x2="221.5" y2="104.5" stroke="var(--pink)" stroke-width="3" stroke-linecap="round"/><line x1="229.5" y1="5.5" x2="229.5" y2="104.5" stroke="var(--pink)" stroke-width="3" stroke-linecap="round"/><line x1="221.5" y1="13.5" x2="229.5" y2="13.5" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="221.5" y1="34.5" x2="229.5" y2="34.5" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="221.5" y1="55.5" x2="229.5" y2="55.5" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="221.5" y1="76.5" x2="229.5" y2="76.5" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><line x1="221.5" y1="97.5" x2="229.5" y2="97.5" stroke="var(--pink)" stroke-width="2.5" stroke-linecap="round"/><text x="56" y="62" text-anchor="middle" style="fill:var(--muted)" font-family="Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">1 huruf</text><text x="56" y="76" text-anchor="middle" style="fill:var(--muted)" font-family="Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11">per langkah</text></svg></span>
           <span class="row"><span class="w"><b>WordRemix</b><small>Ganti 1 huruf sampai jadi kata tujuan</small></span><span class="st-state" id="game-remix-state"></span></span>
         </button>
         <button class="game-card" type="button" id="game-spell">
-          <span class="thumb"><svg class="game-thumb" viewBox="0 0 320 110" aria-hidden="true"><rect x="30" y="45" width="14" height="22" rx="3" style="fill:var(--yellow)"/><path d="M44 45 L62 31 L62 81 L44 67 Z" style="fill:var(--yellow)"/><path d="M72 46 Q79 56 72 66 M80 38 Q92 56 80 74 M88 30 Q105 56 88 82" fill="none" stroke="var(--yellow)" stroke-width="4" stroke-linecap="round"/><path d="M138 18 L122 26 L110 44 L125 53 L132 47 L132 98 L188 98 L188 47 L195 53 L210 44 L198 26 L182 18 Q160 32 138 18 Z" style="fill:var(--pink)"/><text x="160" y="74" text-anchor="middle" style="fill:var(--on-accent)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="19">ABC</text><rect x="220" y="24" width="90" height="30" rx="8" style="fill:var(--card)" stroke="var(--yellow)" stroke-width="1.5"/><text x="229" y="44" style="fill:var(--text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="15">queue</text><line x1="276" y1="31" x2="276" y2="47" stroke="var(--yellow)" stroke-width="2" stroke-linecap="round"/><rect x="220" y="62" width="43" height="20" rx="10" style="fill:var(--card)"/><text x="241.5" y="75.5" text-anchor="middle" style="fill:var(--muted)" font-family="Plus Jakarta Sans, sans-serif" font-weight="800" font-size="9.5">Arti −1</text><rect x="267" y="62" width="43" height="20" rx="10" style="fill:var(--card)"/><text x="288.5" y="75.5" text-anchor="middle" style="fill:var(--muted)" font-family="Plus Jakarta Sans, sans-serif" font-weight="800" font-size="9.5">Jenis −1</text></svg></span>
+          <span class="thumb"><svg class="game-thumb" viewBox="0 0 320 110" aria-hidden="true"><path d="M44 47 Q50 55 44 63 M52 40 Q63 55 52 70 M60 33 Q76 55 60 77" fill="none" stroke="var(--yellow)" stroke-width="3.5" stroke-linecap="round"/><path d="M128 8 L100 16 L78 40 L96 57 L108 47 L108 102 Q160 108 212 102 L212 47 L224 57 L242 40 L220 16 L192 8 Q160 30 128 8 Z" fill="#FFFFFF" stroke="var(--line)" stroke-width="1.5" stroke-linejoin="round"/><path d="M127 9 Q160 32 193 9" fill="none" stroke="var(--yellow)" stroke-width="7" stroke-linecap="round"/><path d="M79 40 L96 56 M241 40 L224 56" stroke="var(--yellow)" stroke-width="7" stroke-linecap="round"/><path d="M116 97 Q160 102 204 97" fill="none" stroke="var(--blue)" stroke-opacity=".55" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/><g font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14" text-anchor="middle"><rect x="103" y="54" width="21" height="23" rx="5" style="fill:var(--blue)"/><rect x="106" y="57" width="15" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="113.5" y="70.5" fill="#fff">S</text><rect x="126" y="54" width="21" height="23" rx="5" style="fill:var(--blue)"/><rect x="129" y="57" width="15" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="136.5" y="70.5" fill="#fff">P</text><rect x="149" y="54" width="21" height="23" rx="5" style="fill:var(--blue)"/><rect x="152" y="57" width="15" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="159.5" y="70.5" fill="#fff">E</text><rect x="172" y="54" width="21" height="23" rx="5" style="fill:var(--blue)"/><rect x="175" y="57" width="15" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="182.5" y="70.5" fill="#fff">L</text><rect x="195" y="54" width="21" height="23" rx="5" style="fill:var(--blue)"/><rect x="198" y="57" width="15" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="205.5" y="70.5" fill="#fff">L</text></g><path d="M162 54 C 172 32, 204 30, 214 56" fill="none" stroke="var(--yellow)" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/><path d="M214 56 C 236 66, 268 52, 262 30" fill="none" stroke="var(--yellow)" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/><g transform="translate(258 24) rotate(40)"><rect x="-2.5" y="0" width="5" height="40" rx="2.5" style="fill:var(--muted)"/><ellipse cx="0" cy="6" rx="1.2" ry="3" style="fill:var(--card-2)"/></g><path d="M272 10 L276 2 M279 17 L287 12 M281 26 L290 26" stroke="var(--yellow)" stroke-width="3.5" stroke-linecap="round"/></svg></span>
           <span class="row"><span class="w"><b>SpellingTees</b><small>Dengar Bibo, ketik ejaannya · 3 kata</small></span><span class="st-state" id="game-spell-state"></span></span>
         </button>
        </div>
        <div class="st-hub" id="stitch-versions" hidden>
         <button class="st-card" type="button" id="stitch-open-lemari">
           <span class="ico" style="background:var(--blue);color:#fff">W</span>
-          <span class="w"><b>Wordstitch</b><small id="stitch-lemari-sub">Kata dari lemarimu</small></span>
+          <span class="w"><b>WordStitch</b><small id="stitch-lemari-sub">Kata dari lemarimu</small></span>
           <span class="st-state" id="stitch-lemari-state"></span>
         </button>
         <button class="st-card" type="button" id="stitch-open-daily">
           <span class="ico" style="background:var(--yellow);color:var(--on-accent)">#</span>
-          <span class="w"><b id="stitch-daily-title">Wordstitch of the Day</b><small>Kata 5 huruf, sama untuk semua pemain</small></span>
+          <span class="w"><b id="stitch-daily-title">WordStitch of the Day</b><small>Kata 5 huruf, sama untuk semua pemain</small></span>
           <span class="st-state" id="stitch-daily-state"></span>
         </button>
        </div>
@@ -955,14 +957,14 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     </div>
   </section>
 
-  <!-- Wordstitch: the board -->
+  <!-- WordStitch: the board -->
   <section id="stitchplay" hidden aria-labelledby="sp-title">
     <div class="st-wrap">
       <div class="fit-top">
-        <button class="round" type="button" id="sp-close" aria-label="Kembali ke Wordstitch">
+        <button class="round" type="button" id="sp-close" aria-label="Kembali ke WordStitch">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
-        <h1 class="top-title" id="sp-title" style="flex:1;font-family:var(--ui);font-size:16px;letter-spacing:0;margin:0">Wordstitch</h1>
+        <h1 class="top-title" id="sp-title" style="flex:1;font-family:var(--ui);font-size:16px;letter-spacing:0;margin:0">WordStitch</h1>
         <span class="fit-pos" id="sp-pos"></span>
       </div>
       <div class="st-hint" id="sp-hint" hidden></div>
@@ -1391,6 +1393,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     if (on) { btn.dataset.label = btn.textContent; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span><span></span>'; btn.lastChild.textContent = label || 'Tunggu…'; }
     else if (btn.dataset.label) btn.textContent = btn.dataset.label;
   }
+  function srcName(s) { return s === 'Wordstitch' ? 'WordStitch' : (s || 'Lainnya'); }   // words saved before the 16 Nov rename
   function speak(text) {
     try { var u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); } catch (e) { /* no speech on this device */ }
   }
@@ -1682,7 +1685,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     prefetched = true;
     var lean = navigator.connection && navigator.connection.saveData;   // data saver: skip the big word list
     var uid = me.user_id;
-    api('getStitch', readToken()).then(function (r) { stitchPre = { data: r, at: Date.now(), uid: uid }; }, function () {});
+    var ep = stitchEpoch;
+    api('getStitch', readToken()).then(function (r) { stitchPre = { data: r, at: Date.now(), uid: uid, ep: ep }; }, function () {});
     if (!lean) loadStitchDict().catch(function () {});
     if (!traps) fetchTraps().catch(function () {});
   }
@@ -1992,7 +1996,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     });
   });
 
-  /* ---------- Wordstitch: guess the word in 6 tries ---------- */
+  /* ---------- WordStitch: guess the word in 6 tries ---------- */
   // Colours: b = right place (blue, stitched), y = in the word elsewhere (yellow), g = not in the word (grey).
   var ST_TRIES = 6, stitch = null, stDict = null, stDictLoad = null, dictWait = false, sp = null, stFound = [], stLookupBusy = false;
   var ST_KEYS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
@@ -2014,7 +2018,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   }
   // Mini games hub: 'all' = one card per game; 'stitch' / 'remix' = the versions of that game
   var hubView = 'all';
-  var HUB = { all: ['Mini games', 'Tiap puzzle bisa dimainkan sehari sekali.'], stitch: ['Wordstitch', 'Jahit huruf jadi kata. 6 kali tebak, sehari sekali.'],
+  var HUB = { all: ['Mini games', 'Tiap puzzle bisa dimainkan sehari sekali.'], stitch: ['WordStitch', 'Jahit huruf jadi kata. 6 kali tebak, sehari sekali.'],
     remix: ['WordRemix', 'Ganti 1 huruf tiap langkah sampai jadi kata tujuan. Makin sedikit langkah, makin keren.'],
     spell: ['SpellingTees', 'Dengar Bibo, ketik ejaannya. 3 kata, sehari sekali. Clue boleh, tapi poinnya berkurang.'] };
   function setHubView(v) {
@@ -2033,14 +2037,21 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     setHubView('all');
     show('stitch');
     msg($('stitch-msg'), '', 'error');
-    if (stitchPre && me && stitchPre.uid === me.user_id && Date.now() - stitchPre.at < 60000) {   // fetched in the background a moment ago
-      stitch = stitchPre.data; stitchPre = null; renderStitchHub(); return;
+    // the prefetched copy only counts when no game was saved since it was asked for, and it is newer than what we have
+    if (stitchPre && me && stitchPre.uid === me.user_id && stitchPre.ep === stitchEpoch && stitchPre.at > stitchAt) { stitch = stitchPre.data; stitchAt = stitchPre.at; stitchUid = stitchPre.uid; }
+    stitchPre = null;
+    // today's data already here (prefetch or an earlier visit): show it at once, refresh quietly when it is older than 20 s
+    if (stitch && me && stitchUid === me.user_id && stitch.day === jakartaToday()) {
+      renderStitchHub();
+      if (Date.now() - stitchAt > 20000) refreshStitch();
+      return;
     }
     $('stitch-cards').hidden = true; $('stitch-loading').hidden = false; $('stitch-retry').hidden = true;
     $('stitch-loading-text').textContent = 'Bibo lagi nyiapin puzzle…';
     loadStitchDict().catch(function () { /* needed only when a guess is checked */ });   // the hub itself does not need the word list
+    var uid = me && me.user_id;
     api('getStitch', readToken()).then(function (r) {
-      stitch = r;
+      stitch = r; stitchAt = Date.now(); stitchUid = uid;
       renderStitchHub();
     }, function (e) {
       if (e && SESSION_RE.test(e.message)) { failed(e, null); return; }
@@ -2049,13 +2060,26 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     });
   }
   $('stitch-retry').addEventListener('click', openStitch);
+  var stitchAt = 0, stitchUid = null, stitchEpoch = 0, stitchRefreshing = false;   // stitchEpoch: +1 on every saved game
+  function jakartaToday() { try { return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }); } catch (e) { return ''; } }
+  function refreshStitch() {
+    if (stitchRefreshing || !me) return;
+    stitchRefreshing = true;
+    var uid = me.user_id, ep = stitchEpoch;
+    api('getStitch', readToken()).then(function (r) {
+      stitchRefreshing = false;
+      if (!me || me.user_id !== uid || ep !== stitchEpoch) return;   // a game saved meanwhile is newer than this answer
+      stitch = r; stitchAt = Date.now(); stitchUid = uid;
+      if (current === 'stitch') renderStitchHub();
+    }, function () { stitchRefreshing = false; /* keep showing what we have */ });
+  }
   function stScore(p) { return (p.won ? p.guesses.length : 'X') + '/' + ST_TRIES; }
   function renderStitchHub() {
     $('stitch-loading').hidden = true; $('stitch-cards').hidden = false;
     var L = stitch.lemari, D = stitch.daily;
     $('stitch-lemari-sub').textContent = L ? 'Kata dari lemarimu · ' + L.word.length + ' huruf' : 'Tambah kata 4–8 huruf dulu lewat New drop';
     $('stitch-lemari-state').textContent = L && L.played ? '✓ ' + stScore(L.played) : L ? 'Main' : '';
-    $('stitch-daily-title').textContent = D ? 'Wordstitch of the Day #' + D.number : 'Wordstitch of the Day';
+    $('stitch-daily-title').textContent = D ? 'WordStitch of the Day #' + D.number : 'WordStitch of the Day';
     $('stitch-daily-state').textContent = D && D.played ? '✓ ' + stScore(D.played) : D ? 'Main' : '';
     var X = stitch.remix || {}, S = stitch.spell || {}, all = [L, D, X.ez, X.master, S.lemari, S.daily].filter(Boolean);
     $('sl-lemari-sub').textContent = S.lemari ? 'Kata dari lemarimu · ' + S.lemari.words.length + ' kata' : 'Tambah kata 3–12 huruf dulu lewat New drop';
@@ -2080,7 +2104,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     startStitch('lemari');
   });
   $('stitch-open-daily').addEventListener('click', function () {
-    if (!stitch || !stitch.daily) { msg($('stitch-msg'), 'Wordstitch of the Day belum siap. Coba lagi nanti ya.', 'error'); return; }
+    if (!stitch || !stitch.daily) { msg($('stitch-msg'), 'WordStitch of the Day belum siap. Coba lagi nanti ya.', 'error'); return; }
     startStitch('daily');
   });
   var spByMode = {};   // a game left half way is kept per mode for the rest of the day (this visit)
@@ -2094,7 +2118,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     }
     stFound = sp.found;
     show('stitchplay');
-    $('sp-title').textContent = mode === 'daily' ? 'Wordstitch of the Day #' + P.number : 'Wordstitch';
+    $('sp-title').textContent = mode === 'daily' ? 'WordStitch of the Day #' + P.number : 'WordStitch';
     $('sp-result').hidden = true;
     msg($('sp-msg'), ''); msg($('sp-save-msg'), '');
     $('sp-board').style.setProperty('--n', P.word.length);
@@ -2199,7 +2223,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     }, function () { f.state = 'none'; }).then(function () { stLookupBusy = false; renderFound(); nextLookup(); });
   }
   function renderFound() {
-    var pre = current === 'remixplay' ? 'rx' : 'sp', src = pre === 'rx' ? 'WordRemix' : 'Wordstitch', note = $(pre + '-msg');
+    var pre = current === 'remixplay' ? 'rx' : 'sp', src = pre === 'rx' ? 'WordRemix' : 'WordStitch', note = $(pre + '-msg');
     var shown = stFound.filter(function (f) { return f.state !== 'none'; });
     $(pre + '-found-box').hidden = !shown.length;
     var box = $(pre + '-found'); box.textContent = '';
@@ -2237,7 +2261,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     msg($('sp-save-msg'), 'Menyimpan hasil…', '');
     var mode = sp.mode, guesses = sp.guesses.slice(), wordId = sp.word_id;
     api('submitStitch', readToken(), { mode: mode, guesses: guesses }).then(function (r) {
-      sp.saved = true;
+      sp.saved = true; stitchEpoch++;
       stitch[mode].played = r.play;
       stats = r.stats || stats;
       if (r.word_status && wordId) words = words.map(function (w) { return w.word_id === wordId ? Object.assign({}, w, { status: r.word_status, updated_at: new Date().toISOString() }) : w; });
@@ -2255,7 +2279,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   function stitchShareText() {
     var won = sp.guesses.indexOf(sp.target) !== -1;
     var score = stScore({ won: won, guesses: sp.guesses });
-    var head = sp.mode === 'daily' ? 'Wordstitch of the Day #' + sp.number + ' ' + score : 'Wordstitch ' + score + ' · kata dari lemariku';
+    var head = sp.mode === 'daily' ? 'WordStitch of the Day #' + sp.number + ' ' + score : 'WordStitch ' + score + ' · kata dari lemariku';
     var cta = sp.mode === 'daily' ? 'Bisa jahit lebih cepat dari aku? 🧵\nMain gratis 👉 unishverse.github.io/wordrobe'
       : 'Jahit kata dari lemarimu sendiri, tiap hari 🧵\nMain gratis 👉 unishverse.github.io/wordrobe';
     var EMO = { b: '🟦', y: '🟨', g: '⬜' };
@@ -2446,7 +2470,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     msg($('rx-save-msg'), 'Menyimpan hasil…', '');
     var me1 = rx, level = rx.level;
     api('submitRemix', readToken(), { level: level, trail: rx.trail.slice(), gave_up: !rx.solved }).then(function (r) {
-      me1.saved = true; me1.path = r.play.path || []; me1.par = r.play.par || me1.par;
+      me1.saved = true; stitchEpoch++; me1.path = r.play.path || []; me1.par = r.play.par || me1.par;
       if (stitch.remix && stitch.remix[level]) stitch.remix[level].played = r.play;
       stats = r.stats || stats;
       var rev = r.revised || [];
@@ -2598,7 +2622,9 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       sm.textContent = (p ? '' : 'Kamu ketik: ' + (sl.typed[i] || '–') + ' · ') + (w.meaning || '') + (used ? ' · ' + used + ' clue' : '');
       t.appendChild(sm);
       var pts = document.createElement('span'); pts.className = 'pts ' + (p ? 'ok' : 'no'); pts.textContent = p ? '+' + p : '✗';
-      row.appendChild(t); row.appendChild(pts); box.appendChild(row);
+      row.appendChild(t); row.appendChild(pts);
+      if (sl.mode === 'daily') row.appendChild(slAddButton(w));
+      box.appendChild(row);
     });
     sl.score = score;
     var good = score * 3 >= max * 2;
@@ -2610,11 +2636,34 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('sl-retry').hidden = true;
     if (fresh) saveSpell();
   }
+  // daily words can go into Lemariku: a short meaning from the dictionary (falls back to the list's definition)
+  function slAddButton(w) {
+    var key = slKey(w.word), add = document.createElement('button');
+    add.type = 'button'; add.className = 'add';
+    var mark = function (saved) { add.disabled = saved; add.textContent = saved ? '✓ Di lemari' : '+ Lemari'; };
+    mark(hasWord(key));
+    add.setAttribute('aria-label', 'Tambah ' + w.word + ' ke lemari');
+    add.addEventListener('click', function () {
+      if (hasWord(key)) { mark(true); return; }
+      add.disabled = true; add.textContent = 'Menyimpan…';
+      api('lookupWord', readToken(), w.word, '').then(function (r) {
+        if (r.already_saved) return { duplicate: true };
+        var meaning = r.translation && slKey(r.translation) !== key ? r.translation : w.meaning;
+        return api('saveWord', readToken(), { word: w.word, meaning: meaning, source: 'SpellingTees' });
+      }, function () {
+        return api('saveWord', readToken(), { word: w.word, meaning: w.meaning, source: 'SpellingTees' });
+      }).then(function (sv) {
+        if (sv && sv.word && !sv.duplicate) words.unshift(sv.word);
+        changed(); mark(true);
+      }, function (e) { failed(e, $('sl-save-msg')); mark(false); });
+    });
+    return add;
+  }
   function saveSpell() {
     msg($('sl-save-msg'), 'Menyimpan hasil…', '');
     var me1 = sl, mode = sl.mode;
     api('submitSpell', readToken(), { mode: mode, typed: sl.typed.slice(), clues: sl.clues.slice() }).then(function (r) {
-      me1.saved = true; slSaveLocalFor(me1);
+      me1.saved = true; stitchEpoch++; slSaveLocalFor(me1);
       if (stitch.spell && stitch.spell[mode]) stitch.spell[mode].played = Object.assign({}, r.play, { words: me1.words.map(function (w) { return w.word; }) });
       stats = r.stats || stats;
       var rev = r.revised || [];
@@ -2680,7 +2729,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     var segs = $('fit-segs'); segs.textContent = '';
     deck.forEach(function (x, i) { var s = document.createElement('i'); if (i < pos) s.className = 'done'; segs.appendChild(s); });
     $('fit-pos').textContent = (pos + 1) + '/' + deck.length;
-    $('fit-source').textContent = 'Dari ' + (w.source || 'Lainnya');
+    $('fit-source').textContent = 'Dari ' + srcName(w.source);
     $('fit-word').textContent = w.word;
     $('fit-sentence').textContent = w.sentence ? '“' + w.sentence + '”' : '';
     $('fit-sentence').hidden = !w.sentence;
@@ -3133,7 +3182,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('edit-tag').className = 'tag ' + st[1]; $('edit-tag').textContent = st[0];
     $('edit-meaning').value = w.meaning;
     $('edit-sentence').value = w.sentence || '';
-    $('edit-source').textContent = 'Ketemu di: ' + (w.source || 'Lainnya') + (w.sentence_translation ? ' · ' + w.sentence_translation : '');
+    $('edit-source').textContent = 'Ketemu di: ' + srcName(w.source) + (w.sentence_translation ? ' · ' + w.sentence_translation : '');
     var inRacks = rackLinks.filter(function (l) { return l.word_id === w.word_id && rackById(l.rack_id); }).map(function (l) {
       return rackById(l.rack_id).title + (l.location ? ' (' + l.location + ')' : '');
     });
