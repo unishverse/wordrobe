@@ -259,6 +259,9 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .kn-dots { display: flex; gap: 6px; }
 .kn-dot { width: 12px; height: 12px; border-radius: 999px; background: var(--card-2); box-shadow: inset 0 0 0 1.5px var(--line); }
 .kn-dot.on { background: var(--error); box-shadow: none; }
+.kn-vlabel { margin: 0; text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); }
+.kn-guess { margin: 0 auto; }
+.kn-guess .st-t { background: var(--card); }
 /* SpellingTees: listen (max 3 plays), two clues that cost a point, type the word */
 .sl-listen { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 6px 0; }
 .sl-play { width: 108px; height: 108px; border-radius: 999px; border: 0; background: var(--yellow); color: var(--on-accent); display: grid; place-items: center; cursor: pointer; }
@@ -1124,11 +1127,10 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <div class="st-hint" id="kn-cat"></div>
         <div class="kn-rows" id="kn-rows"></div>
         <div class="kn-meter"><span id="kn-spools" aria-live="polite"></span><span class="kn-lives"><span id="kn-lives-label">Salah</span><span class="kn-dots" id="kn-dots"></span></span></div>
+        <p class="kn-vlabel">Pasang vokal di semua kata · 1 🧶 per vokal</p>
         <div class="st-keys"><div class="kr" id="kn-vowels"></div></div>
-        <form class="sl-form" id="kn-form" autocomplete="off">
-          <input class="input" id="kn-input" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done" maxlength="20" placeholder="Tebak kata di baris yang dipilih" aria-label="Tebakan kata">
-          <button class="btn" type="submit" id="kn-check">Tebak</button>
-        </form>
+        <div class="kn-tiles kn-guess" id="kn-guess" aria-live="polite" aria-label="Tebakanmu"></div>
+        <div class="st-keys" id="kn-keys" aria-label="Keyboard"></div>
         <div class="msg" id="kn-msg" role="status" aria-live="polite" hidden></div>
       </div>
       <div class="st-result" id="kn-result" hidden>
@@ -1727,7 +1729,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   function peekCache() {   // before sign-in is confirmed: the last copy of this device, if it has the learner too
     try { var c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); return c && c.me && c.me.user_id && c.user_id === c.me.user_id && Array.isArray(c.words) ? c : null; } catch (e) { return null; }
   }
-  function clearCache() { try { localStorage.removeItem(CACHE_KEY); } catch (e) { /* ignore */ } }
+  function clearCache() { try { localStorage.removeItem(CACHE_KEY); localStorage.removeItem('wr_games'); } catch (e) { /* ignore */ } }
   function changed() { wordsVersion++; saveCache(); }   // after every local change, so a refresh started earlier cannot undo it
   function loadWords() {
     if (!wordsLoaded) {
@@ -2129,12 +2131,33 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     stitchBusy[g] = pr;
     return pr;
   }
+  // today's game data is also kept on this device (wr_games), so a game opened earlier today shows at once, even after the app was closed
+  var GAMES_KEY = 'wr_games';
+  function saveGamesLocal() {
+    try {
+      if (!stitch || !me || stitchUid !== me.user_id) return;
+      var d = {};
+      Object.keys(stitchAtG).forEach(function (g) { d[g] = g === 'stitch' ? { daily: stitch.daily || null, lemari: stitch.lemari || null } : stitch[g] || null; });
+      localStorage.setItem(GAMES_KEY, JSON.stringify({ uid: me.user_id, day: stitch.day, lk: stitch.lk, wc: stitch.wc, d: d }));
+    } catch (e) { /* storage full or off: memory only */ }
+  }
+  function loadGamesLocal(g) {
+    try {
+      var c = JSON.parse(localStorage.getItem(GAMES_KEY) || 'null');
+      if (!c || !me || c.uid !== me.user_id || c.day !== jakartaToday() || !c.d || !(g in c.d)) return false;
+      if (!stitch || stitchUid !== me.user_id || stitch.day !== c.day) { stitch = { day: c.day, lk: {}, wc: {} }; stitchAtG = {}; stitchUid = me.user_id; }
+      if (g === 'stitch') { stitch.daily = c.d.stitch.daily; stitch.lemari = c.d.stitch.lemari; } else stitch[g] = c.d[g];
+      stitch.lk[g] = !!(c.lk && c.lk[g]); stitch.wc[g] = c.wc ? c.wc[g] : null;
+      stitchAtG[g] = 1;   // very old: refreshed quietly right away
+      return true;
+    } catch (e) { return false; }
+  }
   function gameFresh(g) { return !!(stitch && me && stitchUid === me.user_id && stitch.day === jakartaToday() && stitchAtG[g]); }
   function openGame(g) {
     setHubView(g);
     if (g === 'stitch' || g === 'remix') loadStitchDict().catch(function () { /* needed only when a guess is checked */ });
     // data from an earlier visit today: show it at once, refresh quietly when it is older than 20 s
-    if (gameFresh(g)) { renderStitchHub(); if (Date.now() - stitchAtG[g] > 20000) refreshGame(g); return; }
+    if (gameFresh(g) || loadGamesLocal(g)) { renderStitchHub(); if (Date.now() - stitchAtG[g] > 20000) refreshGame(g); return; }
     gameLoading(g);
   }
   function gameLoading(g) {
@@ -2167,6 +2190,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   function setLine(id, line) { $(id + '-sub').textContent = line[0]; $(id + '-state').textContent = line[1]; }
   function renderStitchHub() {
     if (!stitch) return;
+    saveGamesLocal();
     if (stitchAtG.stitch) {
       var L = stitch.lemari, D = stitch.daily;
       setLine('stitch-lemari', lemariLine('stitch', L, L && L.played ? stScore(L.played) : '', 'Kata dari lemarimu · ' + (L ? L.word.length : 0) + ' huruf', 'Tambah kata 4–8 huruf dulu lewat New drop'));
@@ -2849,7 +2873,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     if (mode === 'lemari' && !(P && P.played) && lemariLocked('knit')) { lockedNote('knit'); return; }
     if (!P) { msg($('stitch-msg'), mode === 'daily' ? 'KnitWit of the Day belum siap. Coba lagi nanti ya.' : 'Belum ada 3 kata 4–9 huruf yang punya arti di lemarimu. Tambah lewat New drop dulu ya.', 'error'); return; }
     var ws = P.words.map(function (w) { return w.word; });
-    kn = { day: stitch.day, mode: mode, number: P.number || null, category: P.category || '', items: P.words, words: ws, events: [], sel: 0, done: false, saved: false };
+    kn = { typed: '', day: stitch.day, mode: mode, number: P.number || null, category: P.category || '', items: P.words, words: ws, events: [], sel: 0, done: false, saved: false };
     if (P.played) { kn.events = P.played.events.slice(); kn.done = true; kn.saved = true; }
     else {
       var m = knLoadLocal(mode, stitch.day, ws);
@@ -2863,7 +2887,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     if (kn.done) { knResult(!kn.saved); return; }
     if (st.solved[kn.sel]) kn.sel = knFirstOpen(st);
     $('kn-result').hidden = true; $('kn-game').hidden = false;
-    $('kn-input').value = '';
+    kn.typed = '';
     renderKnit();
   }
   $('kn-open-daily').addEventListener('click', function () { openKnit('daily'); });
@@ -2886,7 +2910,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       var mean = kn.items[i].meaning;
       if (kn.mode === 'lemari' && mean) { var sm = document.createElement('span'); sm.className = 'kn-mean'; sm.textContent = 'Arti: ' + mean; b.appendChild(sm); }
       b.setAttribute('aria-label', 'Baris ' + (i + 1) + (st.solved[i] ? ', sudah benar: ' + w : ', ' + w.length + ' huruf' + (i === kn.sel ? ', dipilih' : '')));
-      b.addEventListener('click', function () { kn.sel = i; knSaveLocal(); renderKnit(); try { $('kn-input').focus(); } catch (e) { /* ignore */ } });
+      b.addEventListener('click', function () { if (kn.sel !== i) kn.typed = ''; kn.sel = i; knSaveLocal(); renderKnit(); });
       box.appendChild(b);
     });
     var solvedN = st.solved.filter(Boolean).length;
@@ -2908,7 +2932,36 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       b.setAttribute('aria-label', 'Pasang vokal ' + v.toUpperCase() + ', pakai 1 spool');
       vb.appendChild(b);
     });
+    var n = kn.words[kn.sel].length, gb = $('kn-guess'); gb.textContent = ''; gb.style.setProperty('--n', n);
+    for (var q = 0; q < n; q++) { var t = document.createElement('div'); t.className = 'st-t'; t.textContent = kn.typed[q] || ''; gb.appendChild(t); }
+    var kb = $('kn-keys');
+    if (!kb.firstChild) ST_KEYS.forEach(function (line, li) {
+      var kr = document.createElement('div'), keys = line.split(''); kr.className = 'kr';
+      if (li === 2) { keys.unshift('enter'); keys.push('del'); }
+      keys.forEach(function (k) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'st-key' + (k.length > 1 ? ' wide' : '');
+        b.textContent = k === 'enter' ? 'Tebak' : k === 'del' ? '⌫' : k; b.setAttribute('data-key', k);
+        if (k === 'del') b.setAttribute('aria-label', 'Hapus huruf');
+        kr.appendChild(b);
+      });
+      kb.appendChild(kr);
+    });
   }
+  function knKey(k) {
+    if (!kn || kn.done) return;
+    if (k === 'enter') { knGuess(); return; }
+    if (k === 'del') kn.typed = kn.typed.slice(0, -1);
+    else if (/^[a-z]$/.test(k) && kn.typed.length < kn.words[kn.sel].length) kn.typed += k;
+    else return;
+    msg($('kn-msg'), ''); renderKnit();
+  }
+  $('kn-keys').addEventListener('click', function (ev) { var b = ev.target.closest('[data-key]'); if (b) knKey(b.getAttribute('data-key')); });
+  document.addEventListener('keydown', function (ev) {
+    if (current !== 'knitplay' || !kn || kn.done || ev.ctrlKey || ev.metaKey || ev.altKey || sheetOpen()) return;
+    var k = ev.key === 'Enter' ? 'enter' : ev.key === 'Backspace' ? 'del' : /^[a-zA-Z]$/.test(ev.key) ? ev.key.toLowerCase() : '';
+    if (!k || (k === 'enter' && ev.target && ev.target.tagName === 'BUTTON')) return;
+    ev.preventDefault(); knKey(k);
+  });
   function knAfter() {
     knSaveLocal();
     if (knReplay(kn.words, kn.events).over) { kn.done = true; knResult(true); } else renderKnit();
@@ -2921,19 +2974,18 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     kn.events.push({ t: 'v', v: v }); msg($('kn-msg'), '');
     knAfter();
   });
-  $('kn-form').addEventListener('submit', function (ev) {
-    ev.preventDefault();
+  function knGuess() {
     if (!kn || kn.done) return;
     var st = knReplay(kn.words, kn.events), row = kn.sel;
     if (st.solved[row]) { kn.sel = knFirstOpen(st); renderKnit(); return; }
-    var v = $('kn-input').value.trim().toLowerCase();
+    var v = kn.typed;
     if (!v) { msg($('kn-msg'), 'Ketik tebakanmu dulu ya.', 'error'); return; }
     if (!/^[a-z]+$/.test(v)) { msg($('kn-msg'), 'Pakai huruf A–Z saja ya.', 'error'); return; }
     if (v.length !== kn.words[row].length) { msg($('kn-msg'), 'Kata di baris ini ' + kn.words[row].length + ' huruf.', 'error'); return; }
     if (st.seen[row + ':' + v]) { msg($('kn-msg'), 'Tebakan itu sudah dicoba di baris ini.', 'error'); return; }
     kn.events.push({ t: 'g', row: row, w: v });
     var st2 = knReplay(kn.words, kn.events);
-    $('kn-input').value = '';
+    kn.typed = '';
     if (st2.solved[row]) { msg($('kn-msg'), 'Benar! ' + v.toUpperCase(), 'ok'); kn.sel = knFirstOpen(st2); }
     else {
       msg($('kn-msg'), 'Belum tepat. Sisa kesempatan salah: ' + (KN_MAX_WRONG - st2.wrong), 'error');
@@ -2941,7 +2993,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     }
     knAfter();
     if (!kn.done && !st2.solved[row]) { var rowEl = $('kn-rows').children[row]; if (rowEl) { rowEl.classList.remove('shake'); void rowEl.offsetWidth; rowEl.classList.add('shake'); } }
-  });
+  }
   function knResult(fresh) {
     $('kn-game').hidden = true; $('kn-result').hidden = false;
     var st = knReplay(kn.words, kn.events), box = $('kn-list'); box.textContent = '';
