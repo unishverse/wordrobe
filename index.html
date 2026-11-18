@@ -2765,7 +2765,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     if (fresh) saveSpell();
   }
   // daily words can go into Lemariku: a short meaning from the dictionary (falls back to the list's definition)
-  function slAddButton(w) {
+  function slAddButton(w, source, box) {
+    source = source || 'SpellingTees'; box = box || $('sl-save-msg');
     var key = slKey(w.word), add = document.createElement('button');
     add.type = 'button'; add.className = 'add';
     var mark = function (saved) { add.disabled = saved; add.textContent = saved ? '✓ Di lemari' : '+ Lemari'; };
@@ -2777,13 +2778,14 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       api('lookupWord', readToken(), w.word, '').then(function (r) {
         if (r.already_saved) return { duplicate: true };
         var meaning = r.translation && slKey(r.translation) !== key ? r.translation : w.meaning;
-        return api('saveWord', readToken(), { word: w.word, meaning: meaning, source: 'SpellingTees' });
-      }, function () {
-        return api('saveWord', readToken(), { word: w.word, meaning: w.meaning, source: 'SpellingTees' });
+        return api('saveWord', readToken(), { word: w.word, meaning: meaning, source: source });
+      }, function (e) {
+        if (!w.meaning) throw e;
+        return api('saveWord', readToken(), { word: w.word, meaning: w.meaning, source: source });
       }).then(function (sv) {
         if (sv && sv.word && !sv.duplicate) words.unshift(sv.word);
         changed(); mark(true);
-      }, function (e) { failed(e, $('sl-save-msg')); mark(false); });
+      }, function (e) { failed(e, box); mark(false); });
     });
     return add;
   }
@@ -2837,7 +2839,13 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     var st = { spools: KN_SPOOLS, shown: {}, solved: [], how: [], wrong: 0, seen: {}, used: 0, over: false, won: false };
     events.forEach(function (ev) {
       if (st.over) return;
-      if (ev.t === 'v') { if (st.spools > 0 && !st.shown[ev.v]) { st.shown[ev.v] = true; st.spools--; st.used++; } }
+      if (ev.t === 'v') {
+        if (st.spools > 0 && !st.shown[ev.v]) {
+          st.shown[ev.v] = true; st.spools--; st.used++;
+          // a row whose vowels are now all knitted in is complete: solved, 🟨 (a spool was used)
+          ws.forEach(function (w, i) { if (!st.solved[i] && w.split('').every(function (c) { return KN_VOWELS.indexOf(c) === -1 || st.shown[c]; })) { st.solved[i] = true; st.how[i] = 'y'; } });
+        }
+      }
       else if (ev.t === 'g') {
         var w = ws[ev.row];
         if (!w || st.solved[ev.row]) return;
@@ -2971,7 +2979,10 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     if (!b || !kn || kn.done) return;
     var v = b.getAttribute('data-v'), st = knReplay(kn.words, kn.events);
     if (st.spools <= 0 || st.shown[v]) return;
-    kn.events.push({ t: 'v', v: v }); msg($('kn-msg'), '');
+    kn.events.push({ t: 'v', v: v });
+    var st2 = knReplay(kn.words, kn.events), done = kn.words.filter(function (w, i) { return st2.solved[i] && !st.solved[i]; });
+    msg($('kn-msg'), done.length ? 'Lengkap! ' + done.map(function (w) { return w.toUpperCase(); }).join(', ') : '', 'ok');
+    if (st2.solved[kn.sel]) { kn.sel = knFirstOpen(st2); kn.typed = ''; }
     knAfter();
   });
   function knGuess() {
@@ -3006,6 +3017,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       if (mean) { var sm = document.createElement('small'); sm.textContent = mean; t.appendChild(sm); }
       var pts = document.createElement('span'); pts.className = 'pts ' + (st.solved[i] ? 'ok' : 'no'); pts.textContent = st.solved[i] ? '✓' : '✗';
       row.appendChild(t); row.appendChild(pts);
+      if (kn.mode === 'daily') row.appendChild(slAddButton({ word: w, meaning: mean || '' }, 'KnitWit', $('kn-save-msg')));
       box.appendChild(row);
     });
     $('kn-bibo').src = 'img/' + (st.won ? 'bibo-clap' : 'bibo-surprised') + '.webp';
