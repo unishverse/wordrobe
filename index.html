@@ -619,11 +619,11 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <button class="ring-btn" type="button" id="ring-fit-btn">
             <svg width="68" height="68" viewBox="0 0 68 68" aria-hidden="true"><circle cx="34" cy="34" r="27" fill="none" stroke-width="6" style="stroke:var(--line)"/><circle id="ring-fit" cx="34" cy="34" r="27" fill="none" stroke="#FF8FB1" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 169.6" transform="rotate(-90 34 34)"/><path d="M27 25h12v18H27z" fill="none" stroke-width="2" stroke-linejoin="round" style="stroke:var(--text)"/><path d="M41 28l3 1-4 15-3-1" fill="none" stroke-width="2" stroke-linejoin="round" style="stroke:var(--text)"/></svg>
             <span class="ring-name">Fit check</span>
-            <span class="ring-sub" id="ring-fit-sub">0/5 kartu</span>
+            <span class="ring-sub" id="ring-fit-sub">0/10 kartu</span>
           </button>
           <button class="ring-btn" type="button" id="ring-speak-btn">
             <svg width="68" height="68" viewBox="0 0 68 68" aria-hidden="true"><circle cx="34" cy="34" r="27" fill="none" stroke-width="6" style="stroke:var(--line)"/><circle id="ring-speak" cx="34" cy="34" r="27" fill="none" stroke="#FFD23F" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 169.6" stroke-opacity="0" transform="rotate(-90 34 34)"/><path d="M27 34v-1M31 38v-9M35 41v-15M39 37v-7M43 34v-1" fill="none" stroke="#FFD23F" stroke-width="2.4" stroke-linecap="round"/></svg>
-            <span class="ring-name">Ngomong</span><span class="ring-sub" id="ring-speak-sub">0/5 kata</span>
+            <span class="ring-name">Ngomong</span><span class="ring-sub" id="ring-speak-sub">0/10 kata</span>
           </button>
           <button class="ring-btn" type="button" id="ring-fix-btn">
             <svg width="68" height="68" viewBox="0 0 68 68" aria-hidden="true"><circle cx="34" cy="34" r="27" fill="none" stroke-width="6" style="stroke:var(--line)"/><circle id="ring-fix" cx="34" cy="34" r="27" fill="none" stroke="#7EE0B5" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 169.6" stroke-opacity="0" transform="rotate(-90 34 34)"/><path d="M26 35l5 5 11-12" fill="none" stroke="#7EE0B5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1815,9 +1815,9 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     var list = $('recent-list'); list.textContent = '';
     words.slice(0, 3).forEach(function (w) { list.appendChild(wordRow(w)); });
     $('recent-empty').hidden = !wordsLoaded || words.length > 0;
-    var goal = stats ? stats.goal : 5;
-    [['fit', 'kartu'], ['speak', 'kata'], ['fix', 'kalimat']].forEach(function (m) {
-      var n = stats ? (m[0] === 'fit' ? (stats.fit != null ? stats.fit : stats.today) : stats[m[0]] || 0) : 0;
+    // a full ring = one full round: Fit check and Ngomong 10, Benerin 5
+    [['fit', 'kartu', FIT_MAX], ['speak', 'kata', SPEAK_MAX || 10], ['fix', 'kalimat', FIX_MAX || 5]].forEach(function (m) {
+      var goal = m[2], n = stats ? (m[0] === 'fit' ? (stats.fit != null ? stats.fit : stats.today) : stats[m[0]] || 0) : 0;
       $('ring-' + m[0]).setAttribute('stroke-dasharray', (Math.min(n, goal) / goal * RING).toFixed(1) + ' ' + RING);
       $('ring-' + m[0]).setAttribute('stroke-opacity', n > 0 ? '1' : '0');
       $('ring-' + m[0] + '-sub').textContent = Math.min(n, goal) + '/' + goal + ' ' + m[1];
