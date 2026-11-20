@@ -61,6 +61,8 @@ button, input, textarea { font: inherit; }
   border: 0; border-radius: 999px; background: var(--yellow); color: var(--on-accent); font-weight: 800; font-size: 16px; cursor: pointer; }
 .btn:disabled { opacity: .55; cursor: default; }
 .btn--ghost { background: var(--card-2); color: var(--text); }
+.btn--go { background: #15803D; color: #fff; }
+.btn--stop { background: #DC2626; color: #fff; }
 .btn--trial { background: transparent; color: var(--ok-text); box-shadow: inset 0 0 0 1.5px var(--ok-text); }
 .btn--danger { background: transparent; color: var(--error); box-shadow: inset 0 0 0 1.5px var(--error); }
 .link { background: none; border: 0; padding: 8px 4px; min-height: 44px; color: var(--accent-text); font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
@@ -177,7 +179,24 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .rack-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .rack-actions .btn { width: auto; min-height: 44px; font-size: 14px; padding: 0 16px; }
 .word-row .w small { font-size: 12px; color: var(--ok-text); font-weight: 700; }
-.tile--stitch { grid-column: 1 / -1; min-height: 88px; background: var(--mint); color: var(--on-accent); cursor: pointer; }
+/* Beranda: Mini games strip (cards swipe sideways; all visible on a laptop) */
+.home-games { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.home-games-head { display: flex; align-items: flex-end; gap: 10px; padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.home-games-head .w { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.home-games-head b { font-family: var(--display); font-size: 21px; font-weight: 800; }
+.home-games-head small { font-size: 13px; color: var(--muted); }
+.home-games-head .all { flex: none; font-weight: 800; font-size: 14px; color: var(--accent-text); }
+.games-strip { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -20px; padding: 0 20px 4px; scrollbar-width: none; }
+.games-strip::-webkit-scrollbar { display: none; }
+.gs-card { position: relative; flex: 0 0 138px; scroll-snap-align: start; display: flex; flex-direction: column; padding: 0; border: 0; border-radius: 18px; overflow: hidden; background: var(--card); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.gs-card .thumb { position: relative; aspect-ratio: 16 / 10; background: var(--card-2); }
+.gs-card .game-thumb { position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); max-width: none; }
+.gs-card b { padding: 8px 10px 10px; font-family: var(--display); font-size: 15px; font-weight: 800; }
+.gs-done { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 999px; display: grid; place-items: center; background: var(--mint); color: var(--on-accent); font-size: 13px; font-weight: 800; }
+@media (min-width: 768px) { .games-strip { margin: 0; padding: 0 0 4px; } }
+@media (min-width: 1024px) { .games-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); overflow: visible; margin: 0; padding: 0; } .gs-card { flex: none; } }
+.rx-stack { display: flex; flex-direction: column; gap: 10px; }
+.install-link { align-self: center; text-align: center; }
 .st-hub { display: flex; flex-direction: column; gap: 12px; }
 .st-card { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 18px; border: 0; border-radius: 22px; background: var(--card); color: var(--text); text-align: left; font: inherit; cursor: pointer; }
 .st-card .ico { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; flex: none; font-family: var(--display); font-weight: 800; font-size: 22px; }
@@ -633,6 +652,14 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <button class="btn btn--ghost" type="button" id="nudge-later">Nanti aja</button>
         </div>
       </div>
+      <div class="nudge" id="install-nudge" hidden>
+        <b>Pasang Wordrobe di HP 📲</b>
+        <p class="note">Buka langsung dari layar utama, kayak aplikasi. Biar latihan tiap hari gampang dan streak-mu nggak putus.</p>
+        <div class="nudge-actions">
+          <button class="btn" type="button" id="install-go">Pasang</button>
+          <button class="btn btn--ghost" type="button" id="install-later">Nanti aja</button>
+        </div>
+      </div>
       <div class="home-grid">
       <div class="home-main">
       <div class="daily">
@@ -656,6 +683,10 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           </button>
         </div>
       </div>
+      <div class="home-games">
+        <button class="home-games-head" type="button" id="home-stitch"><span class="w"><b>Mini games</b><small id="home-stitch-sub">5 game · puzzle baru tiap hari</small></span><span class="all">Semua ›</span></button>
+        <div class="games-strip" id="home-games" aria-label="Mini games"></div>
+      </div>
       <div class="rack-card" id="rack-card"></div>
       <button class="drop-btn" type="button" id="home-drop">
         <span class="plus" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
@@ -664,7 +695,6 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       <div class="tiles">
         <button class="tile tile--blue" type="button" id="home-lemari"><b>Lemariku</b><small id="home-count">0 kata</small></button>
         <button class="tile tile--pink" type="button" id="home-fit"><b>Fit check</b><small id="home-fit-sub">Latihan 5 menit</small></button>
-        <button class="tile tile--stitch" type="button" id="home-stitch"><b>Mini games</b><small id="home-stitch-sub">5 game · puzzle baru tiap hari</small></button>
       </div>
       </div>
       <div class="stack home-side" style="gap:10px">
@@ -1060,6 +1090,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <span id="sp-meaning" style="font-weight:700"></span>
         <span class="note" id="sp-note"></span>
         <div class="msg" id="sp-save-msg" role="status" hidden style="white-space:pre-line"></div>
+        <button class="link install-link" type="button" hidden>📲 Biar besok gampang balik, pasang Wordrobe di HP ›</button>
         <div class="st-actions">
           <button class="btn" type="button" id="sp-share">Bagikan hasil</button>
           <button class="btn btn--ghost" type="button" id="sp-back">Puzzle lain</button>
@@ -1095,6 +1126,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <span class="rx-path" id="rx-path" hidden></span>
         <span class="note" id="rx-note"></span>
         <div class="msg" id="rx-save-msg" role="status" hidden style="white-space:pre-line"></div>
+        <button class="link install-link" type="button" hidden>📲 Biar besok gampang balik, pasang Wordrobe di HP ›</button>
         <div class="st-actions">
           <button class="btn" type="button" id="rx-share">Bagikan hasil</button>
           <button class="btn btn--ghost" type="button" id="rx-back">Puzzle lain</button>
@@ -1106,7 +1138,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <div class="st-found" id="rx-found"></div>
       </div>
       <div class="st-keys" id="rx-keys" aria-label="Keyboard"></div>
-      <div class="rx-tools" id="rx-tools"><button class="btn btn--ghost" type="button" id="rx-giveup">Nyerah</button></div>
+      <div class="rx-stack" id="rx-tools"><button class="btn btn--go" type="button" id="rx-enter">Enter</button><button class="btn btn--stop" type="button" id="rx-giveup">Nyerah</button></div>
     </div>
   </section>
 
@@ -1150,6 +1182,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <div class="sl-list" id="sl-list"></div>
         <span class="note" id="sl-note"></span>
         <div class="msg" id="sl-save-msg" role="status" hidden style="white-space:pre-line"></div>
+        <button class="link install-link" type="button" hidden>📲 Biar besok gampang balik, pasang Wordrobe di HP ›</button>
         <div class="st-actions">
           <button class="btn" type="button" id="sl-share">Bagikan hasil</button>
           <button class="btn btn--ghost" type="button" id="sl-back">Puzzle lain</button>
@@ -1185,6 +1218,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <div class="sl-list" id="kn-list"></div>
         <span class="note" id="kn-note"></span>
         <div class="msg" id="kn-save-msg" role="status" hidden style="white-space:pre-line"></div>
+        <button class="link install-link" type="button" hidden>📲 Biar besok gampang balik, pasang Wordrobe di HP ›</button>
         <div class="st-actions">
           <button class="btn" type="button" id="kn-share">Bagikan hasil</button>
           <button class="btn btn--ghost" type="button" id="kn-back">Puzzle lain</button>
@@ -1217,7 +1251,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <div class="rx-tools">
           <button class="btn btn--ghost" type="button" id="th-undo">Batalkan</button>
           <button class="btn btn--ghost" type="button" id="th-reset">Reset</button>
-          <button class="btn btn--ghost" type="button" id="th-giveup">Nyerah</button>
+          <button class="btn btn--stop" type="button" id="th-giveup">Nyerah</button>
         </div>
         <div class="msg" id="th-msg" role="status" aria-live="polite" hidden></div>
       </div>
@@ -1228,6 +1262,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <div class="sl-list" id="th-list"></div>
         <span class="note" id="th-note"></span>
         <div class="msg" id="th-save-msg" role="status" hidden style="white-space:pre-line"></div>
+        <button class="link install-link" type="button" hidden>📲 Biar besok gampang balik, pasang Wordrobe di HP ›</button>
         <div class="st-actions">
           <button class="btn" type="button" id="th-share">Bagikan hasil</button>
           <button class="btn btn--ghost" type="button" id="th-back">Puzzle lain</button>
@@ -1252,6 +1287,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       <button class="btn btn--ghost" type="button" id="slay-retry" hidden>Coba simpan lagi</button>
       <button class="btn" type="button" id="slay-again">Fit check lagi</button>
       <button class="btn btn--ghost" type="button" id="slay-home">Ke Beranda</button>
+      <button class="link install-link" type="button" hidden>📲 Biar besok gampang balik, pasang Wordrobe di HP ›</button>
     </div>
   </section>
 
@@ -1355,6 +1391,15 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   </div>
 </div>
 
+<!-- Install steps (when the browser offers no install dialog) -->
+<div class="sheet" id="install-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="install-title">
+  <div class="sheet-card">
+    <h2 id="install-title">Pasang Wordrobe 📲</h2>
+    <p class="note" id="install-steps" style="white-space:pre-line"></p>
+    <button class="btn" type="button" id="install-ok">Oke</button>
+  </div>
+</div>
+
 <!-- Account sheet -->
 <div class="sheet" id="menu-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="menu-title">
   <div class="sheet-card">
@@ -1365,7 +1410,6 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       <div class="chips" id="theme-chips" role="group" aria-labelledby="theme-label"></div>
     </div>
     <button class="btn btn--ghost" type="button" id="menu-install" hidden>Pasang ke layar utama</button>
-    <p class="note" id="menu-install-note" hidden>Di Safari: ketuk tombol Bagikan, lalu pilih "Tambah ke Layar Utama".</p>
     <button class="btn btn--ghost" type="button" id="menu-add-email" hidden>Tambah email</button>
     <button class="btn btn--ghost" type="button" id="menu-password">Atur password</button>
     <button class="btn btn--ghost" type="button" id="menu-logout">Keluar</button>
@@ -1503,7 +1547,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     syncHistory();
   }
   /* Back button / swipe-back: one extra history entry while a deeper screen or a sheet is open, so Back closes it instead of leaving the app */
-  var SHEET_IDS = ['menu-sheet', 'pw-sheet', 'email-sheet', 'rack-sheet', 'edit-sheet'], BASE_SCREENS = ['home', 'landing', 'restore', 'signin'], skipPop = false;
+  var SHEET_IDS = ['menu-sheet', 'pw-sheet', 'email-sheet', 'rack-sheet', 'edit-sheet', 'install-sheet'], BASE_SCREENS = ['home', 'landing', 'restore', 'signin'], skipPop = false;
   function sheetOpen() { return SHEET_IDS.some(function (i) { var e = $(i); return e && !e.hidden; }); }
   try { if (history.state && history.state.wr) history.replaceState(null, ''); } catch (e) { /* a reload keeps the old marker: start clean */ }
   function syncHistory() {
@@ -1718,10 +1762,11 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   function nudgeState() { try { return JSON.parse(localStorage.getItem(NUDGE_KEY) || 'null') || { n: 0, until: 0 }; } catch (e) { return { n: 0, until: 0 }; } }
   function renderEmailNudge() {
     var box = $('email-nudge');
+    renderInstall();   // one card at a time: while the install card shows, the email card waits
     if (!me || me.email) { box.hidden = true; return; }
     var st = nudgeState(), created = Date.parse(me.created_at || '');
     var due = (wordsLoaded && words.length >= 5) || (isFinite(created) && Date.now() - created >= 3 * 86400000);
-    box.hidden = !(due && st.n < 3 && Date.now() >= (st.until || 0));
+    box.hidden = !(due && st.n < 3 && Date.now() >= (st.until || 0)) || !$('install-nudge').hidden;
   }
   function openEmailSheet() {
     $('email-sheet').hidden = false;
@@ -1901,6 +1946,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     return b;
   }
   function renderHome() {
+    homeGamesDone();
     $('home-count').textContent = wordsLoaded ? words.length + ' kata' : '…';
     var list = $('recent-list'); list.textContent = '';
     words.slice(0, 3).forEach(function (w) { list.appendChild(wordRow(w)); });
@@ -2197,6 +2243,34 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   $('stitch-up').addEventListener('click', function () { if (hubView !== 'all') setHubView('all'); else go('home'); });
   ['stitch', 'remix', 'spell', 'knit', 'thread'].forEach(function (g) { $('game-' + g).addEventListener('click', function () { openGame(g); }); });
   function openStitch() { setHubView('all'); show('stitch'); }   // the card list needs no data
+  // Beranda: one small card per game (thumbnail copied from the hub card); a tap opens that game's versions
+  var GAME_LIST = ['stitch', 'remix', 'spell', 'knit', 'thread'];
+  (function buildHomeGames() {
+    var box = $('home-games');
+    GAME_LIST.forEach(function (g) {
+      var src = $('game-' + g), b = document.createElement('button');
+      b.type = 'button'; b.className = 'gs-card'; b.id = 'home-game-' + g; b.setAttribute('data-game', g);
+      var th = document.createElement('span'); th.className = 'thumb'; th.appendChild(src.querySelector('.game-thumb').cloneNode(true));
+      var name = document.createElement('b'); name.textContent = src.querySelector('.row b').textContent;
+      var done = document.createElement('span'); done.className = 'gs-done'; done.textContent = '✓'; done.hidden = true; done.setAttribute('aria-label', 'Sudah main hari ini');
+      b.appendChild(th); b.appendChild(name); b.appendChild(done);
+      b.addEventListener('click', function () { go('stitch'); openGame(g); });
+      box.appendChild(b);
+    });
+  })();
+  // ✓ when every "of the Day" version of a game was played today (data the page already has: memory or wr_games); no server call
+  function homeGamesDone() {
+    var c = null;
+    try { c = JSON.parse(localStorage.getItem('wr_games') || 'null'); } catch (e) { c = null; }
+    var day = jakartaToday();
+    GAME_LIST.forEach(function (g) {
+      var d = null;
+      if (stitch && me && stitchUid === me.user_id && stitch.day === day && stitchAtG[g]) d = g === 'stitch' ? { daily: stitch.daily } : stitch[g];
+      else if (c && me && c.uid === me.user_id && c.day === day && c.d && c.d[g]) d = c.d[g];
+      var ok = !!d && (g === 'remix' || g === 'thread' ? !!(d.ez && d.ez.played && d.master && d.master.played) : !!(d.daily && d.daily.played));
+      $('home-game-' + g).querySelector('.gs-done').hidden = !ok;
+    });
+  }
   var stitchAtG = {}, stitchBusy = {}, stitchUid = null, stitchEpoch = 0;   // stitchEpoch: +1 on every saved game; stitchAtG: when each game's data came
   function jakartaToday() { try { return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }); } catch (e) { return ''; } }
   // the lemari mode needs LEMARI_MIN words; the page knows its own list, the server checks again (and says so when they differ)
@@ -2281,7 +2355,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   function setLine(id, line) { $(id + '-sub').textContent = line[0]; $(id + '-state').textContent = line[1]; }
   function renderStitchHub() {
     if (!stitch) return;
-    saveGamesLocal();
+    saveGamesLocal(); homeGamesDone();
     if (stitchAtG.stitch) {
       var L = stitch.lemari, D = stitch.daily;
       setLine('stitch-lemari', lemariLine('stitch', L, L && L.played ? stScore(L.played) : '', 'Kata dari lemarimu · ' + (L ? L.word.length : 0) + ' huruf', 'Tambah kata 4–8 huruf dulu lewat New drop'));
@@ -2605,7 +2679,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     ST_KEYS.forEach(function (line, li) {
       var kr = document.createElement('div'); kr.className = 'kr';
       var keys = line.split('');
-      if (li === 2) { keys.unshift('enter'); keys.push('del'); }
+      if (li === 2) keys.push('del');   // Enter is the big green button under the keyboard
       keys.forEach(function (k) {
         var b = document.createElement('button'); b.type = 'button';
         b.className = 'st-key' + (k.length > 1 ? ' wide' : '');
@@ -2618,6 +2692,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     });
   }
   $('rx-keys').addEventListener('click', function (ev) { var b = ev.target.closest('[data-key]'); if (b) remixKey(b.getAttribute('data-key')); });
+  $('rx-enter').addEventListener('click', function () { remixKey('enter'); });
   $('rx-chain').addEventListener('click', function (ev) {
     var t = ev.target.closest('[data-pos]');
     if (!t || !rx || rx.done) return;
@@ -3929,17 +4004,54 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   });
 
   /* ---------- installable web app: service worker + "Pasang ke layar utama" ---------- */
-  var installEvt = null;
+  // Entry points: card on Beranda (phones, from day 1, "Nanti aja" = 7 days, max 3), the Akun menu, and a line under results.
+  // The browser's own install dialog when it offers one; otherwise short steps for this phone (in-app browsers cannot install).
+  var installEvt = null, INSTALL_KEY = 'wr_install_nudge';
   var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
-  if (!standalone) {
-    window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; $('menu-install').hidden = false; });
-    if (/iphone|ipad|ipod/i.test(navigator.userAgent)) $('menu-install').hidden = false;
+  var UA = navigator.userAgent || '', IS_IOS = /iphone|ipad|ipod/i.test(UA), IS_ANDROID = /android/i.test(UA);
+  var IN_APP = /Instagram|FBAN|FBAV|FB_IAB|WhatsApp|TikTok|musical_ly|BytedanceWebview|Line\//i.test(UA);
+  function installState() { try { return JSON.parse(localStorage.getItem(INSTALL_KEY) || 'null') || { n: 0, until: 0 }; } catch (e) { return { n: 0, until: 0 }; } }
+  function canInstall() { return !standalone && !installState().done && (!!installEvt || IS_IOS || IS_ANDROID); }
+  function installNudgeDue() { var st = installState(); return canInstall() && (IS_IOS || IS_ANDROID) && (st.n || 0) < 3 && Date.now() >= (st.until || 0); }
+  function renderInstall() {
+    var ok = canInstall();
+    $('menu-install').hidden = !ok;
+    $('install-nudge').hidden = !(me && installNudgeDue());
+    Array.prototype.forEach.call(document.querySelectorAll('.install-link'), function (b) { b.hidden = !ok; });
   }
-  window.addEventListener('appinstalled', function () { installEvt = null; $('menu-install').hidden = true; $('menu-install-note').hidden = true; });
-  $('menu-install').addEventListener('click', function () {
-    if (installEvt) { installEvt.prompt(); installEvt = null; $('menu-install').hidden = true; }
-    else $('menu-install-note').hidden = false;
+  function installDone() {
+    var st = installState(); st.done = true;
+    try { localStorage.setItem(INSTALL_KEY, JSON.stringify(st)); } catch (e) { /* ignore */ }
+    installEvt = null; renderInstall(); renderEmailNudge();
+  }
+  function installSteps() {
+    if (IN_APP) return 'Kamu lagi buka Wordrobe dari browser di dalam aplikasi (Instagram, WhatsApp, TikTok). Dari sini belum bisa dipasang.\n\n1. Ketuk ⋮ atau ⋯ di pojok layar.\n2. Pilih “Buka di Chrome” atau “Buka di Safari”.\n3. Ketuk Pasang lagi dari sana.';
+    if (IS_IOS) return '1. Buka unishverse.github.io/wordrobe di Safari.\n2. Ketuk tombol Bagikan (kotak dengan panah ke atas).\n3. Pilih “Tambah ke Layar Utama”, lalu “Tambah”.';
+    if (IS_ANDROID) return '1. Ketuk ⋮ di pojok kanan atas Chrome.\n2. Pilih “Instal aplikasi” atau “Tambahkan ke layar utama”.\n3. Ketuk Instal.';
+    return 'Di Chrome atau Edge: klik ikon pasang di kolom alamat, atau menu ⋮ → “Instal Wordrobe”.';
+  }
+  function doInstall() {
+    if (installEvt && !IN_APP) {
+      var e = installEvt; installEvt = null;
+      e.prompt();
+      if (e.userChoice) e.userChoice.then(function (c) { if (c && c.outcome === 'accepted') installDone(); else renderInstall(); }, function () { renderInstall(); });
+      return;
+    }
+    $('install-steps').textContent = installSteps();
+    $('menu-sheet').hidden = true; $('install-sheet').hidden = false;
+  }
+  if (!standalone) window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; renderInstall(); });
+  window.addEventListener('appinstalled', installDone);
+  $('menu-install').addEventListener('click', doInstall);
+  $('install-go').addEventListener('click', doInstall);
+  $('install-ok').addEventListener('click', function () { $('install-sheet').hidden = true; });
+  $('install-later').addEventListener('click', function () {
+    var st = installState(); st.n = (st.n || 0) + 1; st.until = Date.now() + 7 * 86400000;
+    try { localStorage.setItem(INSTALL_KEY, JSON.stringify(st)); } catch (e) { /* this visit only */ }
+    renderInstall(); renderEmailNudge();
   });
+  document.addEventListener('click', function (ev) { if (ev.target.closest && ev.target.closest('.install-link')) doInstall(); });
+  renderInstall();
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* the app works without it */ }); });
   }
