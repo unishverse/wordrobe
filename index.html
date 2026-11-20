@@ -262,6 +262,22 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .kn-vlabel { margin: 0; text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); }
 .kn-guess { margin: 0 auto; }
 .kn-guess .st-t { background: var(--card); }
+/* ThreadIt: one thread (yellow, stitched) through every cell of a square grid */
+.th-board { position: relative; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 4px; align-self: center; width: 100%; max-width: calc(var(--n) * 62px); touch-action: none; user-select: none; -webkit-user-select: none; }
+.th-board--done { max-width: calc(var(--n) * 40px); touch-action: auto; }
+.th-board--done .th-c { cursor: default; }
+.th-c { aspect-ratio: 1; border-radius: 10px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--line); display: grid; place-items: center; cursor: pointer; }
+.th-c.on { background: var(--card-2); }
+.th-c b { position: relative; z-index: 3; width: 72%; height: 72%; border-radius: 8px; display: grid; place-items: center; background: var(--blue); color: #fff; outline: 1.5px dashed rgba(255,255,255,.85); outline-offset: -4px; font-family: var(--display); font-weight: 800; font-size: clamp(14px, 5vw, 24px); text-transform: uppercase; }
+.th-board--done .th-c b { font-size: clamp(11px, 3.4vw, 16px); }
+.th-c.start b { background: var(--yellow); color: var(--on-accent); outline-color: rgba(0,0,0,.35); }
+.th-c.last { box-shadow: inset 0 0 0 3px var(--yellow); }
+.th-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; overflow: visible; }
+.th-svg .th-yarn { fill: none; stroke: var(--yellow); stroke-linecap: round; stroke-linejoin: round; }
+.th-svg .th-stitch { fill: none; stroke: #fff; stroke-opacity: .8; stroke-dasharray: 4 4; stroke-linecap: round; stroke-linejoin: round; }
+.th-spelled { min-height: 28px; text-align: center; font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-text); overflow-wrap: anywhere; }
+.th-board.shake { animation: shake .35s; }
+@media (prefers-reduced-motion: reduce) { .th-board.shake { animation: none; } }
 /* SpellingTees: listen (max 3 plays), two clues that cost a point, type the word */
 .sl-listen { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 6px 0; }
 .sl-play { width: 108px; height: 108px; border-radius: 999px; border: 0; background: var(--yellow); color: var(--on-accent); display: grid; place-items: center; cursor: pointer; }
@@ -639,7 +655,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       <div class="tiles">
         <button class="tile tile--blue" type="button" id="home-lemari"><b>Lemariku</b><small id="home-count">0 kata</small></button>
         <button class="tile tile--pink" type="button" id="home-fit"><b>Fit check</b><small id="home-fit-sub">Latihan 5 menit</small></button>
-        <button class="tile tile--stitch" type="button" id="home-stitch"><b>Mini games</b><small id="home-stitch-sub">4 game · puzzle baru tiap hari</small></button>
+        <button class="tile tile--stitch" type="button" id="home-stitch"><b>Mini games</b><small id="home-stitch-sub">5 game · puzzle baru tiap hari</small></button>
       </div>
       </div>
       <div class="stack home-side" style="gap:10px">
@@ -940,6 +956,10 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <span class="thumb"><svg class="game-thumb" viewBox="0 0 320 110" aria-hidden="true"><g transform="translate(36 14) rotate(-30)"><rect x="-2.5" y="0" width="5" height="46" rx="2.5" style="fill:var(--muted)"/><ellipse cx="0" cy="6" rx="1.2" ry="3" style="fill:var(--card-2)"/></g><path d="M30 20 C 10 50, 50 90, 80 62" fill="none" stroke="var(--yellow)" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/><rect x="90" y="6" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="93.5" y="9.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="102" y="22.8" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">T</text><rect x="119" y="6" width="24" height="24" rx="5" style="fill:var(--yellow)"/><text x="131" y="22.8" text-anchor="middle" style="fill:var(--on-accent)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">O</text><rect x="148.75" y="6.75" width="22" height="22" rx="5" style="fill:var(--card)" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="3 2.5"/><rect x="177" y="6" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="180.5" y="9.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="189" y="22.8" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">S</text><rect x="206" y="6" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="209.5" y="9.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="218" y="22.8" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">T</text><rect x="75.5" y="43" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="79" y="46.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="87.5" y="59.8" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">C</text><rect x="104.5" y="43" width="24" height="24" rx="5" style="fill:var(--yellow)"/><text x="116.5" y="59.8" text-anchor="middle" style="fill:var(--on-accent)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">O</text><rect x="133.5" y="43" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="137" y="46.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="145.5" y="59.8" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">F</text><rect x="162.5" y="43" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="166" y="46.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="174.5" y="59.8" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">F</text><rect x="192.25" y="43.75" width="22" height="22" rx="5" style="fill:var(--card)" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="3 2.5"/><rect x="221.25" y="43.75" width="22" height="22" rx="5" style="fill:var(--card)" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="3 2.5"/><rect x="90" y="80" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="93.5" y="83.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="102" y="96.8" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">B</text><rect x="119.75" y="80.75" width="22" height="22" rx="5" style="fill:var(--card)" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="3 2.5"/><rect x="148" y="80" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="151.5" y="83.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="160" y="96.8" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">C</text><rect x="177" y="80" width="24" height="24" rx="5" style="fill:var(--yellow)"/><text x="189" y="96.8" text-anchor="middle" style="fill:var(--on-accent)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">O</text><rect x="206" y="80" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="209.5" y="83.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="218" y="96.8" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">N</text><circle cx="268" cy="62" r="22" style="fill:var(--pink)"/><path d="M251 50 Q268 40 285 52 M247 62 Q268 50 289 64 M251 74 Q268 66 284 76" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2" stroke-linecap="round"/><path d="M260 42 C 240 20, 215 14, 200 24" fill="none" stroke="var(--pink)" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/></svg></span>
           <span class="row"><span class="w"><b>KnitWit</b><small>Jahit vokal yang hilang · 3 kata</small></span></span>
         </button>
+        <button class="game-card" type="button" id="game-thread">
+          <span class="thumb"><svg class="game-thumb" viewBox="0 0 320 110" aria-hidden="true"><rect x="74" y="4" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="100" y="4" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="126" y="4" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="152" y="4" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="178" y="4" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="204" y="4" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="230" y="4" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="74" y="30" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="100" y="30" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="126" y="30" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="152" y="30" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="178" y="30" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="204" y="30" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="230" y="30" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="74" y="56" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="100" y="56" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="126" y="56" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="152" y="56" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="178" y="56" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="204" y="56" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="230" y="56" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="74" y="82" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="100" y="82" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="126" y="82" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="152" y="82" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="178" y="82" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="204" y="82" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="230" y="82" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><path d="M40 30 C 52 30, 58 16, 86 16" fill="none" style="stroke:var(--yellow)" stroke-width="5" stroke-linecap="round"/><polyline points="86,16 112,16 138,16 164,16 190,16 216,16 242,16 242,42 216,42 190,42 164,42 138,42 112,42 86,42 86,68 112,68 138,68 164,68 190,68 216,68 242,68 242,94 216,94 190,94 164,94 138,94 112,94 86,94" fill="none" style="stroke:var(--yellow)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><polyline points="86,16 112,16 138,16 164,16 190,16 216,16 242,16 242,42 216,42 190,42 164,42 138,42 112,42 86,42 86,68 112,68 138,68 164,68 190,68 216,68 242,68 242,94 216,94 190,94 164,94 138,94 112,94 86,94" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="1.6" stroke-dasharray="3 3" stroke-linecap="round" stroke-linejoin="round"/><rect x="74" y="4" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="77.5" y="7.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="86" y="21" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">T</text><rect x="204" y="4" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="207.5" y="7.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="216" y="21" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">H</text><rect x="126" y="30" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="129.5" y="33.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="138" y="47" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">R</text><rect x="126" y="56" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="129.5" y="59.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="138" y="73" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">E</text><rect x="204" y="82" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="207.5" y="85.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="216" y="99" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">A</text><rect x="74" y="82" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="77.5" y="85.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="86" y="99" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">D</text><g transform="translate(22 14)"><rect x="0" y="0" width="30" height="6" rx="3" style="fill:var(--pink)"/><rect x="5" y="6" width="20" height="22" style="fill:var(--yellow)"/><path d="M5 11 H25 M5 16 H25 M5 21 H25" stroke="#fff" stroke-opacity=".6" stroke-width="1.5"/><rect x="0" y="28" width="30" height="6" rx="3" style="fill:var(--pink)"/></g><path d="M74 94 C 50 94, 46 90, 40 86" fill="none" style="stroke:var(--yellow)" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/><g transform="translate(40 86) rotate(60)"><rect x="-2.5" y="-40" width="5" height="40" rx="2.5" style="fill:var(--muted)"/><ellipse cx="0" cy="-6" rx="1.2" ry="3" style="fill:var(--card-2)"/></g></svg></span>
+          <span class="row"><span class="w"><b>ThreadIt</b><small>Tarik benang lewat semua kotak · huruf jadi kata</small></span></span>
+        </button>
        </div>
        <div class="st-hub" id="stitch-versions" hidden>
         <button class="st-card" type="button" id="stitch-open-daily">
@@ -987,6 +1007,23 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <span class="ico" style="background:var(--blue);color:#fff">K</span>
           <span class="w"><b>KnitWit</b><small id="kn-lemari-sub">Kata dari lemarimu</small></span>
           <span class="st-state" id="kn-lemari-state"></span>
+        </button>
+       </div>
+       <div class="st-hub" id="thread-versions" hidden>
+        <button class="st-card" type="button" id="th-open-ez">
+          <span class="ico" style="background:var(--pink);color:var(--on-accent);font-size:17px">Ez</span>
+          <span class="w"><b id="th-ez-title">ThreadIt Ez</b><small id="th-ez-sub">Grid 5×5 · kata 4–6 huruf, sama untuk semua pemain</small></span>
+          <span class="st-state" id="th-ez-state"></span>
+        </button>
+        <button class="st-card" type="button" id="th-open-master">
+          <span class="ico" style="background:var(--yellow);color:var(--on-accent);font-size:15px">Pro</span>
+          <span class="w"><b id="th-master-title">ThreadIt Master</b><small id="th-master-sub">Grid 7×7 · kata 7–9 huruf, sama untuk semua pemain</small></span>
+          <span class="st-state" id="th-master-state"></span>
+        </button>
+        <button class="st-card" type="button" id="th-open-lemari">
+          <span class="ico" style="background:var(--blue);color:#fff">T</span>
+          <span class="w"><b>ThreadIt</b><small id="th-lemari-sub">Kata dari lemarimu</small></span>
+          <span class="st-state" id="th-lemari-state"></span>
         </button>
        </div>
        <button class="btn btn--ghost" type="button" id="stitch-newdrop" hidden>Tambah kata lewat New drop</button>
@@ -1143,6 +1180,49 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <button class="btn" type="button" id="kn-share">Bagikan hasil</button>
           <button class="btn btn--ghost" type="button" id="kn-back">Puzzle lain</button>
           <button class="btn btn--ghost" type="button" id="kn-retry" hidden>Coba simpan lagi</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ThreadIt: one thread through every cell; the letters it passes spell a hidden word (clues cost a point) -->
+  <section id="threadplay" hidden aria-labelledby="th-title">
+    <div class="st-wrap">
+      <div class="fit-top">
+        <button class="round" type="button" id="th-close" aria-label="Kembali ke ThreadIt">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <h1 class="top-title" id="th-title" style="flex:1;font-family:var(--ui);font-size:16px;letter-spacing:0;margin:0">ThreadIt</h1>
+        <span class="fit-pos" id="th-time" aria-label="Waktu">0:00</span>
+      </div>
+      <div class="stack" id="th-game" style="gap:12px">
+        <p class="kn-vlabel" id="th-rule">Mulai dari kotak kuning, isi semua kotak. Huruf yang kamu lewati harus jadi satu kata.</p>
+        <div class="th-board" id="th-board" role="grid" aria-label="Papan ThreadIt"></div>
+        <div class="th-spelled" id="th-spelled" aria-live="polite"></div>
+        <div class="sl-clues">
+          <button class="sl-clue" type="button" id="th-clue-m"><span>Arti</span><small id="th-clue-m-sub">−1 poin</small></button>
+          <button class="sl-clue" type="button" id="th-clue-w"><span>Kata</span><small id="th-clue-w-sub">−1 poin</small></button>
+        </div>
+        <div class="st-hint" id="th-hint-m" hidden></div>
+        <div class="st-hint" id="th-hint-w" hidden></div>
+        <div class="rx-tools">
+          <button class="btn btn--ghost" type="button" id="th-undo">Batalkan</button>
+          <button class="btn btn--ghost" type="button" id="th-reset">Reset</button>
+          <button class="btn btn--ghost" type="button" id="th-giveup">Nyerah</button>
+        </div>
+        <div class="msg" id="th-msg" role="status" aria-live="polite" hidden></div>
+      </div>
+      <div class="st-result" id="th-result" hidden>
+        <div class="top-line"><img id="th-bibo" src="img/bibo-clap.webp" width="420" height="431" alt=""><h2 id="th-result-title"></h2></div>
+        <span id="th-score" style="font-weight:800"></span>
+        <div class="th-board th-board--done" id="th-final" aria-hidden="true"></div>
+        <div class="sl-list" id="th-list"></div>
+        <span class="note" id="th-note"></span>
+        <div class="msg" id="th-save-msg" role="status" hidden style="white-space:pre-line"></div>
+        <div class="st-actions">
+          <button class="btn" type="button" id="th-share">Bagikan hasil</button>
+          <button class="btn btn--ghost" type="button" id="th-back">Puzzle lain</button>
+          <button class="btn btn--ghost" type="button" id="th-retry" hidden>Coba simpan lagi</button>
         </div>
       </div>
     </div>
@@ -1394,7 +1474,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   var racks = [], rackLinks = [], idleHours = 3, rackFilter = '', rackSort = 'found', lemSort = 'new', lemLetter = '', lemLimit = 10, LEM_STEP = 10, draftKind = 'Buku', rackDeleteArmed = false;
   var RACK_KINDS = ['Buku', 'Series', 'Film'];
 
-  var SCREENS = ['landing', 'restore', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'speak', 'fix', 'slay', 'privacy', 'stitch', 'stitchplay', 'remixplay', 'spellplay', 'knitplay'];
+  var SCREENS = ['landing', 'restore', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'speak', 'fix', 'slay', 'privacy', 'stitch', 'stitchplay', 'remixplay', 'spellplay', 'knitplay', 'threadplay'];
   var current = 'landing', privacyFrom = 'landing';
   function show(id) {
     var was = current;
@@ -1433,6 +1513,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     else if (current === 'remixplay') $('rx-close').click();
     else if (current === 'spellplay') $('sl-close').click();
     else if (current === 'knitplay') $('kn-close').click();
+    else if (current === 'threadplay') $('th-close').click();
     else if (current === 'stitch') $('stitch-up').click();
     else if (BASE_SCREENS.indexOf(current) === -1) { var b = $(current).querySelector('[data-go]'); if (b) b.click(); else go('home'); }
     syncHistory();
@@ -2087,24 +2168,25 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     for (i = 0; i < guess.length; i++) { if (out[i]) continue; if (left[guess[i]]) { out[i] = 'y'; left[guess[i]]--; } else out[i] = 'g'; }
     return out.join('');
   }
-  // Mini games: 'all' = one card per game, static (no server call); 'stitch' / 'remix' / 'spell' / 'knit' = the versions of that game.
+  // Mini games: 'all' = one card per game, static (no server call); 'stitch' / 'remix' / 'spell' / 'knit' / 'thread' = the versions of that game.
   // Opening a game asks the server for that game only (getGame); the first versions listed are the "of the Day" ones.
   var hubView = 'all', LEMARI_MIN = 10;
   var HUB = { all: ['Mini games', 'Tiap puzzle bisa dimainkan sehari sekali.'], stitch: ['WordStitch', 'Jahit huruf jadi kata. 6 kali tebak, sehari sekali.'],
     remix: ['WordRemix', 'Ganti 1 huruf tiap langkah sampai jadi kata tujuan. Makin sedikit langkah, makin keren.'],
     spell: ['SpellingTees', 'Dengar Bibo, ketik ejaannya. 3 kata, sehari sekali. Clue boleh, tapi poinnya berkurang.'],
-    knit: ['KnitWit', 'Jahit vokal yang hilang ke 3 kata. 2 spool, boleh nebak kapan saja.'] };
+    knit: ['KnitWit', 'Jahit vokal yang hilang ke 3 kata. 2 spool, boleh nebak kapan saja.'],
+    thread: ['ThreadIt', 'Tarik satu benang lewat semua kotak. Huruf yang dilewati harus jadi satu kata. Clue boleh, tapi poinnya berkurang.'] };
   function setHubView(v) {
     hubView = v;
     $('stitch-title').textContent = HUB[v][0]; $('stitch-note').textContent = HUB[v][1];
-    $('games-list').hidden = v !== 'all'; $('stitch-versions').hidden = v !== 'stitch'; $('remix-versions').hidden = v !== 'remix'; $('spell-versions').hidden = v !== 'spell'; $('knit-versions').hidden = v !== 'knit';
+    $('games-list').hidden = v !== 'all'; $('stitch-versions').hidden = v !== 'stitch'; $('remix-versions').hidden = v !== 'remix'; $('spell-versions').hidden = v !== 'spell'; $('knit-versions').hidden = v !== 'knit'; $('thread-versions').hidden = v !== 'thread';
     $('stitch-loading').hidden = true; $('stitch-cards').hidden = false; $('stitch-newdrop').hidden = true;
     $('stitch-up').setAttribute('aria-label', v === 'all' ? 'Kembali ke Beranda' : 'Kembali ke Mini games');
     msg($('stitch-msg'), '', 'error');
   }
   function backToHub(v) { setHubView(v); show('stitch'); if (stitch) renderStitchHub(); }
   $('stitch-up').addEventListener('click', function () { if (hubView !== 'all') setHubView('all'); else go('home'); });
-  ['stitch', 'remix', 'spell', 'knit'].forEach(function (g) { $('game-' + g).addEventListener('click', function () { openGame(g); }); });
+  ['stitch', 'remix', 'spell', 'knit', 'thread'].forEach(function (g) { $('game-' + g).addEventListener('click', function () { openGame(g); }); });
   function openStitch() { setHubView('all'); show('stitch'); }   // the card list needs no data
   var stitchAtG = {}, stitchBusy = {}, stitchUid = null, stitchEpoch = 0;   // stitchEpoch: +1 on every saved game; stitchAtG: when each game's data came
   function jakartaToday() { try { return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }); } catch (e) { return ''; } }
@@ -2208,6 +2290,16 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       setLine('kn-lemari', lemariLine('knit', K.lemari, K.lemari && K.lemari.played ? knScore(K.lemari.played) : '', 'Kata dari lemarimu · 3 kata, arti jadi petunjuk', 'Butuh 3 kata 4–9 huruf yang punya arti di lemarimu'));
       $('kn-daily-title').textContent = K.daily ? 'KnitWit of the Day #' + K.daily.number : 'KnitWit of the Day';
       $('kn-daily-state').textContent = K.daily && K.daily.played ? '✓ ' + knScore(K.daily.played) : K.daily ? 'Main' : '';
+    }
+    if (stitchAtG.thread) {
+      var H = stitch.thread || {};
+      ['ez', 'master'].forEach(function (lv) {
+        var P = H[lv];
+        $('th-' + lv + '-title').textContent = 'ThreadIt ' + (lv === 'ez' ? 'Ez' : 'Master') + (P ? ' #' + P.number : '');
+        $('th-' + lv + '-sub').textContent = !P ? 'Puzzle hari ini belum siap' : lv === 'ez' ? 'Grid 5×5 · kata 4–6 huruf, sama untuk semua pemain' : 'Grid 7×7 · kata 7–9 huruf, sama untuk semua pemain';
+        $('th-' + lv + '-state').textContent = P && P.played ? '✓ ' + thScore(P.played) : P ? 'Main' : '';
+      });
+      setLine('th-lemari', lemariLine('thread', H.lemari, H.lemari && H.lemari.played ? thScore(H.lemari.played) : '', 'Kata dari lemarimu · grid ' + (H.lemari ? H.lemari.size + '×' + H.lemari.size : ''), 'Butuh kata 4–9 huruf yang punya arti di lemarimu'));
     }
     if (stitchAtG.remix) {
       var X = stitch.remix || {};
@@ -3074,6 +3166,245 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       return d || (a.updated_at < b.updated_at ? -1 : a.updated_at > b.updated_at ? 1 : 0);
     }).slice(0, max);
   }
+  /* ---------- ThreadIt: one thread through every cell; the letters it passes spell the word (clues cost a point) ---------- */
+  var th = null, TH_POINTS = 3, TH_KEY = 'wr_thread', thTick = null, thDrag = false;
+  function thScore(p) { return (p.points || 0) + '/' + TH_POINTS; }
+  function thClock(s) { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  function thSecs() { return th.secs + (th.t0 ? (Date.now() - th.t0) / 1000 : 0); }
+  function thAdj(a, b, n) { return Math.abs(Math.floor(a / n) - Math.floor(b / n)) + Math.abs(a % n - b % n) === 1; }
+  function thSpelled(P, path) { return path.map(function (c) { return P.grid[c] || ''; }).join(''); }
+  function thSolved(P, path) { var N = P.size * P.size; return path.length === N && path[0] === P.start && !!P.grid[path[N - 1]] && thSpelled(P, path) === P.word; }
+  // a round in progress (thread, clues, time) is kept on this device for the day
+  function thSaveLocal() {
+    try {
+      var all = JSON.parse(localStorage.getItem(TH_KEY) || 'null') || {};
+      if (all.uid !== me.user_id || all.day !== th.day || !all.modes) all = { uid: me.user_id, day: th.day, modes: {} };
+      all.modes[th.mode] = th.saved ? null : { word: th.P.word, path: th.path, clues: th.clues, secs: Math.round(thSecs()), done: th.done, gave_up: th.gaveUp };
+      localStorage.setItem(TH_KEY, JSON.stringify(all));
+    } catch (e) { /* storage unavailable: the round lives in memory only */ }
+  }
+  function thSaveLocalFor(x) { var keep = th; th = x; thSaveLocal(); th = keep; }
+  function thLoadLocal(mode, day, word) {
+    try {
+      var all = JSON.parse(localStorage.getItem(TH_KEY) || 'null');
+      var m = all && all.uid === me.user_id && all.day === day && all.modes ? all.modes[mode] : null;
+      return m && m.word === word ? m : null;
+    } catch (e) { return null; }
+  }
+  function thStopTick() { if (thTick) { clearInterval(thTick); thTick = null; } }
+  function thStartTick() {
+    thStopTick();
+    thTick = setInterval(function () { if (current !== 'threadplay' || !th || th.done) { thStopTick(); return; } $('th-time').textContent = thClock(thSecs()); }, 1000);
+  }
+  function thPause() { if (th && !th.done && th.t0) { th.secs = thSecs(); th.t0 = 0; thSaveLocal(); } thStopTick(); }
+  document.addEventListener('visibilitychange', function () {
+    if (current !== 'threadplay' || !th || th.done) return;
+    if (document.hidden) thPause(); else if (!th.t0) { th.t0 = Date.now(); thStartTick(); }
+  });
+  function openThread(mode) {
+    var X = stitch && stitch.thread, P = X && X[mode];
+    if (mode === 'lemari' && !(P && P.played) && lemariLocked('thread')) { lockedNote('thread'); return; }
+    if (!P) { msg($('stitch-msg'), mode === 'lemari' ? 'Belum ada kata 4–9 huruf yang punya arti di lemarimu. Tambah lewat New drop dulu ya.' : 'ThreadIt hari ini belum siap. Coba lagi nanti ya.', 'error'); return; }
+    th = { day: stitch.day, mode: mode, P: P, path: [], clues: [false, false], secs: 0, t0: 0, done: false, gaveUp: false, saved: false, sure: false, points: 0 };
+    if (P.played) { th.done = true; th.saved = true; th.path = (P.played.path || []).slice(); th.clues = (P.played.clues || [false, false]).slice(); th.secs = P.played.secs || 0; th.gaveUp = !P.played.solved; }
+    else {
+      var m = thLoadLocal(mode, stitch.day, P.word);
+      if (m) { th.path = m.path || []; th.clues = m.clues || th.clues; th.secs = m.secs || 0; th.done = !!m.done; th.gaveUp = !!m.gave_up; }
+    }
+    show('threadplay');
+    $('th-title').textContent = mode === 'lemari' ? 'ThreadIt' : 'ThreadIt ' + (mode === 'ez' ? 'Ez' : 'Master') + ' #' + P.number;
+    msg($('th-msg'), ''); msg($('th-save-msg'), '');
+    if (th.done) { $('th-time').textContent = thClock(th.secs); thResult(!th.saved); return; }
+    $('th-result').hidden = true; $('th-game').hidden = false;
+    th.t0 = Date.now(); thStartTick();
+    renderThread();
+  }
+  $('th-open-ez').addEventListener('click', function () { openThread('ez'); });
+  $('th-open-master').addEventListener('click', function () { openThread('master'); });
+  $('th-open-lemari').addEventListener('click', function () { openThread('lemari'); });
+  // the board: cells (letters as stitched tiles) and the thread drawn over them as an SVG line through the cell centres
+  function thDraw(board, P, path, live) {
+    var n = P.size, on = {};
+    board.style.setProperty('--n', n); board.textContent = '';
+    path.forEach(function (c) { on[c] = true; });
+    for (var i = 0; i < n * n; i++) {
+      var d = document.createElement('div');
+      d.className = 'th-c' + (on[i] ? ' on' : '') + (i === P.start ? ' start' : '') + (live && path.length && i === path[path.length - 1] ? ' last' : '');
+      d.setAttribute('role', 'gridcell');
+      if (P.grid[i]) {
+        var b = document.createElement('b'); b.textContent = P.grid[i]; d.appendChild(b);
+        d.setAttribute('aria-label', 'Huruf ' + P.grid[i].toUpperCase() + (i === P.start ? ', mulai di sini' : ''));
+      } else d.setAttribute('aria-label', 'Kotak kosong');
+      board.appendChild(d);
+    }
+    if (!path.length) return;
+    var NS = 'http://www.w3.org/2000/svg', u = 100 / n, svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'th-svg'); svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('preserveAspectRatio', 'none'); svg.setAttribute('aria-hidden', 'true');
+    var pts = path.map(function (c) { return (((c % n) + 0.5) * u).toFixed(2) + ',' + ((Math.floor(c / n) + 0.5) * u).toFixed(2); });
+    if (pts.length === 1) pts.push(pts[0]);
+    [['th-yarn', u * 0.34, ''], ['th-stitch', u * 0.05, (u * 0.12).toFixed(2) + ' ' + (u * 0.12).toFixed(2)]].forEach(function (k) {
+      var l = document.createElementNS(NS, 'polyline');
+      l.setAttribute('class', k[0]); l.setAttribute('points', pts.join(' ')); l.setAttribute('stroke-width', k[1].toFixed(2));
+      if (k[2]) l.setAttribute('stroke-dasharray', k[2]);
+      svg.appendChild(l);
+    });
+    board.appendChild(svg);
+  }
+  function renderThread() {
+    var P = th.P;
+    thDraw($('th-board'), P, th.path, true);
+    $('th-spelled').textContent = thSpelled(P, th.path) || ' ';
+    [['m', 0, 'Arti: ' + (P.meaning || '')], ['w', 1, 'Kata: ' + P.word.toUpperCase()]].forEach(function (k) {
+      var used = th.clues[k[1]];
+      $('th-clue-' + k[0]).disabled = used;
+      $('th-clue-' + k[0] + '-sub').textContent = used ? 'dipakai · −1' : '−1 poin';
+      $('th-hint-' + k[0]).hidden = !used; $('th-hint-' + k[0]).textContent = used ? k[2] : '';   // the text is only in the page once the clue is used
+    });
+    $('th-undo').disabled = !th.path.length; $('th-reset').disabled = !th.path.length;
+    $('th-giveup').textContent = th.sure ? 'Yakin nyerah?' : 'Nyerah';
+    $('th-time').textContent = thClock(thSecs());
+  }
+  function thCellAt(ev) {
+    var r = $('th-board').getBoundingClientRect(), n = th.P.size, x = ev.clientX - r.left, y = ev.clientY - r.top;
+    if (x < 0 || y < 0 || x >= r.width || y >= r.height) return -1;
+    return Math.min(n - 1, Math.floor(y / r.height * n)) * n + Math.min(n - 1, Math.floor(x / r.width * n));
+  }
+  // one step: extend the thread to cell c, or take it back one cell when c is the previous one
+  function thStep(c) {
+    var p = th.path, n = th.P.size, last = p[p.length - 1];
+    if (c < 0 || c === last) return false;
+    if (!p.length) { if (c !== th.P.start) { msg($('th-msg'), 'Mulai dari kotak kuning ya.', 'error'); return false; } p.push(c); return true; }
+    var at = p.indexOf(c);
+    if (at !== -1 && at === p.length - 2) { p.pop(); return true; }
+    if (at !== -1 || !thAdj(c, last, n)) return false;
+    p.push(c); return true;
+  }
+  // a fast drag can skip cells: walk along the row or column towards c one cell at a time
+  function thMoveTo(c) {
+    var changed = false, n = th.P.size, guard = 0;
+    while (c >= 0 && guard++ < n * 2) {
+      var last = th.path[th.path.length - 1];
+      if (last === undefined || last === c || thAdj(last, c, n) || (th.path.length > 1 && th.path.indexOf(c) === th.path.length - 2)) { if (thStep(c)) changed = true; break; }
+      var lr = Math.floor(last / n), lc = last % n, cr = Math.floor(c / n), cc = c % n, next;
+      if (lr === cr) next = last + (cc > lc ? 1 : -1);
+      else if (lc === cc) next = last + (cr > lr ? n : -n);
+      else break;
+      if (!thStep(next)) break;
+      changed = true;
+    }
+    return changed;
+  }
+  function thAfter() {
+    th.sure = false; msg($('th-msg'), '');
+    thSaveLocal(); renderThread();
+    var N = th.P.size * th.P.size;
+    if (th.path.length !== N) return;
+    if (thSolved(th.P, th.path)) { thFinish(false); return; }
+    msg($('th-msg'), 'Semua kotak sudah terisi, tapi hurufnya belum jadi kata yang benar. Ubah rutenya ya.', 'error');
+    var b = $('th-board'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+  }
+  $('th-board').addEventListener('pointerdown', function (ev) {
+    if (!th || th.done) return;
+    var c = thCellAt(ev), at = th.path.indexOf(c);
+    ev.preventDefault();
+    thDrag = true;
+    try { $('th-board').setPointerCapture(ev.pointerId); } catch (e) { /* ignore */ }
+    if (at !== -1 && at < th.path.length - 1) { th.path = th.path.slice(0, at + 1); thAfter(); return; }   // tap on the thread: cut it back to there
+    if (thMoveTo(c)) thAfter();
+  });
+  $('th-board').addEventListener('pointermove', function (ev) {
+    if (!thDrag || !th || th.done) return;
+    if (thMoveTo(thCellAt(ev))) thAfter();
+  });
+  ['pointerup', 'pointercancel'].forEach(function (t) { $('th-board').addEventListener(t, function () { thDrag = false; }); });
+  document.addEventListener('keydown', function (ev) {
+    if (current !== 'threadplay' || !th || th.done || ev.ctrlKey || ev.metaKey || ev.altKey || sheetOpen()) return;
+    var n = th.P.size, last = th.path[th.path.length - 1], d = { ArrowUp: -n, ArrowDown: n, ArrowLeft: -1, ArrowRight: 1 }[ev.key];
+    if (ev.key === 'Backspace') { if (th.path.length) { th.path.pop(); thAfter(); } ev.preventDefault(); return; }
+    if (d === undefined) return;
+    ev.preventDefault();
+    if (last === undefined) { if (thStep(th.P.start)) thAfter(); return; }
+    var c = last + d;
+    if (c < 0 || c >= n * n || (d === 1 && c % n === 0) || (d === -1 && last % n === 0)) return;
+    if (thStep(c)) thAfter();
+  });
+  $('th-undo').addEventListener('click', function () { if (th && !th.done && th.path.length) { th.path.pop(); thAfter(); } });
+  $('th-reset').addEventListener('click', function () { if (th && !th.done) { th.path = []; thAfter(); } });
+  ['m', 'w'].forEach(function (k, idx) {
+    $('th-clue-' + k).addEventListener('click', function () { if (!th || th.done) return; th.clues[idx] = true; thSaveLocal(); renderThread(); });
+  });
+  $('th-giveup').addEventListener('click', function () {
+    if (!th || th.done) return;
+    if (!th.sure) { th.sure = true; renderThread(); return; }
+    thFinish(true);
+  });
+  function thFinish(gaveUp) {
+    th.secs = thSecs(); th.t0 = 0; thStopTick();
+    th.done = true; th.gaveUp = gaveUp; thSaveLocal();
+    thResult(true);
+  }
+  function thDrawFinal() { thDraw($('th-final'), th.P, th.path, false); }
+  function thResult(fresh) {
+    thStopTick();
+    $('th-game').hidden = true; $('th-result').hidden = false;
+    var P = th.P, solved = !th.gaveUp, used = th.clues.filter(Boolean).length, pts = solved ? TH_POINTS - used : 0;
+    th.points = pts;
+    $('th-bibo').src = 'img/' + (solved ? 'bibo-clap' : 'bibo-surprised') + '.webp';
+    $('th-result-title').textContent = !solved ? 'Nyerah dulu…' : pts === TH_POINTS ? 'Benang sempurna!' : 'Benangmu nyambung!';
+    $('th-score').textContent = 'Skor ' + pts + '/' + TH_POINTS + ' · ⏱ ' + thClock(th.secs);
+    thDrawFinal();
+    var box = $('th-list'); box.textContent = '';
+    var row = document.createElement('div'); row.className = 'sl-row';
+    var t = document.createElement('span'); t.className = 'w';
+    var b = document.createElement('b'); b.textContent = P.word; t.appendChild(b);
+    var sm = document.createElement('small'); sm.textContent = (P.meaning || '') + (used ? ' · ' + used + ' clue' : ''); t.appendChild(sm);
+    var ps = document.createElement('span'); ps.className = 'pts ' + (solved ? 'ok' : 'no'); ps.textContent = solved ? '+' + pts : '✗';
+    row.appendChild(t); row.appendChild(ps);
+    if (th.mode !== 'lemari') row.appendChild(slAddButton({ word: P.word, meaning: P.meaning || '' }, 'ThreadIt', $('th-save-msg')));
+    box.appendChild(row);
+    $('th-note').textContent = th.mode === 'lemari' ? (solved ? 'Kata lemarimu berikutnya besok.' : 'Katanya masuk “Masih nyoba”, jadi muncul duluan di Fit check.')
+      : (solved ? '' : 'Ini salah satu jalur benangnya. ') + 'Puzzle berikutnya besok. Sama untuk semua pemain.';
+    $('th-retry').hidden = true;
+    if (fresh) saveThread();
+  }
+  function saveThread() {
+    msg($('th-save-msg'), 'Menyimpan hasil…', '');
+    var me1 = th, mode = th.mode, wordId = th.P.word_id || null;
+    api('submitThread', readToken(), { mode: mode, word: th.P.word, path: th.gaveUp ? [] : th.path.slice(), clues: th.clues.slice(), secs: Math.round(th.secs), gave_up: th.gaveUp }).then(function (r) {
+      me1.saved = true; stitchEpoch++; thSaveLocalFor(me1);
+      if (stitch && stitch.thread && stitch.thread[mode]) stitch.thread[mode].played = Object.assign({}, r.play);
+      stats = r.stats || stats;
+      if (r.word_status && wordId) words = words.map(function (w) { return w.word_id === wordId ? Object.assign({}, w, { status: r.word_status, updated_at: new Date().toISOString() }) : w; });
+      changed();
+      renderStitchHub();
+      if (th !== me1) return;
+      th.path = (r.play.path || th.path).slice(); thDrawFinal();   // after giving up: the planned thread
+      msg($('th-save-msg'), stats && stats.streak ? 'Tersimpan. Streak kamu: ' + stats.streak + ' hari.' : 'Tersimpan.', 'ok');
+    }, function (e) {
+      if (e && SESSION_RE.test(e.message)) { failed(e, null); return; }
+      if (th !== me1) return;
+      msg($('th-save-msg'), 'Hasilnya belum tersimpan: ' + e.message, 'error');
+      $('th-retry').hidden = /sudah main|berubah/.test(e.message);
+    });
+  }
+  $('th-retry').addEventListener('click', saveThread);
+  function threadShareText() {
+    var head = th.mode === 'lemari' ? 'Wordrobe: ThreadIt · kata dari lemariku 🧵' : 'Wordrobe: ThreadIt ' + (th.mode === 'ez' ? 'Ez' : 'Master') + ' #' + th.P.number + ' 🧵';
+    var line = th.gaveUp ? 'Nyerah dulu 🏳️ · ⏱ ' + thClock(th.secs)
+      : new Array(th.points + 1).join('🟦') + new Array(TH_POINTS - th.points + 1).join('⬜') + ' ' + th.points + '/' + TH_POINTS + ' · ⏱ ' + thClock(th.secs);
+    var cta = th.mode === 'lemari' ? 'Latih kata dari lemarimu sendiri 🧵' : 'Bisa nyambungin benangnya lebih cepat? 🧵';
+    return head + '\n' + line + '\n' + cta + '\nMain gratis 👉 unishverse.github.io/wordrobe';
+  }
+  $('th-share').addEventListener('click', function () {
+    var text = threadShareText();
+    if (navigator.share) { navigator.share({ text: text }).catch(function () { /* closed */ }); return; }
+    var done = function () { msg($('th-save-msg'), 'Hasil disalin. Tempel di Story atau chat!', 'ok'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { msg($('th-save-msg'), text, 'ok'); });
+    else msg($('th-save-msg'), text, 'ok');
+  });
+  $('th-back').addEventListener('click', function () { thPause(); backToHub('thread'); });
+  $('th-close').addEventListener('click', function () { thPause(); backToHub('thread'); });
+
   function segments(el, n, done) {
     el.textContent = '';
     for (var i = 0; i < n; i++) { var s = document.createElement('i'); if (i < done) s.className = 'done'; el.appendChild(s); }
