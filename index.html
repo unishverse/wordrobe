@@ -1602,8 +1602,32 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     else if (btn.dataset.label) btn.textContent = btn.dataset.label;
   }
   function srcName(s) { return s === 'Wordstitch' ? 'WordStitch' : (s || 'Lainnya'); }   // words saved before the 16 Nov rename
-  function speak(text) {
-    try { var u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); } catch (e) { /* no speech on this device */ }
+  // Browser voice. Chrome on Android can drop a speak() that comes right after cancel(), stay paused after the app was in the
+  // background, and garbage-collect an utterance before it plays: cancel only when something is playing, resume first, keep a
+  // reference. done(result): 'ok' = the voice started, 'fail' = error or nothing within 2.5 s, 'cut' = replaced by a newer one.
+  var speechVoice = null, speechKeep = [];
+  function pickVoice() {
+    try {
+      var v = window.speechSynthesis.getVoices() || [], by = function (re) { return v.filter(function (x) { return re.test(x.lang || ''); })[0] || null; };
+      speechVoice = by(/^en[-_]US/i) || by(/^en[-_]GB/i) || by(/^en/i);
+    } catch (e) { speechVoice = null; }
+  }
+  try { pickVoice(); window.speechSynthesis.addEventListener('voiceschanged', pickVoice); } catch (e) { /* no speech on this device */ }
+  function speak(text, done) {
+    var over = false, finish = function (r) { if (over) return; over = true; if (done) done(r); };
+    try {
+      var S = window.speechSynthesis, u = new SpeechSynthesisUtterance(text);
+      if (!speechVoice) pickVoice();
+      u.lang = speechVoice ? speechVoice.lang : 'en-US';
+      if (speechVoice) u.voice = speechVoice;
+      u.onstart = function () { finish('ok'); };
+      u.onend = function () { finish('ok'); };   // some browsers skip onstart
+      u.onerror = function (e) { finish(e && (e.error === 'interrupted' || e.error === 'canceled') ? 'cut' : 'fail'); };
+      speechKeep.push(u); if (speechKeep.length > 5) speechKeep.shift();
+      var go = function () { try { S.resume(); } catch (e) { /* ignore */ } S.speak(u); };
+      if (S.speaking || S.pending) { S.cancel(); setTimeout(go, 80); } else go();   // the first speak stays inside the tap (iPhone)
+      setTimeout(function () { finish('fail'); }, 2500);
+    } catch (e) { finish('fail'); }
   }
   function failed(e, el) {
     if (e && SESSION_RE.test(e.message)) { signedOut(e.message); return; }
@@ -2882,12 +2906,19 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       $('sl-next').textContent = sl.i + 1 < sl.words.length ? 'Kata berikutnya' : 'Lihat hasil';
     }
   }
+  // a play only counts when the voice really started; a silent phone gets a message and keeps its plays
+  var slWaiting = false;
   function slSpeak() {
-    if (!sl || sl.done) return;
-    var answered = sl.typed.length > sl.i;
-    if (!answered) { if (sl.plays[sl.i] >= SL_PLAYS) return; sl.plays[sl.i]++; slSaveLocal(); }
-    speak(sl.words[sl.i].word);
-    renderSpell();
+    if (!sl || sl.done || slWaiting) return;
+    var answered = sl.typed.length > sl.i, me1 = sl, i = sl.i;
+    if (!answered && sl.plays[i] >= SL_PLAYS) return;
+    slWaiting = true; msg($('sl-msg'), '');
+    speak(sl.words[i].word, function (r) {
+      slWaiting = false;
+      if (sl !== me1 || sl.i !== i) return;
+      if (r === 'fail') { msg($('sl-msg'), 'Suara Bibo belum keluar. Cek volume media atau pengaturan text-to-speech HP, lalu ketuk 🔊 lagi. Jatah dengarmu nggak berkurang.', 'error'); return; }
+      if (r === 'ok' && sl.typed.length <= i) { sl.plays[i]++; slSaveLocal(); renderSpell(); }
+    });
   }
   $('sl-play').addEventListener('click', slSpeak);
   ['m', 'p'].forEach(function (k, idx) {
