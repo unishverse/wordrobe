@@ -306,6 +306,16 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .th-spelled { min-height: 28px; text-align: center; font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-text); overflow-wrap: anywhere; }
 .th-board.shake { animation: shake .35s; }
 @media (prefers-reduced-motion: reduce) { .th-board.shake { animation: none; } }
+/* LintRoll: a fabric strip of letter tiles; lint tiles roll away, snags are marked as part of the word */
+.lr-fabric { border-radius: 18px; padding: 14px 10px; background: var(--card) repeating-linear-gradient(45deg, transparent 0 5px, var(--line) 5px 6px); box-shadow: inset 0 0 0 2px var(--card), inset 0 0 0 3.5px var(--yellow); }
+.lr-strip { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 4px; max-width: calc(var(--n) * 44px); margin: 0 auto; }
+.lr-t { aspect-ratio: 3 / 4; padding: 0; border: 0; border-radius: 8px; background: var(--card-2); color: var(--text); box-shadow: inset 0 0 0 1.5px var(--line); font-family: var(--display); font-weight: 800; font-size: clamp(15px, 5vw, 24px); text-transform: uppercase; cursor: pointer; transition: transform .25s, opacity .25s; }
+.lr-t.gone { opacity: 0; transform: translateY(-18px) rotate(-12deg) scale(.7); pointer-events: none; }
+.lr-t.kept { background: var(--blue); color: #fff; box-shadow: none; outline: 1.5px dashed rgba(255,255,255,.85); outline-offset: -5px; cursor: default; }
+.lr-t.snag { animation: shake .35s; }
+.lr-t.lintleft { background: var(--st-absent); color: var(--st-absent-text); box-shadow: none; }
+.lr-fabric--done .lr-t { font-size: clamp(12px, 4vw, 18px); cursor: default; }
+@media (prefers-reduced-motion: reduce) { .lr-t, .lr-t.snag { transition: none; animation: none; } }
 /* SpellingTees: listen (max 3 plays), two clues that cost a point, type the word */
 .sl-listen { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 6px 0; }
 .sl-play { width: 108px; height: 108px; border-radius: 999px; border: 0; background: var(--yellow); color: var(--on-accent); display: grid; place-items: center; cursor: pointer; }
@@ -684,7 +694,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         </div>
       </div>
       <div class="home-games">
-        <button class="home-games-head" type="button" id="home-stitch"><span class="w"><b>Mini games</b><small id="home-stitch-sub">5 game · puzzle baru tiap hari</small></span><span class="all">Semua ›</span></button>
+        <button class="home-games-head" type="button" id="home-stitch"><span class="w"><b>Mini games</b><small id="home-stitch-sub">6 game · puzzle baru tiap hari</small></span><span class="all">Semua ›</span></button>
         <div class="games-strip" id="home-games" aria-label="Mini games"></div>
       </div>
       <div class="rack-card" id="rack-card"></div>
@@ -999,6 +1009,10 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <span class="thumb"><svg class="game-thumb" viewBox="70 0 190 110" aria-hidden="true"><rect x="74" y="4" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="100" y="4" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="126" y="4" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="152" y="4" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="178" y="4" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="204" y="4" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="230" y="4" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="74" y="30" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="100" y="30" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="126" y="30" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="152" y="30" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="178" y="30" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="204" y="30" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="230" y="30" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="74" y="56" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="100" y="56" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="126" y="56" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="152" y="56" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="178" y="56" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="204" y="56" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="230" y="56" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="74" y="82" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="100" y="82" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="126" y="82" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="152" y="82" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="178" y="82" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="204" y="82" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><rect x="230" y="82" width="24" height="24" rx="5" style="fill:var(--card)" stroke="var(--line)" stroke-width="1.5"/><path d="M40 30 C 52 30, 58 16, 86 16" fill="none" style="stroke:var(--yellow)" stroke-width="5" stroke-linecap="round"/><polyline points="86,16 112,16 138,16 164,16 190,16 216,16 242,16 242,42 216,42 190,42 164,42 138,42 112,42 86,42 86,68 112,68 138,68 164,68 190,68 216,68 242,68 242,94 216,94 190,94 164,94 138,94 112,94 86,94" fill="none" style="stroke:var(--yellow)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><polyline points="86,16 112,16 138,16 164,16 190,16 216,16 242,16 242,42 216,42 190,42 164,42 138,42 112,42 86,42 86,68 112,68 138,68 164,68 190,68 216,68 242,68 242,94 216,94 190,94 164,94 138,94 112,94 86,94" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="1.6" stroke-dasharray="3 3" stroke-linecap="round" stroke-linejoin="round"/><rect x="74" y="4" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="77.5" y="7.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="86" y="21" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">T</text><rect x="204" y="4" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="207.5" y="7.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="216" y="21" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">H</text><rect x="126" y="30" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="129.5" y="33.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="138" y="47" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">R</text><rect x="126" y="56" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="129.5" y="59.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="138" y="73" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">E</text><rect x="204" y="82" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="207.5" y="85.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="216" y="99" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">A</text><rect x="74" y="82" width="24" height="24" rx="5" style="fill:var(--blue)"/><rect x="77.5" y="85.5" width="17" height="17" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="86" y="99" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13.5">D</text><g transform="translate(22 14)"><rect x="0" y="0" width="30" height="6" rx="3" style="fill:var(--pink)"/><rect x="5" y="6" width="20" height="22" style="fill:var(--yellow)"/><path d="M5 11 H25 M5 16 H25 M5 21 H25" stroke="#fff" stroke-opacity=".6" stroke-width="1.5"/><rect x="0" y="28" width="30" height="6" rx="3" style="fill:var(--pink)"/></g></svg></span>
           <span class="row"><span class="w"><b>ThreadIt</b><small>Tarik benang</small></span></span>
         </button>
+        <button class="game-card" type="button" id="game-lint">
+          <span class="thumb"><svg class="game-thumb" viewBox="52 0 222 110" aria-hidden="true"><defs><pattern id="lr-weave" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 6 L6 0" style="stroke:var(--line)" stroke-width="1"/></pattern></defs><rect x="58" y="50" width="209" height="38" rx="8" style="fill:var(--card)"/><rect x="58" y="50" width="209" height="38" rx="8" fill="url(#lr-weave)"/><rect x="61" y="53" width="203" height="32" rx="6" fill="none" style="stroke:var(--yellow)" stroke-width="1.5" stroke-dasharray="4 3"/><rect x="64" y="58" width="22" height="22" rx="5" style="fill:var(--blue)"/><rect x="67" y="61" width="16" height="16" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="75" y="73.5" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="12.5">J</text><rect x="89" y="58" width="22" height="22" rx="5" style="fill:var(--st-absent)"/><text x="100" y="73.5" text-anchor="middle" style="fill:var(--st-absent-text)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="12.5">K</text><rect x="114" y="58" width="22" height="22" rx="5" style="fill:var(--blue)"/><rect x="117" y="61" width="16" height="16" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="125" y="73.5" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="12.5">A</text><rect x="139" y="58" width="22" height="22" rx="5" style="fill:var(--blue)"/><rect x="142" y="61" width="16" height="16" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="150" y="73.5" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="12.5">C</text><g transform="translate(175 38) rotate(-10)"><rect x="-11" y="-11" width="22" height="22" rx="5" style="fill:var(--muted)"/><text x="0" y="5" text-anchor="middle" style="fill:var(--card)" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="12.5">P</text></g><rect x="165" y="59" width="20" height="20" rx="5" fill="none" style="stroke:var(--muted)" stroke-width="1.2" stroke-dasharray="3 2.5"/><rect x="189" y="58" width="22" height="22" rx="5" style="fill:var(--blue)"/><rect x="192" y="61" width="16" height="16" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="200" y="73.5" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="12.5">K</text><rect x="214" y="58" width="22" height="22" rx="5" style="fill:var(--blue)"/><rect x="217" y="61" width="16" height="16" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="225" y="73.5" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="12.5">E</text><rect x="239" y="58" width="22" height="22" rx="5" style="fill:var(--blue)"/><rect x="242" y="61" width="16" height="16" rx="3" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.1" stroke-dasharray="2.5 2"/><text x="250" y="73.5" text-anchor="middle" fill="#fff" font-family="Bricolage Grotesque, Plus Jakarta Sans, sans-serif" font-weight="800" font-size="12.5">T</text><g transform="translate(175 16)"><rect x="-26" y="-11" width="52" height="22" rx="11" style="fill:var(--pink)"/><path d="M-14 -11 V11 M0 -11 V11 M14 -11 V11" stroke="#fff" stroke-opacity=".6" stroke-width="1.4"/><path d="M26 0 H34 L46 -10" fill="none" style="stroke:var(--muted)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="42" y="-30" width="9" height="20" rx="4.5" transform="rotate(45 46.5 -20)" style="fill:var(--yellow)"/></g></svg></span>
+          <span class="row"><span class="w"><b>LintRoll</b><small>Gulung lint · sisakan kata</small></span></span>
+        </button>
        </div>
        <div class="st-hub" id="stitch-versions" hidden>
         <button class="st-card" type="button" id="stitch-open-daily">
@@ -1065,6 +1079,18 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <span class="st-state" id="th-lemari-state"></span>
         </button>
        </div>
+       <div class="st-hub" id="lint-versions" hidden>
+        <button class="st-card" type="button" id="lr-open-daily">
+          <span class="ico" style="background:var(--yellow);color:var(--on-accent)">#</span>
+          <span class="w"><b id="lr-daily-title">LintRoll of the Day</b><small id="lr-daily-sub">Satu kata tersembunyi, sama untuk semua pemain</small></span>
+          <span class="st-state" id="lr-daily-state"></span>
+        </button>
+        <button class="st-card" type="button" id="lr-open-lemari">
+          <span class="ico" style="background:var(--blue);color:#fff">L</span>
+          <span class="w"><b>LintRoll</b><small id="lr-lemari-sub">Kata dari lemarimu</small></span>
+          <span class="st-state" id="lr-lemari-state"></span>
+        </button>
+       </div>
        <button class="btn btn--ghost" type="button" id="stitch-newdrop" hidden>Tambah kata lewat New drop</button>
       </div>
       <div class="msg msg--error" id="stitch-msg" role="alert" hidden></div>
@@ -1124,6 +1150,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         <span id="rx-result-line" style="font-weight:700"></span>
         <span class="note" id="rx-path-label" hidden>Salah satu jalur terpendek:</span>
         <span class="rx-path" id="rx-path" hidden></span>
+        <span class="note" id="rx-words-label">Tambah kata dari puzzle ini ke lemari:</span>
+        <div class="sl-list" id="rx-words"></div>
         <span class="note" id="rx-note"></span>
         <div class="msg" id="rx-save-msg" role="status" hidden style="white-space:pre-line"></div>
         <button class="link install-link" type="button" hidden>📲 Biar besok gampang balik, pasang Wordrobe di HP ›</button>
@@ -1267,6 +1295,44 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <button class="btn" type="button" id="th-share">Bagikan hasil</button>
           <button class="btn btn--ghost" type="button" id="th-back">Puzzle lain</button>
           <button class="btn btn--ghost" type="button" id="th-retry" hidden>Coba simpan lagi</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LintRoll: roll the lint letters off a strip until only the hidden word is left (3 rolls, clues cost a point) -->
+  <section id="lintplay" hidden aria-labelledby="lr-title">
+    <div class="st-wrap">
+      <div class="fit-top">
+        <button class="round" type="button" id="lr-close" aria-label="Kembali ke LintRoll">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <h1 class="top-title" id="lr-title" style="flex:1;font-family:var(--ui);font-size:16px;letter-spacing:0;margin:0">LintRoll</h1>
+        <span class="fit-pos" id="lr-rolls" aria-label="Roll tersisa"></span>
+      </div>
+      <div class="stack" id="lr-game" style="gap:12px">
+        <p class="kn-vlabel">Ketuk huruf “lint” yang nyelip. Sisakan satu kata. Salah ketuk = 1 roll hilang.</p>
+        <div class="lr-fabric"><div class="lr-strip" id="lr-strip" role="group" aria-label="Strip huruf"></div></div>
+        <div class="sl-clues">
+          <button class="sl-clue" type="button" id="lr-clue-c"><span>Kategori</span><small id="lr-clue-c-sub">−1 poin</small></button>
+          <button class="sl-clue" type="button" id="lr-clue-m"><span>Arti</span><small id="lr-clue-m-sub">−1 poin</small></button>
+        </div>
+        <div class="st-hint" id="lr-hint-c" hidden></div>
+        <div class="st-hint" id="lr-hint-m" hidden></div>
+        <div class="msg" id="lr-msg" role="status" aria-live="polite" hidden></div>
+      </div>
+      <div class="st-result" id="lr-result" hidden>
+        <div class="top-line"><img id="lr-bibo" src="img/bibo-clap.webp" width="420" height="431" alt=""><h2 id="lr-result-title"></h2></div>
+        <span id="lr-score" style="font-weight:800"></span>
+        <div class="lr-fabric lr-fabric--done"><div class="lr-strip" id="lr-final" aria-hidden="true"></div></div>
+        <div class="sl-list" id="lr-list"></div>
+        <span class="note" id="lr-note"></span>
+        <div class="msg" id="lr-save-msg" role="status" hidden style="white-space:pre-line"></div>
+        <button class="link install-link" type="button" hidden>📲 Biar besok gampang balik, pasang Wordrobe di HP ›</button>
+        <div class="st-actions">
+          <button class="btn" type="button" id="lr-share">Bagikan hasil</button>
+          <button class="btn btn--ghost" type="button" id="lr-back">Puzzle lain</button>
+          <button class="btn btn--ghost" type="button" id="lr-retry" hidden>Coba simpan lagi</button>
         </div>
       </div>
     </div>
@@ -1527,7 +1593,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   var racks = [], rackLinks = [], idleHours = 3, rackFilter = '', rackSort = 'found', lemSort = 'new', lemLetter = '', lemLimit = 10, LEM_STEP = 10, draftKind = 'Buku', rackDeleteArmed = false;
   var RACK_KINDS = ['Buku', 'Series', 'Film'];
 
-  var SCREENS = ['landing', 'restore', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'speak', 'fix', 'slay', 'privacy', 'stitch', 'stitchplay', 'remixplay', 'spellplay', 'knitplay', 'threadplay'];
+  var SCREENS = ['landing', 'restore', 'signin', 'home', 'add', 'result', 'lemari', 'fit', 'speak', 'fix', 'slay', 'privacy', 'stitch', 'stitchplay', 'remixplay', 'spellplay', 'knitplay', 'threadplay', 'lintplay'];
   var current = 'landing', privacyFrom = 'landing';
   function show(id) {
     var was = current;
@@ -1567,6 +1633,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     else if (current === 'spellplay') $('sl-close').click();
     else if (current === 'knitplay') $('kn-close').click();
     else if (current === 'threadplay') $('th-close').click();
+    else if (current === 'lintplay') $('lr-close').click();
     else if (current === 'stitch') $('stitch-up').click();
     else if (BASE_SCREENS.indexOf(current) === -1) { var b = $(current).querySelector('[data-go]'); if (b) b.click(); else go('home'); }
     syncHistory();
@@ -2254,21 +2321,22 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     remix: ['WordRemix', 'Ganti 1 huruf tiap langkah sampai jadi kata tujuan. Makin sedikit langkah, makin keren.'],
     spell: ['SpellingTees', 'Dengar Bibo, ketik ejaannya. 3 kata, sehari sekali. Clue boleh, tapi poinnya berkurang.'],
     knit: ['KnitWit', 'Jahit vokal yang hilang ke 3 kata. 2 spool, boleh nebak kapan saja.'],
+    lint: ['LintRoll', 'Gulung huruf lint yang nyelip sampai tinggal satu kata. 3 roll, clue boleh tapi poinnya berkurang.'],
     thread: ['ThreadIt', 'Tarik satu benang lewat semua kotak. Huruf yang dilewati harus jadi satu kata. Clue boleh, tapi poinnya berkurang.'] };
   function setHubView(v) {
     hubView = v;
     $('stitch-title').textContent = HUB[v][0]; $('stitch-note').textContent = HUB[v][1];
-    $('games-list').hidden = v !== 'all'; $('stitch-versions').hidden = v !== 'stitch'; $('remix-versions').hidden = v !== 'remix'; $('spell-versions').hidden = v !== 'spell'; $('knit-versions').hidden = v !== 'knit'; $('thread-versions').hidden = v !== 'thread';
+    $('games-list').hidden = v !== 'all'; $('stitch-versions').hidden = v !== 'stitch'; $('remix-versions').hidden = v !== 'remix'; $('spell-versions').hidden = v !== 'spell'; $('knit-versions').hidden = v !== 'knit'; $('thread-versions').hidden = v !== 'thread'; $('lint-versions').hidden = v !== 'lint';
     $('stitch-loading').hidden = true; $('stitch-cards').hidden = false; $('stitch-newdrop').hidden = true;
     $('stitch-up').setAttribute('aria-label', v === 'all' ? 'Kembali ke Beranda' : 'Kembali ke Mini games');
     msg($('stitch-msg'), '', 'error');
   }
   function backToHub(v) { setHubView(v); show('stitch'); if (stitch) renderStitchHub(); }
   $('stitch-up').addEventListener('click', function () { if (hubView !== 'all') setHubView('all'); else go('home'); });
-  ['stitch', 'remix', 'spell', 'knit', 'thread'].forEach(function (g) { $('game-' + g).addEventListener('click', function () { openGame(g); }); });
+  ['stitch', 'remix', 'spell', 'knit', 'thread', 'lint'].forEach(function (g) { $('game-' + g).addEventListener('click', function () { openGame(g); }); });
   function openStitch() { setHubView('all'); show('stitch'); }   // the card list needs no data
   // Beranda: one small card per game (thumbnail copied from the hub card); a tap opens that game's versions
-  var GAME_LIST = ['stitch', 'remix', 'spell', 'knit', 'thread'];
+  var GAME_LIST = ['stitch', 'remix', 'spell', 'knit', 'thread', 'lint'];
   (function buildHomeGames() {
     var box = $('home-games');
     GAME_LIST.forEach(function (g) {
@@ -2397,6 +2465,12 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       setLine('kn-lemari', lemariLine('knit', K.lemari, K.lemari && K.lemari.played ? knScore(K.lemari.played) : '', 'Kata dari lemarimu · 3 kata, arti jadi petunjuk', 'Butuh 3 kata 4–9 huruf yang punya arti di lemarimu'));
       $('kn-daily-title').textContent = K.daily ? 'KnitWit of the Day #' + K.daily.number : 'KnitWit of the Day';
       $('kn-daily-state').textContent = K.daily && K.daily.played ? '✓ ' + knScore(K.daily.played) : K.daily ? 'Main' : '';
+    }
+    if (stitchAtG.lint) {
+      var R = stitch.lint || {};
+      $('lr-daily-title').textContent = R.daily ? 'LintRoll of the Day #' + R.daily.number : 'LintRoll of the Day';
+      $('lr-daily-state').textContent = R.daily && R.daily.played ? '✓ ' + lrScore(R.daily.played) : R.daily ? 'Main' : '';
+      setLine('lr-lemari', lemariLine('lint', R.lemari, R.lemari && R.lemari.played ? lrScore(R.lemari.played) : '', 'Kata dari lemarimu · arti jadi clue', 'Butuh kata 4–9 huruf yang punya arti di lemarimu'));
     }
     if (stitchAtG.thread) {
       var H = stitch.thread || {};
@@ -2757,7 +2831,6 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       if (w !== rx.end && !stDict.has(w) && !hasWord(w)) { remixShake('“' + w + '” bukan kata bahasa Inggris yang Bibo kenal.'); return; }
       msg($('rx-msg'), '');
       rx.trail.push(w); rx.chain.push(w); rx.cand = null;
-      if (w !== rx.end && !hasWord(w) && !stFound.some(function (f) { return f.word === w; })) foundWord(w);
       if (w === rx.end) { rx.done = true; rx.solved = true; renderRemix(); rxResult(true); return; }
       renderRemix();
       return;
@@ -2792,6 +2865,22 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     var show1 = !!(rx.path && rx.path.length && (!rx.solved || (rx.par && rx.trail.length > rx.par)));
     $('rx-path-label').hidden = !show1; $('rx-path').hidden = !show1;
     $('rx-path').textContent = show1 ? rx.path.join(' → ') : '';
+    rxWordList(show1);
+  }
+  // after the game only: start, every word of the learner's chain, the shortest path when it is shown, end; each with + Lemari
+  function rxWordList(withPath) {
+    var list = [rx.start].concat(rx.trail, withPath ? rx.path : [], [rx.end]), seen = {}, box = $('rx-words');
+    box.textContent = '';
+    list.forEach(function (w) {
+      w = String(w || '').toLowerCase();
+      if (!w || seen[w]) return;
+      seen[w] = true;
+      var row = document.createElement('div'); row.className = 'sl-row';
+      var t = document.createElement('span'); t.className = 'w';
+      var b = document.createElement('b'); b.textContent = w; t.appendChild(b);
+      row.appendChild(t); row.appendChild(slAddButton({ word: w, meaning: '' }, 'WordRemix', $('rx-save-msg')));
+      box.appendChild(row);
+    });
   }
   function saveRemix() {
     msg($('rx-save-msg'), 'Menyimpan hasil…', '');
@@ -3519,6 +3608,152 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   });
   $('th-back').addEventListener('click', function () { thPause(); backToHub('thread'); });
   $('th-close').addEventListener('click', function () { thPause(); backToHub('thread'); });
+
+  /* ---------- LintRoll: tap the lint letters off the strip until only the hidden word is left (3 rolls, clues cost a point) ---------- */
+  var lr = null, LR_ROLLS = 3, LR_POINTS = 3, LR_KEY = 'wr_lint';
+  function lrScore(p) { return (p.points || 0) + '/' + LR_POINTS; }
+  // the same rules as the server (lintReplay_): lint removed, word letters tapped = snags, round over at all lint or 3 snags
+  function lrState(P, taps) {
+    var isLint = {}, removed = {}, snags = [];
+    P.lint.forEach(function (i) { isLint[i] = true; });
+    taps.forEach(function (i) { if (isLint[i]) removed[i] = true; else snags.push(i); });
+    var gone = Object.keys(removed).length, won = gone === P.lint.length;
+    return { removed: removed, snags: snags, won: won, over: won || snags.length >= LR_ROLLS };
+  }
+  function lrPoints(P, clues, won) { return won ? LR_POINTS - (clues[0] && P.category ? 1 : 0) - (clues[1] && P.meaning ? 1 : 0) : 0; }
+  function lrSaveLocal() {
+    try {
+      var all = JSON.parse(localStorage.getItem(LR_KEY) || 'null') || {};
+      if (all.uid !== me.user_id || all.day !== lr.day || !all.modes) all = { uid: me.user_id, day: lr.day, modes: {} };
+      all.modes[lr.mode] = lr.saved ? null : { word: lr.P.word, taps: lr.taps, clues: lr.clues };
+      localStorage.setItem(LR_KEY, JSON.stringify(all));
+    } catch (e) { /* storage unavailable: the round lives in memory only */ }
+  }
+  function lrSaveLocalFor(x) { var keep = lr; lr = x; lrSaveLocal(); lr = keep; }
+  function lrLoadLocal(mode, day, word) {
+    try {
+      var all = JSON.parse(localStorage.getItem(LR_KEY) || 'null');
+      var m = all && all.uid === me.user_id && all.day === day && all.modes ? all.modes[mode] : null;
+      return m && m.word === word ? m : null;
+    } catch (e) { return null; }
+  }
+  function openLint(mode) {
+    var P = stitch && stitch.lint && stitch.lint[mode];
+    if (mode === 'lemari' && !(P && P.played) && lemariLocked('lint')) { lockedNote('lint'); return; }
+    if (!P) { msg($('stitch-msg'), mode === 'daily' ? 'LintRoll hari ini belum siap. Coba lagi nanti ya.' : 'Belum ada kata 4–9 huruf yang punya arti di lemarimu. Tambah lewat New drop dulu ya.', 'error'); return; }
+    lr = { day: stitch.day, mode: mode, P: P, taps: [], clues: [false, false], saved: false };
+    if (P.played) { lr.taps = (P.played.taps || []).slice(); lr.clues = (P.played.clues || [false, false]).slice(); lr.saved = true; }
+    else { var m = lrLoadLocal(mode, stitch.day, P.word); if (m) { lr.taps = m.taps || []; lr.clues = m.clues || lr.clues; } }
+    show('lintplay');
+    $('lr-title').textContent = mode === 'daily' ? 'LintRoll #' + P.number : 'LintRoll';
+    msg($('lr-msg'), ''); msg($('lr-save-msg'), '');
+    if (lrState(P, lr.taps).over) { lrResult(!lr.saved); return; }
+    $('lr-result').hidden = true; $('lr-game').hidden = false;
+    renderLint();
+  }
+  $('lr-open-daily').addEventListener('click', function () { openLint('daily'); });
+  $('lr-open-lemari').addEventListener('click', function () { openLint('lemari'); });
+  function lrRolls(left) { var t = ''; for (var i = 0; i < LR_ROLLS; i++) t += i < left ? '🧻' : '▫️'; return t; }
+  function lrDraw(box, P, st, done) {
+    box.style.setProperty('--n', P.strip.length); box.textContent = '';
+    P.strip.forEach(function (ch, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'lr-t'; b.textContent = ch; b.setAttribute('data-i', i);
+      var isLint = P.lint.indexOf(i) !== -1;
+      if (st.removed[i]) b.className += ' gone';
+      else if (st.snags.indexOf(i) !== -1 || (done && !isLint)) b.className += ' kept';
+      else if (done && isLint) b.className += ' lintleft';
+      b.disabled = done || !!st.removed[i] || st.snags.indexOf(i) !== -1;
+      b.setAttribute('aria-label', 'Huruf ' + ch.toUpperCase() + (st.snags.indexOf(i) !== -1 ? ', bagian dari kata' : ''));
+      box.appendChild(b);
+    });
+  }
+  function renderLint() {
+    var P = lr.P, st = lrState(P, lr.taps);
+    lrDraw($('lr-strip'), P, st, false);
+    $('lr-rolls').textContent = lrRolls(LR_ROLLS - st.snags.length);
+    [['c', 0, P.category, 'Kategori: '], ['m', 1, P.meaning, 'Arti: ']].forEach(function (k) {
+      var has = !!k[2], used = lr.clues[k[1]];
+      $('lr-clue-' + k[0]).disabled = used || !has;
+      $('lr-clue-' + k[0] + '-sub').textContent = !has ? 'nggak ada' : used ? 'dipakai · −1' : '−1 poin';
+      $('lr-hint-' + k[0]).hidden = !(has && used);
+      $('lr-hint-' + k[0]).textContent = has && used ? k[3] + k[2] : '';
+    });
+  }
+  $('lr-strip').addEventListener('click', function (ev) {
+    var b = ev.target.closest('.lr-t');
+    if (!b || !lr || lr.saved || b.disabled) return;
+    var i = Number(b.getAttribute('data-i')), P = lr.P;
+    if (lrState(P, lr.taps).over || lr.taps.indexOf(i) !== -1) return;
+    lr.taps.push(i); lrSaveLocal();
+    var snag = P.lint.indexOf(i) === -1, st = lrState(P, lr.taps);
+    renderLint();
+    if (snag) {
+      var nb = $('lr-strip').querySelector('[data-i="' + i + '"]'); if (nb) nb.classList.add('snag');
+      msg($('lr-msg'), st.over ? '' : 'Nyangkut! Itu huruf katanya. Roll tersisa ' + (LR_ROLLS - st.snags.length) + '.', 'error');
+    } else msg($('lr-msg'), '');
+    if (st.over) setTimeout(function () { if (lr && !lr.saved) lrResult(true); }, 450);
+  });
+  ['c', 'm'].forEach(function (k, idx) {
+    $('lr-clue-' + k).addEventListener('click', function () { if (!lr || lr.saved) return; lr.clues[idx] = true; lrSaveLocal(); renderLint(); });
+  });
+  function lrResult(fresh) {
+    $('lr-game').hidden = true; $('lr-result').hidden = false;
+    var P = lr.P, st = lrState(P, lr.taps), pts = lrPoints(P, lr.clues, st.won), used = lr.clues.filter(Boolean).length;
+    lr.points = pts; lr.won = st.won; lr.snags = st.snags.length;
+    $('lr-bibo').src = 'img/' + (st.won ? 'bibo-clap' : 'bibo-surprised') + '.webp';
+    $('lr-result-title').textContent = !st.won ? 'Roll-nya habis…' : st.snags.length === 0 ? 'Bersih tanpa nyangkut!' : 'Kainnya bersih!';
+    $('lr-score').textContent = 'Skor ' + pts + '/' + LR_POINTS + ' · Roll tersisa ' + (LR_ROLLS - st.snags.length) + '/' + LR_ROLLS;
+    $('lr-rolls').textContent = lrRolls(LR_ROLLS - st.snags.length);
+    lrDraw($('lr-final'), P, st, true);
+    var box = $('lr-list'); box.textContent = '';
+    var row = document.createElement('div'); row.className = 'sl-row';
+    var t = document.createElement('span'); t.className = 'w';
+    var b = document.createElement('b'); b.textContent = P.word; t.appendChild(b);
+    var sm = document.createElement('small'); sm.textContent = (P.meaning || '') + (P.category ? ' · ' + P.category : '') + (used ? ' · ' + used + ' clue' : ''); t.appendChild(sm);
+    var ps = document.createElement('span'); ps.className = 'pts ' + (st.won ? 'ok' : 'no'); ps.textContent = st.won ? '+' + pts : '✗';
+    row.appendChild(t); row.appendChild(ps);
+    if (lr.mode === 'daily') row.appendChild(slAddButton({ word: P.word, meaning: P.meaning || '' }, 'LintRoll', $('lr-save-msg')));
+    box.appendChild(row);
+    $('lr-note').textContent = lr.mode === 'lemari' ? (st.won ? 'Kata lemarimu berikutnya besok.' : 'Katanya masuk “Masih nyoba”, jadi muncul duluan di Fit check.') : 'Puzzle berikutnya besok. Sama untuk semua pemain.';
+    $('lr-retry').hidden = true;
+    if (fresh) saveLint();
+  }
+  function saveLint() {
+    msg($('lr-save-msg'), 'Menyimpan hasil…', '');
+    var me1 = lr, mode = lr.mode, wordId = lr.P.word_id || null;
+    api('submitLint', readToken(), { mode: mode, word: lr.P.word, taps: lr.taps.slice(), clues: lr.clues.slice() }).then(function (r) {
+      me1.saved = true; stitchEpoch++; lrSaveLocalFor(me1);
+      if (stitch && stitch.lint && stitch.lint[mode]) stitch.lint[mode].played = Object.assign({}, r.play);
+      stats = r.stats || stats;
+      if (r.word_status && wordId) words = words.map(function (w) { return w.word_id === wordId ? Object.assign({}, w, { status: r.word_status, updated_at: new Date().toISOString() }) : w; });
+      changed();
+      renderStitchHub();
+      if (lr === me1) msg($('lr-save-msg'), stats && stats.streak ? 'Tersimpan. Streak kamu: ' + stats.streak + ' hari.' : 'Tersimpan.', 'ok');
+    }, function (e) {
+      if (e && SESSION_RE.test(e.message)) { failed(e, null); return; }
+      if (lr !== me1) return;
+      msg($('lr-save-msg'), 'Hasilnya belum tersimpan: ' + e.message, 'error');
+      $('lr-retry').hidden = /sudah main|berubah/.test(e.message);
+    });
+  }
+  $('lr-retry').addEventListener('click', saveLint);
+  function lintShareText() {
+    var P = lr.P, st = lrState(P, lr.taps);
+    var head = lr.mode === 'daily' ? 'Wordrobe: LintRoll #' + P.number + ' 🧻 · ' + lr.points + '/' + LR_POINTS : 'Wordrobe: LintRoll · kata dari lemariku 🧻 · ' + lr.points + '/' + LR_POINTS;
+    var strip = P.strip.map(function (c, i) { return P.lint.indexOf(i) !== -1 ? '⬜' : '🟩'; }).join('');
+    var left = LR_ROLLS - st.snags.length;
+    var cta = lr.mode === 'daily' ? 'Bisa bersihin kainnya tanpa nyangkut? 🧻' : 'Latih kata dari lemarimu sendiri 🧻';
+    return head + '\n' + strip + '\nRoll tersisa: ' + (left ? new Array(left + 1).join('🧻') : '–') + ' (' + left + '/' + LR_ROLLS + ')' + '\n' + cta + '\nMain gratis 👉 unishverse.github.io/wordrobe';
+  }
+  $('lr-share').addEventListener('click', function () {
+    var text = lintShareText();
+    if (navigator.share) { navigator.share({ text: text }).catch(function () { /* closed */ }); return; }
+    var done = function () { msg($('lr-save-msg'), 'Hasil disalin. Tempel di Story atau chat!', 'ok'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { msg($('lr-save-msg'), text, 'ok'); });
+    else msg($('lr-save-msg'), text, 'ok');
+  });
+  $('lr-back').addEventListener('click', function () { backToHub('lint'); });
+  $('lr-close').addEventListener('click', function () { backToHub('lint'); });
 
   function segments(el, n, done) {
     el.textContent = '';
