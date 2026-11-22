@@ -52,6 +52,10 @@ body { -webkit-font-smoothing: antialiased; }
 .app { max-width: 440px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
   padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); }
 .app.with-nav { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+/* Bibo's Fabric Quest: a round must fit one phone screen, so this screen gets tighter padding and a small top bar */
+body[data-screen="gameplay"] .app { padding: max(10px, env(safe-area-inset-top)) 14px max(10px, env(safe-area-inset-bottom)); }
+#gameplay .st-wrap { gap: 8px; }
+#gameplay .fit-top .round { width: 36px; height: 36px; }
 [hidden] { display: none !important; }
 h1, h2 { font-family: var(--display); font-weight: 800; letter-spacing: -0.5px; margin: 0; line-height: 1.05; }
 p { margin: 0; }

@@ -234,7 +234,6 @@ const UI = (function () {
   const E = Engine, F = id => E.FAB[id];
   const KEY = 'wr_game', BEST = 'wr_game_best';
   const REG = [['yarn', 'Si Kusut'], ['button', 'Kancing Nakal'], ['needle', 'Jarum Jahil'], ['pin', 'Peniti Pelit'], ['iron', 'Setrika Sinis'], ['hanger', 'Hanger Galak']];
-  const BK = { minimal: 'cube', silent: 'ghost', repeater: 'twin', short: 'bigscissors', vthief: 'thief' };   // boss art: placeholder drawings until the owner's art arrives
   let host = null, root = null, body = null, ready = null, mounted = false;
   let best = 0, G = null, R = null, phase = 'intro', sel = [], msg = '', last = null, starters = [], rewards = [], shop = [], modal = null, fx = null, shake = false;
   let showAll = false, sendState = '', sendErr = '';
@@ -257,12 +256,11 @@ const UI = (function () {
 .bq-btn.pri{background:var(--yellow);color:var(--on-accent)}.bq-btn.mint{background:var(--mint);color:var(--on-accent)}.bq-btn:disabled{opacity:.4;cursor:not-allowed}
 .bq-btn.sm{min-height:40px;font-size:13px;flex:none}
 .bq-btns{display:flex;gap:8px;flex-wrap:wrap}
-.bq-arena{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;background:var(--card);border-radius:20px;padding:12px 12px 10px;position:relative;min-height:176px;overflow:hidden;box-shadow:inset 0 0 0 1.5px var(--line)}
+.bq-arena{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;background:var(--card);border-radius:20px;padding:8px 12px 8px;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1.5px var(--line)}
 .bq-fig{text-align:center;width:44%;position:relative}
-.bq-fig .bq-img{height:118px;display:flex;align-items:flex-end;justify-content:center}
-.bq-fig img,.bq-fig svg{max-height:118px;max-width:100%;width:auto;height:auto;display:block}
-.bq-fig svg{width:112px}
-.bq-name{font-size:12px;font-weight:800;margin-top:4px}
+.bq-fig .bq-img{height:var(--bq-art,118px);display:flex;align-items:flex-end;justify-content:center}
+.bq-fig img{max-height:var(--bq-art,118px);max-width:100%;width:auto;height:auto;display:block}
+.bq-name{font-size:12px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bq-hp{height:11px;background:var(--card-2);border-radius:999px;overflow:hidden;margin:4px 0 0}.bq-hp i{display:block;height:100%;background:linear-gradient(90deg,#ff6b6b,#ff9a6b);transition:width .5s}
 .bq-vs{align-self:center;font:800 18px var(--display);color:var(--line)}
 .bq-atk{animation:bq-atk .5s}@keyframes bq-atk{35%{transform:translateX(64px) rotate(6deg)}}
@@ -306,6 +304,25 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 .bq-wl .add{min-height:36px;padding:0 12px;border:0;border-radius:999px;background:var(--yellow);color:var(--on-accent);font:inherit;font-weight:800;font-size:13px;cursor:pointer}
 .bq-wl .add:disabled{background:var(--card);color:var(--muted);cursor:default}
 .bq-hero img{height:120px;width:auto}
+/* the round screen fits one phone screen: smaller art, one-line chips, a hand that never wraps */
+.bq-r{gap:8px;--bq-art:100px}
+.bq-r .bq-name{white-space:normal;line-height:1.2}
+.bq-r .bq-top{gap:8px}.bq-r .bq-top .t b{display:inline;font-size:14px;color:var(--text)}.bq-r .bq-coin{padding:3px 10px;font-size:14px}
+.bq-r .bq-bar{font-size:12px}
+.bq-r .bq-boss{padding:6px 10px;font-size:12px;line-height:1.3}
+.bq-r .bq-slot{min-height:40px;font-size:9.5px;border-radius:10px}.bq-r .bq-slot .ic{font-size:16px}
+.bq-r .bq-info{flex-wrap:nowrap;overflow:hidden;font-size:11.5px}.bq-r .bq-info span{padding:3px 8px;white-space:nowrap}
+.bq-r .bq-prev{min-height:84px;max-height:118px;padding:8px 10px;overflow:hidden}
+.bq-r .bq-sel{min-height:38px;margin-bottom:4px;flex-wrap:nowrap;gap:4px}.bq-r .bq-sel .bq-tile{width:32px;height:38px;font-size:17px}
+.bq-r .bq-last{background:none;padding:0;border-radius:0}
+.bq-r .bq-msg{min-height:16px;font-size:12px;line-height:16px;margin:-2px 0}
+.bq-r .bq-hand{display:grid;grid-template-columns:repeat(var(--bq-n,8),minmax(0,48px));gap:5px;justify-content:center}
+.bq-r .bq-hand .bq-tile{width:auto;height:50px;font-size:22px}
+.bq-r .bq-btn{min-height:46px;min-width:0;padding:0 8px;white-space:nowrap}
+.bq-r .bq-kb{font-size:12px}
+@media(hover:none){.bq-kb{display:none}}
+@media(max-height:740px){.bq-r{--bq-art:84px}}
+@media(max-height:680px){.bq-r{--bq-art:64px}.bq-r .bq-hand .bq-tile{height:44px}.bq-r .bq-prev{min-height:76px}}
 @media(prefers-reduced-motion:reduce){.bq-atk,.bq-ehit,.bq-dead,.bq-dmg,.bq-say,.bq-pop,.bq-shake{animation:none}}`;
 
   /* ---------- persistence ---------- */
@@ -353,18 +370,8 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     for (let i = 0; i < E.CFG.slots; i++) { const id = G.fabrics[i]; h += id ? `<button type="button" class="bq-slot" data-a="showFab" data-i="${id}"><span class="ic">${F(id).icon}</span>${F(id).name}</button>` : '<div class="bq-slot">kosong</div>'; }
     return h + '</div>';
   }
-  function bossSvg(k) {
-    const eyes = (x1, x2, y) => `<g><circle cx="${x1}" cy="${y}" r="8" fill="#fff"/><circle cx="${x2}" cy="${y}" r="8" fill="#fff"/><circle cx="${x1 + 1}" cy="${y + 1}" r="3.6" fill="#1a1820"/><circle cx="${x2 - 1}" cy="${y + 1}" r="3.6" fill="#1a1820"/><path d="M${x1 - 9} ${y - 12}l16 6M${x2 + 9} ${y - 12}l-16 6" stroke="#1a1820" stroke-width="3.5" stroke-linecap="round"/></g>`;
-    let b = '';
-    if (k === 'cube') b = `<rect x="18" y="34" width="64" height="58" rx="8" fill="#7d6bff"/><path d="M26 34l-6-20 18 10 12-16 12 16 18-10-6 20z" fill="#FFD23F"/>` + eyes(38, 62, 62) + `<path d="M40 82h20" stroke="#1a1820" stroke-width="4" stroke-linecap="round"/>`;
-    else if (k === 'ghost') b = `<path d="M16 90V44q0-34 34-34t34 34v46l-11-9-12 9-11-9-12 9-11-9z" fill="#dfe6f2"/>` + eyes(38, 62, 44) + `<rect x="34" y="64" width="32" height="10" rx="2" fill="#6b6780"/><path d="M40 64v10M50 64v10M60 64v10" stroke="#a29fae" stroke-width="2"/>`;
-    else if (k === 'twin') b = `<ellipse cx="38" cy="58" rx="28" ry="30" fill="#7EE0B5"/><ellipse cx="62" cy="58" rx="28" ry="30" fill="#4fb98e" opacity=".92"/>` + eyes(36, 64, 52) + `<path d="M38 76q12 8 24 0" stroke="#1a1820" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
-    else if (k === 'bigscissors') b = `<path d="M28 10l54 74M72 10L18 84" stroke="#ff6b6b" stroke-width="14" stroke-linecap="round"/><circle cx="22" cy="88" r="10" fill="none" stroke="#FFD23F" stroke-width="5"/><circle cx="78" cy="88" r="10" fill="none" stroke="#FFD23F" stroke-width="5"/>` + eyes(40, 60, 46);
-    else b = `<ellipse cx="50" cy="58" rx="36" ry="34" fill="#4a3f6b"/><rect x="18" y="42" width="64" height="20" rx="9" fill="#16141d"/>` + eyes(38, 62, 52) + `<path d="M70 86q20-4 18-24" stroke="#c28a4a" stroke-width="5" fill="none"/><circle cx="86" cy="58" r="9" fill="#c28a4a"/>`;
-    return `<svg viewBox="0 0 100 100" aria-hidden="true">${b}</svg>`;
-  }
   function enemyInfo() {
-    if (R.boss) return { svg: bossSvg(BK[R.boss.id]), n: R.boss.name };
+    if (R.boss) return { img: 'img/game/boss-' + R.boss.id + '.webp', n: R.boss.name };
     const e = REG[(G.stage * 2 + G.rnd) % REG.length];
     return { img: 'img/game/enemy-' + e[0] + '.webp', n: e[1] };
   }
@@ -378,7 +385,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   function arenaHtml() {
     const en = enemyInfo(), left = Math.max(0, R.target - R.score), pct = left / R.target * 100, f = fx; fx = null;
     const say = f && f.say ? `<div class="bq-say">${f.say}</div>` : '';
-    const art = en.img ? `<img src="${en.img}" alt="">` : en.svg;
+    const art = `<img src="${en.img}" alt="">`;
     return `<div class="bq-arena">${say}${f ? `<div class="bq-dmg">-${f.dmg}</div>` : ''}
       <div class="bq-fig"><div class="bq-img ${f ? 'bq-atk' : ''}"><img src="img/game/bibo-${pose()}.webp" alt="Bibo"></div><div class="bq-name">Bibo</div></div><div class="bq-vs">VS</div>
       <div class="bq-fig"><div class="bq-img ${f ? 'bq-ehit' : ''} ${R.cleared ? 'bq-dead' : ''}">${art}</div><div class="bq-hp"><i style="width:${pct}%"></i></div><div class="bq-name">${en.n} · ${left}/${R.target}</div></div></div>`;
@@ -389,22 +396,23 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       const w = sel.map(t => t.ch).join('');
       if (w.length >= 3 && E.isWord(w) && (!R.boss || R.boss.id !== 'minimal' || w.length >= 5)) {
         const s = E.score(sel, G.fabrics, { first: !R.firstDone, chain: R.chain }, R.boss, () => 1);
-        pv = `<div class="bq-pl"><b>${w.toUpperCase()}</b> · ${s.letters} + ${s.lenBonus} panjang → <b>${s.final}</b> poin${G.fabrics.includes('jackpot') ? ' (belum termasuk Jackpot)' : ''}</div><div class="bq-chips">${chipsOf(Object.assign({}, s, { jackpot: undefined }))}</div>`;
+        pv = `<div class="bq-pl"><b>${w.toUpperCase()}</b> · ${s.letters} + ${s.lenBonus} panjang → <b>${s.final}</b> poin</div><div class="bq-chips">${chipsOf(Object.assign({}, s, { jackpot: undefined }))}${G.fabrics.includes('jackpot') ? '<span class="bq-chip">🎰 bisa ×2</span>' : ''}</div>`;
       } else pv = `<div class="bq-pl">${w.length < 3 ? 'Pilih minimal 3 huruf untuk kata, atau langsung Buang' : 'Belum jadi kata valid (boleh Buang huruf ini)'}</div>`;
     } else pv = '<div class="bq-pl">Ketuk huruf: susun kata untuk menyerang, atau buang huruf yang tidak berguna.</div>';
     const selIds = new Set(sel.map(t => t.id));
-    const head = `<div class="bq-top"><div class="t"><b>${label()}</b><h2>${R.boss ? 'Boss: ' + R.boss.name : 'Lawan Bibo'}</h2></div><span class="bq-coin">🪙 ${G.coins}</span></div>${arenaHtml()}
+    const head = `<div class="bq-top"><div class="t"><b>${label()}</b></div><span class="bq-coin">🪙 ${G.coins}</span></div>${arenaHtml()}
       <div class="bq-bar"><span>Skor ronde <b>${R.score}</b></span><span>Target <b>${R.target}</b></span></div>
       ${R.boss ? `<div class="bq-boss"><b>${R.boss.name}:</b> ${R.boss.desc}${R.boss.block ? ' Terkunci: <b>' + R.boss.block.toUpperCase() + '</b>' : ''}</div>` : ''}`;
+    const lastHtml = last && last.res ? `<div class="bq-last bq-pop">Terakhir: <b>${last.res.word.toUpperCase()} -${last.res.final}</b> <span class="bq-mut">(${last.res.letters} + ${last.res.lenBonus})</span>${last.res.recycled ? ` ♻️ ${last.res.recycled.toUpperCase()}` : ''}${last.res.extraDraw ? ' 🔄 +1' : ''}<div class="bq-chips">${chipsOf(last.res)}</div></div>` : '';
+    if (!sel.length && lastHtml) pv = lastHtml;
     if (R.cleared) return head + `<div class="bq-center bq-pop"><h2>${enemyInfo().n} kalah! 🎉</h2><div class="bq-mut">+${last.fin.coins} koin${last.fin.saver ? ` (+${last.fin.saver} Saver)` : ''}</div><button type="button" class="bq-btn pri" style="width:100%;margin-top:10px" data-a="goNext">Ambil hadiah</button></div>`;
     return head + slotsHtml() + `
-      <div class="bq-info"><span>📦 Supply ${R.supply.length}</span><span>✋ Tangan ${R.hand.length}</span><span>🗑️ Buang ${R.discards}/${R.maxDiscards}</span><span>📝 ${R.words} kata</span>${R.chain > 0 && G.fabrics.includes('chain') ? `<span>⛓️ chain ${R.chain}</span>` : ''}</div>
+      <div class="bq-info"><span>📦 Supply ${R.supply.length}</span><span>🗑️ Buang ${R.discards}/${R.maxDiscards}</span><span>📝 ${R.words} kata</span>${R.chain > 0 && G.fabrics.includes('chain') ? `<span>⛓️ chain ${R.chain}</span>` : ''}</div>
       <div class="bq-prev"><div class="bq-sel">${sel.map((t, i) => tileHtml(t, '', `data-a="unsel" data-i="${i}"`)).join('')}</div>${pv}</div>
       <div class="bq-msg" role="status">${msg}</div>
-      <div class="bq-hand">${R.hand.map(t => { const lk = E.blocked(R, t), us = selIds.has(t.id); return tileHtml(t, lk ? 'lock' : us ? 'used' : '', lk ? 'disabled' : `data-a="pick" data-i="${t.id}"`); }).join('')}</div>
+      <div class="bq-hand" style="--bq-n:${R.handSize}">${R.hand.map(t => { const lk = E.blocked(R, t), us = selIds.has(t.id); return tileHtml(t, lk ? 'lock' : us ? 'used' : '', lk ? 'disabled' : `data-a="pick" data-i="${t.id}"`); }).join('')}</div>
       <div class="bq-btns"><button type="button" class="bq-btn" data-a="clr" ${sel.length ? '' : 'disabled'}>Hapus</button><button type="button" class="bq-btn mint" data-a="discard" ${sel.length && E.canDiscard(R) ? '' : 'disabled'}>🗑️ Buang${sel.length ? ' ' + sel.length : ''}</button><button type="button" class="bq-btn pri" data-a="send" ${sel.length >= 3 ? '' : 'disabled'}>⚔️ Serang</button></div>
-      ${last && last.res ? `<div class="bq-last bq-pop">Terakhir: <b>${last.res.word.toUpperCase()} -${last.res.final}</b> <span class="bq-mut">(${last.res.letters} + ${last.res.lenBonus}${last.res.adds.length || last.res.mults.length ? ' dengan Fabric' : ''})</span><div class="bq-chips">${chipsOf(last.res)}</div>${last.res.recycled ? `<div class="bq-mut">♻️ huruf ${last.res.recycled.toUpperCase()} kembali ke supply</div>` : ''}${last.res.extraDraw ? '<div class="bq-mut">🔄 tarik 1 huruf ekstra</div>' : ''}</div>` : ''}
-      <div class="bq-mut">Di laptop: ketik huruf untuk memilih, Backspace menghapus, Enter menyerang.</div>`;
+      <div class="bq-mut bq-kb">Di laptop: ketik huruf untuk memilih, Backspace menghapus, Enter menyerang.</div>`;
   }
   function introHtml() {
     const saved = load(), resumable = saved && saved.phase !== 'end';
@@ -438,7 +446,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     let h = '';
     if (phase === 'intro') h = introHtml();
     else if (phase === 'starter') h = `<h2>Pilih Fabric awal</h2><div class="bq-mut">Kamu mulai dengan 1 Fabric dari 3 pilihan.</div><div class="bq-opts">${starters.map((id, i) => `<button type="button" class="bq-opt" data-a="pickStarter" data-i="${i}">${fabricCard(id)}</button>`).join('')}</div>`;
-    else if (phase === 'bosspre') h = `<div class="bq-card bq-center"><div class="bq-big">👹</div><h2>${R.boss.name}</h2><p>${R.boss.desc}${R.boss.block ? `<br><b style="color:var(--error);font-size:22px">Huruf terkunci: ${R.boss.block.toUpperCase()}</b>` : ''}</p><div class="bq-mut">Target ${R.target}</div></div><button type="button" class="bq-btn pri" data-a="faceBoss">Hadapi boss</button>`;
+    else if (phase === 'bosspre') h = `<div class="bq-card bq-center"><img src="img/game/boss-${R.boss.id}.webp" alt="" style="height:150px;width:auto"><h2>${R.boss.name}</h2><p>${R.boss.desc}${R.boss.block ? `<br><b style="color:var(--error);font-size:22px">Huruf terkunci: ${R.boss.block.toUpperCase()}</b>` : ''}</p><div class="bq-mut">Target ${R.target}</div></div><button type="button" class="bq-btn pri" data-a="faceBoss">Hadapi boss</button>`;
     else if (phase === 'round') h = roundHtml();
     else if (phase === 'reward') h = `<h2>Ronde selesai! 🎉</h2><div class="bq-mut">Pilih 1 hadiah.</div><div class="bq-opts">${rewards.map((o, i) => `<button type="button" class="bq-opt" data-a="takeReward" data-i="${i}">${optHtml(o)}</button>`).join('')}</div>`;
     else if (phase === 'shop') {
@@ -450,7 +458,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
         <div><div class="bq-mut">Fabric kamu</div>${slotsHtml()}</div>
         <button type="button" class="bq-btn pri" data-a="leaveShop">Lanjut ke ${label()}</button>`;
     } else if (phase === 'end') h = endHtml();
-    body.innerHTML = '<div class="bq">' + h + (modal ? modalHtml() : '') + '</div>';
+    body.innerHTML = '<div class="bq' + (phase === 'round' ? ' bq-r' : '') + '">' + h + (modal ? modalHtml() : '') + '</div>';
     if (shake) { const p = body.querySelector('.bq-prev'); if (p) p.classList.add('bq-shake'); }
     shake = false;
     body.querySelectorAll('[data-add]').forEach(el => { try { const b = host.addButton(el.getAttribute('data-add')); if (b) el.replaceWith(b); } catch (e) { /* host without Lemari: no add button */ } });
