@@ -9,7 +9,7 @@ const Engine = (function () {
   const BAG = { e: 12, a: 9, i: 9, o: 8, n: 6, r: 6, t: 6, l: 4, s: 4, u: 4, d: 4, g: 3, b: 2, c: 2, m: 2, p: 2, f: 2, h: 2, v: 2, w: 2, y: 2, k: 1, j: 1, x: 1, q: 1, z: 1 };
   const CFG = {
     hand: 8, supply: 24, slots: 5, maxWord: 12, discards: 3, letterMul: 3, lenMul: 3, addMul: 3,
-    base: 80, growth: 2.15, ramp: 0.08, roundMul: [1, 1.3, 1.6], // endless: target = base * growth^stage * (1 + ramp*stage) * roundMul
+    base: 220, growth: 1.8, ramp: 0.08, roundMul: [1, 1.3, 1.6], // endless: target = base * growth^stage * (1 + ramp*stage) * roundMul
     coinRound: 3, price: { fabric: 6, gold: 4, glass: 6, supply: 3, letter: 4, reroll: 2, book: 5, multi: 5, wild: 8 }, supplyPack: 3, handMaxBuys: 1
   };
   const FABRICS = [
