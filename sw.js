@@ -1,6 +1,7 @@
 /* Wordrobe service worker. Never touches the Apps Script API (cross-origin POSTs are not intercepted).
    - index.html / navigations: network first (3 s), cached copy only as a fallback, so a deploy reaches users at once
    - img/*, words-en.txt, words-game.txt: cache first (bump VERSION when an image or the word list changes)
+   - game.js: network first, revalidated with the server every time (so a deploy shows on the next open, not the one after)
    - everything else on this origin, and Google Fonts: stale while revalidate */
 var VERSION = 'wr-sw-3';
 var PAGES = VERSION + '-pages', FILES = VERSION + '-files';
@@ -12,14 +13,14 @@ self.addEventListener('activate', function (e) {
   }).then(function () { return self.clients.claim(); }));
 });
 
-function networkFirst(req) {
+function networkFirst(req, fresh) {
   return new Promise(function (resolve) {
     var settled = false;
     var fallback = function () { return caches.match(req, { cacheName: PAGES }); };
     var timer = setTimeout(function () {
       fallback().then(function (hit) { if (hit && !settled) { settled = true; resolve(hit); } });
     }, 3000);
-    fetch(req).then(function (res) {
+    fetch(req, fresh ? { cache: 'no-cache' } : undefined).then(function (res) {
       clearTimeout(timer);
       if (res && res.ok) { var copy = res.clone(); caches.open(PAGES).then(function (c) { c.put(req, copy); }); }
       if (!settled) { settled = true; resolve(res); }
@@ -55,6 +56,7 @@ self.addEventListener('fetch', function (e) {
   if (url.origin !== self.location.origin && !fonts) return;
   if (fonts) { e.respondWith(staleWhileRevalidate(req)); return; }
   if (req.mode === 'navigate' || /\/(index\.html)?$/.test(url.pathname)) { e.respondWith(networkFirst(req)); return; }
+  if (/\/game\.js$/.test(url.pathname)) { e.respondWith(networkFirst(req, true)); return; }
   if (/\/img\/|words-(en|game)\.txt$/.test(url.pathname)) { e.respondWith(cacheFirst(req)); return; }
   e.respondWith(staleWhileRevalidate(req));
 });
