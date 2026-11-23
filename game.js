@@ -8,8 +8,8 @@ const Engine = (function () {
   const VOW = 'aeiou';
   const BAG = { e: 12, a: 9, i: 9, o: 8, n: 6, r: 6, t: 6, l: 4, s: 4, u: 4, d: 4, g: 3, b: 2, c: 2, m: 2, p: 2, f: 2, h: 2, v: 2, w: 2, y: 2, k: 1, j: 1, x: 1, q: 1, z: 1 };
   const CFG = {
-    hand: 8, supply: 24, slots: 5, maxWord: 12, discards: 3, letterMul: 3, lenMul: 3, addMul: 3,
-    base: 220, growth: 1.8, ramp: 0.08, roundMul: [1, 1.3, 1.6], // endless: target = base * growth^stage * (1 + ramp*stage) * roundMul
+    hand: 8, supply: 32, slots: 5, maxWord: 12, discards: 3, letterMul: 3, lenMul: 3, addMul: 3,
+    base: 220, growth: 1.8, ramp: 0.08, roundMul: [1, 1.3, 1.4], // endless: target = base * growth^stage * (1 + ramp*stage) * roundMul
     coinRound: 3, price: { fabric: 6, gold: 4, glass: 6, supply: 3, letter: 4, reroll: 2, book: 5, multi: 5, wild: 8 }, supplyPack: 3, handMaxBuys: 1
   };
   const FABRICS = [
@@ -27,8 +27,13 @@ const Engine = (function () {
     { id: 'saver', name: 'Saver', icon: '🐷', desc: '+1 koin tiap 3 huruf sisa saat ronde selesai.', kind: 'util' },
     { id: 'recycler', name: 'Recycler', icon: '♻️', desc: '20% peluang 1 huruf terpakai kembali ke supply.', kind: 'util' },
     { id: 'thread7', name: 'Thread Count', icon: '7️⃣', desc: 'Kata 7 huruf +' + 30 * CFG.addMul + '.', kind: 'add' },
-    { id: 'patch', name: 'Patchwork', icon: '🧩', desc: 'Kata dengan 3+ vokal berbeda ×2.', kind: 'mult' }
+    { id: 'patch', name: 'Patchwork', icon: '🧩', desc: 'Kata dengan 3+ vokal berbeda ×2.', kind: 'mult' },
+    { id: 'measure', name: 'Measuring Tape', icon: '📏', desc: 'Kata 5+ huruf +' + 10 * CFG.addMul + '.', kind: 'add', locked: true },
+    { id: 'steady', name: 'Steady Hand', icon: '🤲', desc: '+2 koin tiap ronde yang dimenangkan tanpa Buang.', kind: 'util', locked: true },
+    { id: 'lemariku', name: 'Lemariku', icon: '🚪', desc: 'Kata yang sudah ada di Lemarimu ×2.', kind: 'mult', locked: true }
   ];
+  // a locked Fabric shows up in starters, rewards and the shop only after its achievement (G.unlocked)
+  const avail = (G, f) => !f.locked || (G.unlocked || []).includes(f.id);
   const FAB = {}; FABRICS.forEach(f => FAB[f.id] = f);
   const BOSSES = [
     { id: 'minimal', name: 'The Minimalist', desc: 'Kata minimal 5 huruf.' },
@@ -47,7 +52,7 @@ const Engine = (function () {
     r: { name: 'Adverb', icon: '⚡', base: 45, mult: 3, step: [20, 1] }
   };
   /* Multi-letter cards (Paperback) and the wild card. Affixes in the right place (prefix first, suffix last) give x1.5 each. */
-  const PRE = ['un', 're', 'dis'], SUF = ['ly', 'ing', 'ed', 'er', 'est', 'ful', 'ness'], PAIRS = ['th', 'ch', 'sh', 'qu', 'ck'];
+  const PRE = ['un', 're', 'dis'], SUF = ['ly', 'ing', 'ed', 'er', 'est', 'ful', 'ness', 'ous', 'able', 'ive', 'less', 'ment', 'tion'], PAIRS = ['th', 'ch', 'sh', 'qu', 'ck'];
   const MULTI = PRE.concat(SUF, PAIRS), AFFIX_MULT = 1.5;
   const kindOf = ch => ch === '?' ? 'wild' : PRE.includes(ch) ? 'pre' : SUF.includes(ch) ? 'suf' : ch.length > 1 ? 'pair' : 'letter';
   const txt = t => t.ch === '?' ? (t.as || '') : t.ch;
@@ -97,7 +102,9 @@ const Engine = (function () {
     if (has('rare') && /[jqxz]/.test(w)) adds.push({ id: 'rare', v: 20 * CFG.addMul });
     if (has('club') && con) adds.push({ id: 'club', v: 2 * CFG.addMul * con });
     if (has('thread7') && n === 7) adds.push({ id: 'thread7', v: 30 * CFG.addMul });
+    if (has('measure') && n >= 5) adds.push({ id: 'measure', v: 10 * CFG.addMul });
     if (has('long') && n >= 6) mults.push({ id: 'long', v: 2 });
+    if (has('lemariku') && ctx.inLemari) mults.push({ id: 'lemariku', v: 2 });
     if (has('golden') && w.includes('e')) mults.push({ id: 'golden', v: 1.5 });
     if (has('first') && ctx.first) mults.push({ id: 'first', v: 3 });
     if (has('patch') && new Set(vow).size >= 3) mults.push({ id: 'patch', v: 2 });
@@ -168,10 +175,65 @@ const Engine = (function () {
     return b;
   }
 
-  function newGame(starterId) {
-    return { stage: 0, rnd: 0, fabrics: starterId ? [starterId] : [], upgrades: [], coins: 0, extra: 0, letterAdds: [], handBonus: 0, discardBonus: 0, bosses: [],
-      handLv: { o: 1, n: 1, v: 1, a: 1, r: 1 },
-      stats: { words: 0, longest: '', best: { w: '', s: 0 }, total: 0, list: [] } };
+  /* Decks ("Kain"), Balatro-style: chosen at the start of a run; all but the basic one are opened by an achievement */
+  const DECKS = [
+    { id: 'base', name: 'Kain Dasar', icon: '🧵', desc: 'Supply huruf acak biasa.' },
+    { id: 'noun', name: 'Kain Noun', icon: '📦', desc: 'Supply berisi kartu NESS, MENT, TION, ER. Hand Noun mulai Lv2.', cards: ['ness', 'ment', 'tion', 'er'], lv: 'n' },
+    { id: 'verb', name: 'Kain Verb', icon: '🏃', desc: 'Supply berisi kartu ING, ED, RE, UN. Hand Verb mulai Lv2.', cards: ['ing', 'ed', 're', 'un'], lv: 'v' },
+    { id: 'adj', name: 'Kain Adjective', icon: '🎨', desc: 'Supply berisi kartu FUL, OUS, ABLE, LESS. Hand Adjective mulai Lv2.', cards: ['ful', 'ous', 'able', 'less'], lv: 'a' },
+    { id: 'adv', name: 'Kain Adverb', icon: '⚡', desc: 'Supply berisi kartu LY, LY, ? . Hand Adverb mulai Lv2.', cards: ['ly', 'ly', '?'], lv: 'r' },
+    { id: 'long', name: 'Kain Panjang', icon: '📜', desc: 'Tangan 9 kartu sejak awal, tapi supply −4.', hand: 1, extra: -4 },
+    { id: 'vowel', name: 'Kain Vokal', icon: '🅰️', desc: 'Supply ekstra A, E, I, O.', cards: ['a', 'e', 'i', 'o'] },
+    { id: 'gold', name: 'Kain Emas', icon: '🥇', desc: 'Mulai dengan 3 huruf Gold (E, R, T).', gold: ['e', 'r', 't'] },
+    { id: 'wild', name: 'Kain Wild', icon: '❓', desc: 'Supply berisi 2 kartu wild ?.', cards: ['?', '?'] }
+  ];
+  const DECK = {}; DECKS.forEach(d => DECK[d.id] = d);
+  const ACH = [
+    { id: 'boss1', name: 'Jahitan Pertama', desc: 'Kalahkan boss pertamamu.', open: ['fabric', 'measure'] },
+    { id: 'noun15', name: 'Kolektor Benda', desc: 'Mainkan 15 noun dalam satu run.', open: ['deck', 'noun'] },
+    { id: 'verb10', name: 'Banyak Gerak', desc: 'Mainkan 10 verb dalam satu run.', open: ['deck', 'verb'] },
+    { id: 'adj8', name: 'Tukang Warna', desc: 'Mainkan 8 adjective dalam satu run.', open: ['deck', 'adj'] },
+    { id: 'adv5', name: 'Si Paling Adverb', desc: 'Mainkan 5 adverb dalam satu run.', open: ['deck', 'adv'] },
+    { id: 'affix', name: 'Tukang Imbuhan', desc: 'Pakai prefiks dan sufiks di satu kata.', open: ['deck', 'wild'] },
+    { id: 'giant', name: 'Kata Raksasa', desc: 'Mainkan kata 10 huruf atau lebih.', open: ['deck', 'long'] },
+    { id: 'nodisc', name: 'Tanpa Buang', desc: 'Menangkan satu ronde tanpa Buang.', open: ['fabric', 'steady'] },
+    { id: 'minimal', name: 'Penakluk Minimalist', desc: 'Kalahkan The Minimalist.', open: ['deck', 'vowel'] },
+    { id: 'stage5', name: 'Sampai Stage 5', desc: 'Capai Stage 5.', open: ['deck', 'gold'] },
+    { id: 'lemari10', name: 'Pengumpul', desc: 'Simpan 10 kata dari game ke Lemari.', open: ['fabric', 'lemariku'] }
+  ];
+  // what an achievement list opens: { fabrics: [...], decks: [...] }
+  function opened(achIds) {
+    const o = { fabrics: [], decks: ['base'] };
+    ACH.forEach(a => { if ((achIds || []).includes(a.id)) (a.open[0] === 'deck' ? o.decks : o.fabrics).push(a.open[1]); });
+    return o;
+  }
+  // achievements this run has earned so far (lemari10 is decided by the server from the saved words)
+  function earned(G) {
+    const st = G.stats, pc = st.pos || {}, out = [];
+    if ((st.bosses || 0) >= 1) out.push('boss1');
+    if ((pc.n || 0) >= 15) out.push('noun15');
+    if ((pc.v || 0) >= 10) out.push('verb10');
+    if ((pc.a || 0) >= 8) out.push('adj8');
+    if ((pc.r || 0) >= 5) out.push('adv5');
+    if (st.affix) out.push('affix');
+    if (st.longest.length >= 10) out.push('giant');
+    if (st.noDisc) out.push('nodisc');
+    if (st.minimal) out.push('minimal');
+    if (G.stage >= 4) out.push('stage5');
+    return out;
+  }
+
+  function newGame(starterId, deckId, unlocked) {
+    const G = { stage: 0, rnd: 0, fabrics: starterId ? [starterId] : [], upgrades: [], coins: 0, extra: 0, letterAdds: [], handBonus: 0, discardBonus: 0, bosses: [],
+      handLv: { o: 1, n: 1, v: 1, a: 1, r: 1 }, deck: DECK[deckId] ? deckId : 'base', unlocked: (unlocked || []).slice(),
+      stats: { words: 0, longest: '', best: { w: '', s: 0 }, total: 0, list: [], pos: { o: 0, n: 0, v: 0, a: 0, r: 0 }, bosses: 0 } };
+    const d = DECK[G.deck];
+    (d.cards || []).forEach(c => G.letterAdds.push(c));
+    if (d.lv) G.handLv[d.lv] = 2;
+    if (d.hand) G.handBonus = d.hand;
+    if (d.extra) G.extra = d.extra;
+    (d.gold || []).forEach(c => G.upgrades.push(mk(c, 'gold')));
+    return G;
   }
   const roundIndex = G => G.stage * 3 + G.rnd;
   function targetFor(stage, rnd) { const b = CFG.base * Math.pow(CFG.growth, stage) * (1 + CFG.ramp * stage) * CFG.roundMul[rnd]; return Math.round(b / 10) * 10 || 10; }
@@ -201,14 +263,14 @@ const Engine = (function () {
   function draw(R, upTo) { while (R.hand.length < upTo && R.supply.length) R.hand.push(R.supply.shift()); }
 
   // submit tiles in order; returns {ok,msg} or {ok,res,won}
-  function submit(G, R, tl, rng) {
+  function submit(G, R, tl, rng, ctxExtra) {
     if (tl.some(t => t.ch === '?' && !t.as)) return { ok: false, msg: 'Pilih dulu huruf untuk kartu ?.' };
     if (tl.some(t => t.ch === '?' && R.boss && t.as === R.boss.block)) return { ok: false, msg: 'Huruf ' + R.boss.block.toUpperCase() + ' sedang dikunci boss.' };
     const w = tl.map(txt).join('');
     if (w.length < 3) return { ok: false, msg: 'Minimal 3 huruf.' };
     if (!bossOK(R, w)) return { ok: false, msg: R.boss.name + ': minimal 5 huruf.' };
     if (!isWord(w)) return { ok: false, msg: '“' + w.toUpperCase() + '” belum ada di kamus.' };
-    const res = score(tl, G.fabrics, { first: !R.firstDone, chain: R.chain, lv: G.handLv }, R.boss, rng);
+    const res = score(tl, G.fabrics, Object.assign({ first: !R.firstDone, chain: R.chain, lv: G.handLv }, ctxExtra || {}), R.boss, rng);
     R.score += res.final; R.words++; R.firstDone = true;
     R.chain = w.length >= 5 ? R.chain + 1 : 0;
     const ids = new Set(tl.map(t => t.id));
@@ -218,6 +280,8 @@ const Engine = (function () {
     if (w.length > st.longest.length) st.longest = w;
     if (res.final > st.best.s) st.best = { w, s: res.final };
     st.list.push({ w, s: res.final, p: res.hand.pos });
+    st.pos = st.pos || {}; st.pos[res.hand.pos] = (st.pos[res.hand.pos] || 0) + 1;
+    if (tl.some(t => kindOf(t.ch) === 'pre') && tl.some(t => kindOf(t.ch) === 'suf') && res.affix.length === 2) st.affix = true;
     let recycled = null;
     if (G.fabrics.includes('recycler') && rng() < 0.2) {
       const t = tl[Math.floor(rng() * tl.length)];
@@ -243,12 +307,15 @@ const Engine = (function () {
     draw(R, R.handSize); return true;
   }
   function finishRound(G, R) {
-    let coins = CFG.coinRound + G.stage, saver = 0;
+    let coins = CFG.coinRound + G.stage, saver = 0, steady = 0;
     if (G.fabrics.includes('saver')) saver = Math.floor((R.hand.length + R.supply.length) / 3);
-    G.coins += coins + saver; return { coins, saver };
+    const st = G.stats, noDisc = R.discards === R.maxDiscards;
+    if (noDisc) { st.noDisc = true; if (G.fabrics.includes('steady')) steady = 2; }
+    if (R.boss) { st.bosses = (st.bosses || 0) + 1; if (R.boss.id === 'minimal') st.minimal = true; }
+    G.coins += coins + saver + steady; return { coins, saver, steady };
   }
   function rewardOptions(G, rng) {
-    const owned = new Set(G.fabrics), pool = FABRICS.filter(f => !owned.has(f.id));
+    const owned = new Set(G.fabrics), pool = FABRICS.filter(f => !owned.has(f.id) && avail(G, f));
     const opts = [];
     const kinds = shuffle(['fabric', 'fabric', 'up', 'coin', 'book', 'multi'], rng);
     for (const k of kinds) {
@@ -263,7 +330,7 @@ const Engine = (function () {
     return opts;
   }
   function shopItems(G, rng) {
-    const owned = new Set(G.fabrics), pool = shuffle(FABRICS.filter(f => !owned.has(f.id)), rng);
+    const owned = new Set(G.fabrics), pool = shuffle(FABRICS.filter(f => !owned.has(f.id) && avail(G, f)), rng);
     const items = [];
     pool.slice(0, 2).forEach(f => items.push({ type: 'fabric', id: f.id, price: CFG.price.fabric }));
     const kind = rng() < 0.5 ? 'gold' : 'glass';
@@ -279,7 +346,7 @@ const Engine = (function () {
   // always-available permanent upgrades; price rises with each purchase
   function permItems(G) {
     const out = [];
-    out.push({ type: 'supply', n: CFG.supplyPack, price: CFG.price.supply + Math.floor(G.extra / CFG.supplyPack) });
+    out.push({ type: 'supply', n: CFG.supplyPack, price: CFG.price.supply + Math.floor(Math.max(0, G.extra) / CFG.supplyPack) });
     out.push({ type: 'discard', price: 6 + 3 * G.discardBonus });
     out.push({ type: 'hand', price: 8 + 4 * G.handBonus, maxed: G.handBonus >= CFG.handMaxBuys });
     return out;
@@ -287,7 +354,7 @@ const Engine = (function () {
   function addUpgrade(G, kind, ch) { G.upgrades.push(mk(ch, kind)); }
   // after restoring a saved run: new tile ids must not collide with the restored ones
   function resumeIds(G, R) { let m = 0; const see = t => { if (t.id > m) m = t.id; }; G.upgrades.forEach(see); if (R) { R.hand.forEach(see); R.supply.forEach(see); } if (m >= UID) UID = m + 1; }
-  return { val, txt, kindOf, HANDS, MULTI, PRE, SUF, PAIRS, posOf, lvOf, handInfo, spell, V, LB, CFG, FABRICS, FAB, BOSSES, setDict, isWord, rngFrom, shuffle, mk, score, blocked, candidates, tilesFor, best, newGame,
+  return { DECKS, DECK, ACH, opened, earned, avail, val, txt, kindOf, HANDS, MULTI, PRE, SUF, PAIRS, posOf, lvOf, handInfo, spell, V, LB, CFG, FABRICS, FAB, BOSSES, setDict, isWord, rngFrom, shuffle, mk, score, blocked, candidates, tilesFor, best, newGame,
     roundIndex, targetFor, handSize, permItems, makeRound, draw, submit, stuck, failed, discard, canDiscard, finishRound, rewardOptions, shopItems, addUpgrade, resumeIds, randLetter, get ARR() { return ARR; } };
 })();
 
@@ -298,7 +365,8 @@ const UI = (function () {
   const REG = [['yarn', 'Si Kusut'], ['button', 'Kancing Nakal'], ['needle', 'Jarum Jahil'], ['pin', 'Peniti Pelit'], ['iron', 'Setrika Sinis'], ['hanger', 'Hanger Galak']];
   let host = null, root = null, body = null, ready = null, mounted = false;
   let best = 0, G = null, R = null, phase = 'intro', sel = [], msg = '', last = null, starters = [], rewards = [], shop = [], modal = null, fx = null, shake = false;
-  let sendState = '', sendErr = '', means = {};
+  let sendState = '', sendErr = '', means = {}, achOwned = [], deckOpts = [], toastTimer = null;
+  const ACHKEY = 'wr_game_ach';
   const rng = Math.random;
   const store = {
     get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -351,6 +419,9 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 .bq-tile.multi{font-size:16px;letter-spacing:-.5px}.bq-tile.wild{background:linear-gradient(135deg,#ffd9e6,#c9b8ff);box-shadow:0 3px 0 #8f7bc8}
 .bq-tile.wild i{position:absolute;left:4px;top:1px;font:800 10px var(--ui);font-style:normal;opacity:.7}
 .bq-chip.h{background:var(--blue);color:#fff;font-weight:800}
+.bq-mute.off{opacity:.35;text-decoration:line-through}.bq-toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:30;background:var(--yellow);color:var(--on-accent);border-radius:16px;padding:10px 16px;font-weight:800;font-size:14px;box-shadow:0 6px 20px #0006;max-width:92vw;animation:bq-pop .3s}
+.bq-giveup{border:0;background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:2px 0;align-self:center}
+.bq-ach{display:flex;gap:10px;align-items:center;background:var(--card);border-radius:16px;padding:10px 12px}.bq-ach.lock{opacity:.5}.bq-ach .ic{font-size:24px}.bq-ach b{display:block}
 .bq-mute{border:0;background:var(--card-2);color:var(--text);border-radius:999px;width:36px;height:30px;font-size:15px;cursor:pointer;flex:none}
 .bq-abc{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}.bq-abc .bq-tile{width:auto;height:46px;font-size:20px}
 .bq-wl .row{cursor:pointer}.bq-wl .row s{text-decoration:none;font-size:11px;font-weight:800;color:var(--accent-text);margin-left:6px}
@@ -392,7 +463,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 .bq-r .bq-kb{font-size:12px}
 @media(hover:none){.bq-kb{display:none}}
 @media(max-height:740px){.bq-r{--bq-art:84px}}
-@media(max-height:680px){.bq-r{--bq-art:64px}.bq-r .bq-hand .bq-tile{height:44px}.bq-r .bq-prev{min-height:76px}}
+@media(max-height:680px){.bq-r{--bq-art:56px;gap:6px}.bq-r .bq-btn{min-height:40px}.bq-r .bq-slot{min-height:34px}.bq-r .bq-giveup{padding:0}.bq-r .bq-bar,.bq-r .bq-boss{font-size:11px}.bq-r .bq-boss{padding:4px 8px}.bq-r .bq-hand .bq-tile{height:42px}.bq-r .bq-prev{min-height:66px}}
 @media(prefers-reduced-motion:reduce){.bq-atk,.bq-ehit,.bq-dead,.bq-dmg,.bq-say,.bq-pop,.bq-shake{animation:none}}`;
 
   /* ---------- persistence ---------- */
@@ -410,44 +481,81 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   function restore(s) {
     G = s.G; R = s.R; phase = s.phase; starters = s.starters || []; rewards = s.rewards || []; shop = s.shop || []; last = s.last || null;
     sel = []; msg = ''; modal = null; fx = null; E.resumeIds(G, R);
-    G.handLv = G.handLv || { o: 1, n: 1, v: 1, a: 1, r: 1 };
+    G.handLv = G.handLv || { o: 1, n: 1, v: 1, a: 1, r: 1 }; G.unlocked = G.unlocked || []; G.newAch = G.newAch || []; G.deck = G.deck || 'base';
     if (R) [].concat(R.hand, R.supply).forEach(t => { delete t.as; });
   }
 
   /* ---------- background music: a soft loop made in the browser (Web Audio), no file to download ---------- */
+  // one AudioContext for music and sound effects, made on the first tap (browsers only allow sound after a tap)
+  let ac = null, musicOut = null, sfxOut = null;
+  function audio() {
+    if (ac) return ac;
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+    ac = new C();
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1600; f.connect(ac.destination);
+    musicOut = ac.createGain(); musicOut.gain.value = 0.09; musicOut.connect(f);
+    sfxOut = ac.createGain(); sfxOut.gain.value = 0.22; sfxOut.connect(ac.destination);
+    return ac;
+  }
+  const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+  function tone(out, f, t, dur, type, vol, f2) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function noise(out, t, dur, vol, from, to) {
+    const n = Math.floor(ac.sampleRate * dur), buf = ac.createBuffer(1, n, ac.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    const src = ac.createBufferSource(), bp = ac.createBiquadFilter(), g = ac.createGain();
+    src.buffer = buf; bp.type = 'bandpass'; bp.Q.value = 1.2; bp.frequency.setValueAtTime(from, t); bp.frequency.exponentialRampToValueAtTime(to, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(bp); bp.connect(g); g.connect(out); src.start(t); src.stop(t + dur);
+  }
   const Music = (function () {
     const KEYM = 'wr_game_music', STEP = 60 / 84 / 2;   // eighth notes at 84 bpm
     const CHORDS = [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62]];   // C, Am, F, G
     const MEL = [72, null, 76, 74, null, 72, 69, null, 72, null, 69, 67, null, 64, 67, null, 69, null, 72, 69, null, 65, 67, null, 67, null, 71, 74, null, 72, null, null];
-    let ac = null, out = null, timer = null, step = 0, next = 0, on = store.get(KEYM) !== '0';
-    const hz = m => 440 * Math.pow(2, (m - 69) / 12);
-    function note(m, t, dur, type, vol) {
-      const o = ac.createOscillator(), g = ac.createGain();
-      o.type = type; o.frequency.value = hz(m);
-      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.05);
-    }
+    let timer = null, step = 0, next = 0, on = store.get(KEYM) !== '0';
     function tick() {
       while (next < ac.currentTime + 0.25) {
         const ch = CHORDS[Math.floor(step / 8) % 4], i = step % 8, mel = MEL[step % 32];
-        if (i === 0) note(ch[0] - 24, next, STEP * 7, 'triangle', 0.5);
-        note(ch[[0, 1, 2, 1][i % 4]] + (i >= 4 ? 12 : 0), next, STEP * 1.6, 'sine', 0.16);
-        if (mel) note(mel, next, STEP * 2.4, 'sine', 0.22);
+        if (i === 0) tone(musicOut, hz(ch[0] - 24), next, STEP * 7, 'triangle', 0.5);
+        tone(musicOut, hz(ch[[0, 1, 2, 1][i % 4]] + (i >= 4 ? 12 : 0)), next, STEP * 1.6, 'sine', 0.16);
+        if (mel) tone(musicOut, hz(mel), next, STEP * 2.4, 'sine', 0.22);
         next += STEP; step++;
       }
     }
     function start() {
       if (!on || timer) return;
-      try {
-        if (!ac) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return; ac = new C(); const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1600; out = ac.createGain(); out.gain.value = 0.09; out.connect(f); f.connect(ac.destination); }
-        ac.resume(); next = ac.currentTime + 0.1; timer = setInterval(tick, 60); tick();
-      } catch (e) { timer = null; /* no audio on this device: play silently */ }
+      try { if (!audio()) return; ac.resume(); next = ac.currentTime + 0.1; timer = setInterval(tick, 60); tick(); } catch (e) { timer = null; /* no audio: play silently */ }
     }
-    function stop() { if (timer) { clearInterval(timer); timer = null; } try { if (ac) ac.suspend(); } catch (e) { /* ignore */ } }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
     function toggle() { on = !on; store.set(KEYM, on ? '1' : '0'); if (on) start(); else stop(); }
     return { start, stop, toggle, get on() { return on; }, get playing() { return !!timer; } };
   })();
-  const muteHtml = () => `<button type="button" class="bq-mute" data-a="music" aria-label="${Music.on ? 'Matikan musik' : 'Nyalakan musik'}" aria-pressed="${Music.on}">${Music.on ? '🔊' : '🔇'}</button>`;
+  /* sound effects, also made in the browser: attack, coin "cring", win, wrong word, discard, run over, letter tap, achievement */
+  const Sfx = (function () {
+    const KEYS = 'wr_game_sfx'; let on = store.get(KEYS) !== '0', lastPlayed = '';
+    const SOUNDS = {
+      tick(t) { tone(sfxOut, 1400, t, 0.04, 'sine', 0.12); },
+      attack(t) { noise(sfxOut, t, 0.22, 0.5, 600, 3000); tone(sfxOut, 160, t + 0.18, 0.25, 'sine', 0.9, 55); },
+      coin(t) { tone(sfxOut, 1319, t, 0.12, 'square', 0.12); tone(sfxOut, 1760, t + 0.07, 0.35, 'sine', 0.5); tone(sfxOut, 2637, t + 0.07, 0.25, 'sine', 0.15); },
+      win(t) { [72, 76, 79, 84].forEach((m, i) => tone(sfxOut, hz(m), t + i * 0.09, 0.35, 'triangle', 0.5)); },
+      bad(t) { tone(sfxOut, 180, t, 0.16, 'square', 0.18, 120); },
+      discard(t) { noise(sfxOut, t, 0.18, 0.4, 2500, 700); },
+      over(t) { [67, 64, 60, 55].forEach((m, i) => tone(sfxOut, hz(m), t + i * 0.18, 0.4, 'triangle', 0.45)); },
+      unlock(t) { [79, 84, 88, 91].forEach((m, i) => tone(sfxOut, hz(m), t + i * 0.07, 0.3, 'sine', 0.4)); SOUNDS.coin(t + 0.3); }
+    };
+    function play(name) {
+      lastPlayed = name;
+      if (!on || document.hidden || (root && root.hidden)) return;
+      try { if (!audio()) return; ac.resume(); SOUNDS[name](ac.currentTime + 0.01); } catch (e) { /* no audio */ }
+    }
+    function toggle() { on = !on; store.set(KEYS, on ? '1' : '0'); if (on) play('coin'); }
+    return { play, toggle, get on() { return on; }, get last() { return lastPlayed; } };
+  })();
+  const soundHtml = () => `<button type="button" class="bq-mute ${Music.on ? '' : 'off'}" data-a="music" aria-label="Musik latar" aria-pressed="${Music.on}">🎵</button><button type="button" class="bq-mute ${Sfx.on ? '' : 'off'}" data-a="sfx" aria-label="Efek suara" aria-pressed="${Sfx.on}">🔔</button>`;
 
   /* ---------- end of run: meaning of a word (looked up only when tapped) ---------- */
   const escH = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -527,12 +635,12 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     if (sel.length) {
       const w = sel.map(E.txt).join('');
       if (w.length >= 3 && E.isWord(w) && (!R.boss || R.boss.id !== 'minimal' || w.length >= 5)) {
-        const s = E.score(sel, G.fabrics, { first: !R.firstDone, chain: R.chain, lv: G.handLv }, R.boss, () => 1);
+        const s = E.score(sel, G.fabrics, { first: !R.firstDone, chain: R.chain, lv: G.handLv, inLemari: inLemari(w) }, R.boss, () => 1);
         pv = `<div class="bq-pl"><b>${w.toUpperCase()}</b> · ${s.letters} + ${s.lenBonus} panjang → <b>${s.final}</b> poin</div><div class="bq-chips">${chipsOf(Object.assign({}, s, { jackpot: undefined }))}${G.fabrics.includes('jackpot') ? '<span class="bq-chip">🎰 bisa ×2</span>' : ''}</div>`;
       } else pv = `<div class="bq-pl">${w.length < 3 ? 'Pilih minimal 3 huruf untuk kata, atau langsung Buang' : '<b>' + w.toUpperCase() + '</b> belum jadi kata valid (boleh Buang huruf ini)'}</div>`;
     } else pv = '<div class="bq-pl">Ketuk huruf: susun kata untuk menyerang, atau buang huruf yang tidak berguna.</div>';
     const selIds = new Set(sel.map(t => t.id));
-    const head = `<div class="bq-top"><div class="t"><b>${label()}</b></div>${muteHtml()}<span class="bq-coin">🪙 ${G.coins}</span></div>${arenaHtml()}
+    const head = `<div class="bq-top"><div class="t"><b>${label()}</b></div>${soundHtml()}<span class="bq-coin">🪙 ${G.coins}</span></div>${arenaHtml()}
       <div class="bq-bar"><span>Skor ronde <b>${R.score}</b></span><span>Target <b>${R.target}</b></span></div>
       ${R.boss ? `<div class="bq-boss"><b>${R.boss.name}:</b> ${R.boss.desc}${R.boss.block ? ' Terkunci: <b>' + R.boss.block.toUpperCase() + '</b>' : ''}</div>` : ''}`;
     const lastHtml = last && last.res ? `<div class="bq-last bq-pop">Terakhir: <b>${last.res.word.toUpperCase()} -${last.res.final}</b> <span class="bq-mut"></span>${last.res.recycled ? ` ♻️ ${last.res.recycled.toUpperCase()}` : ''}${last.res.extraDraw ? ' 🔄 +1' : ''}<div class="bq-chips">${chipsOf(last.res)}</div></div>` : '';
@@ -544,22 +652,54 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       <div class="bq-msg" role="status">${msg}</div>
       <div class="bq-hand" style="--bq-n:${R.handSize}">${R.hand.map(t => { const lk = E.blocked(R, t), us = selIds.has(t.id); return tileHtml(t, lk ? 'lock' : us ? 'used' : '', lk ? 'disabled' : `data-a="pick" data-i="${t.id}"`); }).join('')}</div>
       <div class="bq-btns"><button type="button" class="bq-btn" data-a="clr" ${sel.length ? '' : 'disabled'}>Hapus</button><button type="button" class="bq-btn mint" data-a="discard" ${sel.length && E.canDiscard(R) ? '' : 'disabled'}>🗑️ Buang${sel.length ? ' ' + sel.length : ''}</button><button type="button" class="bq-btn pri" data-a="send" ${sel.length >= 3 ? '' : 'disabled'}>⚔️ Serang</button></div>
+      <button type="button" class="bq-giveup" data-a="giveUp">🏳️ Akhiri run</button>
       <div class="bq-mut bq-kb">Di laptop: ketik huruf untuk memilih, Backspace menghapus, Enter menyerang.</div>`;
   }
   function introHtml() {
     const saved = load(), resumable = saved && saved.phase !== 'end';
     return `<div class="bq-center bq-hero"><img src="img/game/bibo-idle.webp" alt="Bibo"><h2 style="margin-top:6px;font-size:26px">Bibo's Fabric Quest</h2><div class="bq-mut">Susun kata, kalahkan musuh jahit, naik stage sejauh mungkin.</div></div>
       <div class="bq-card"><b>Cara main</b><ul class="bq-mut" style="margin:6px 0 0;padding-left:18px">
-        <li>Tangan 8 huruf, supply 24. Ketuk huruf berurutan untuk menyusun kata (3 huruf sampai sebesar tanganmu), lalu Serang.</li>
+        <li>Tangan 8 huruf, supply 32. Ketuk huruf berurutan untuk menyusun kata (3 huruf sampai sebesar tanganmu), lalu Serang.</li>
         <li>Skor kata jadi serangan Bibo. Capai target ronde untuk mengalahkan musuh.</li>
         <li>Huruf jelek? Pilih lalu Buang: ambil huruf baru dari supply (3 kali per ronde).</li>
         <li>Jenis kata = hand: Noun +15, Verb +20 ×1,5, Adjective +30 ×2, Adverb +45 ×3. Naikkan levelnya dengan Buku di shop.</li>
         <li>Di shop ada kartu imbuhan (UN, LY, ING…), gabungan huruf (TH, QU…), dan kartu wild ?.</li>
         <li>Tiap stage: 2 ronde + 1 boss, lalu shop. Run tak berujung; target makin berat tiap stage.</li></ul></div>
-      <div class="bq-btns" style="justify-content:center">${muteHtml()}<span class="bq-mut" style="align-self:center">Musik latar</span></div>
+      <div class="bq-btns" style="justify-content:center;align-items:center">${soundHtml()}<span class="bq-mut">Musik 🎵 dan efek suara 🔔 (ketuk untuk menyalakan/mematikan)</span></div>
       ${best ? `<div class="bq-card bq-center">🏅 Rekor kamu: <b>Stage ${best}</b></div>` : ''}
+      <button type="button" class="bq-btn" style="width:100%" data-a="achList">🏆 Achievement (${achOwned.filter(a => E.ACH.some(x => x.id === a)).length}/${E.ACH.length})</button>
       ${resumable ? '<button type="button" class="bq-btn pri" style="width:100%" data-a="resume">Lanjutkan run</button><button type="button" class="bq-btn" style="width:100%" data-a="start">Mulai run baru</button>' : '<button type="button" class="bq-btn pri" style="width:100%" data-a="start">Mulai run</button>'}`;
   }
+  function achHtml() {
+    const open = what => what[0] === 'deck' ? E.DECK[what[1]] : E.FAB[what[1]];
+    return `<div class="bq-top"><h2 style="flex:1">🏆 Achievement</h2><button type="button" class="bq-btn sm" data-a="achBack">Kembali</button></div>
+      <div class="bq-mut">Tersimpan di akunmu. Tiap achievement membuka Kain (dek awal) atau Fabric baru.</div>
+      ${E.ACH.map(a => { const got = achOwned.includes(a.id), o = open(a.open);
+        return `<div class="bq-ach ${got ? '' : 'lock'}"><span class="ic">${got ? '🏆' : '🔒'}</span><div><b>${a.name}</b><span class="bq-mut">${a.desc}</span><div style="font-size:13px">Membuka ${a.open[0] === 'deck' ? 'Kain' : 'Fabric'}: ${o.icon} <b style="display:inline">${o.name}</b></div></div></div>`; }).join('')}`;
+  }
+  function toast(text) {
+    let el = document.getElementById('bq-toast');
+    if (!el) { el = document.createElement('div'); el.id = 'bq-toast'; el.className = 'bq-toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+    el.textContent = text; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 3200);
+  }
+  // new achievements of this run: shown at once, opened Fabrics join the pool at once, saved to the account with the run
+  function checkAch() {
+    if (!G) return;
+    G.newAch = G.newAch || [];
+    const fresh = E.earned(G).filter(id => !achOwned.includes(id) && !G.newAch.includes(id));
+    fresh.forEach(id => {
+      const a = E.ACH.find(x => x.id === id); G.newAch.push(id);
+      if (a.open[0] === 'fabric' && !G.unlocked.includes(a.open[1])) G.unlocked.push(a.open[1]);
+      const o = a.open[0] === 'deck' ? E.DECK[a.open[1]] : E.FAB[a.open[1]];
+      toast('🏆 ' + a.name + ' · terbuka: ' + o.icon + ' ' + o.name);
+    });
+    if (fresh.length) {
+      Sfx.play('unlock');
+      if (host.claim) host.claim(fresh).then(r => { if (r && r.achievements) setAch(r.achievements); }, () => { /* kept in G.newAch: sent again with the run */ });
+    }
+  }
+  const inLemari = w => { try { return !!(host.lemariHas && host.lemariHas(w)); } catch (e) { return false; } };
+  function setAch(list) { achOwned = (list || []).slice(); store.set(ACHKEY, JSON.stringify(achOwned)); }
   function endHtml() {
     const s = G.stats, uniq = []; const seen = {};
     s.list.slice().sort((a, b) => b.s - a.s).forEach(x => { if (!seen[x.w]) { seen[x.w] = 1; uniq.push(x); } });
@@ -575,6 +715,8 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       <button type="button" class="bq-btn pri" data-a="start">Main lagi</button>`;
   }
   function modalHtml() {
+    if (modal.t === 'giveup') return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Akhiri run?</h2><div class="bq-mut" style="margin:6px 0 12px">Run berhenti di ${label()}. Kata-katamu tetap bisa dilihat artinya dan disimpan ke Lemari.</div>
+      <div class="bq-btns"><button type="button" class="bq-btn" data-a="closeModal">Lanjut main</button><button type="button" class="bq-btn pri" data-a="giveUpYes">Ya, akhiri</button></div></div></div>`;
     if (modal.t === 'wild') return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Kartu ? jadi huruf apa?</h2><div class="bq-mut">Nilainya setengah dari huruf aslinya.${R.boss && R.boss.block ? ' Huruf ' + R.boss.block.toUpperCase() + ' sedang dikunci.' : ''}</div>
       <div class="bq-abc">${'abcdefghijklmnopqrstuvwxyz'.split('').map(c => `<button type="button" class="bq-tile" data-a="wildAs" data-i="${c}" ${R.boss && R.boss.block === c ? 'disabled' : ''}>${c}<small>${Math.ceil(E.V[c] * E.CFG.letterMul / 2)}</small></button>`).join('')}</div>
       <button type="button" class="bq-btn" style="width:100%;margin-top:10px" data-a="closeModal">Batal</button></div></div>`;
@@ -584,6 +726,8 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   function render() {
     let h = '';
     if (phase === 'intro') h = introHtml();
+    else if (phase === 'deck') h = `<h2>Pilih Kain</h2><div class="bq-mut">Kain menentukan isi supply-mu. Kain baru terbuka lewat achievement.</div><div class="bq-opts">${deckOpts.map(id => { const d = E.DECK[id]; return `<button type="button" class="bq-opt" data-a="pickDeck" data-i="${id}"><span class="ic">${d.icon}</span><b>${d.name}</b><span class="d">${d.desc}</span></button>`; }).join('')}</div>`;
+    else if (phase === 'ach') h = achHtml();
     else if (phase === 'starter') h = `<h2>Pilih Fabric awal</h2><div class="bq-mut">Kamu mulai dengan 1 Fabric dari 3 pilihan.</div><div class="bq-opts">${starters.map((id, i) => `<button type="button" class="bq-opt" data-a="pickStarter" data-i="${i}">${fabricCard(id)}</button>`).join('')}</div>`;
     else if (phase === 'bosspre') h = `<div class="bq-card bq-center"><img src="img/game/boss-${R.boss.id}.webp" alt="" style="height:150px;width:auto"><h2>${R.boss.name}</h2><p>${R.boss.desc}${R.boss.block ? `<br><b style="color:var(--error);font-size:22px">Huruf terkunci: ${R.boss.block.toUpperCase()}</b>` : ''}</p><div class="bq-mut">Target ${R.target}</div></div><button type="button" class="bq-btn pri" data-a="faceBoss">Hadapi boss</button>`;
     else if (phase === 'round') h = roundHtml();
@@ -618,12 +762,13 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     if (!g || g.submitted || sendState === 'sending') return;
     const s = g.stats;
     sendState = 'sending'; sendErr = '';
-    host.submit({ run_id: g.runId, stage: g.reached, round: g.rnd + 1, words: s.words, longest: s.longest, best_word: s.best.w, best_score: s.best.s, total_score: s.total, fabrics: g.fabrics.slice() })
-      .then(function (r) { markSent(g); sendState = 'ok'; if (r && r.stats && host.onStats) host.onStats(r.stats); if (phase === 'end') render(); },
+    host.submit({ run_id: g.runId, stage: g.reached, round: g.rnd + 1, words: s.words, longest: s.longest, best_word: s.best.w, best_score: s.best.s, total_score: s.total, fabrics: g.fabrics.slice(), deck: g.deck || 'base', achievements: (g.newAch || []).slice() })
+      .then(function (r) { markSent(g); sendState = 'ok'; if (r && r.achievements) setAch(r.achievements); if (r && r.stats && host.onStats) host.onStats(r.stats); if (phase === 'end') render(); },
         function (e) { sendState = 'fail'; sendErr = e && e.message ? e.message : 'Coba lagi nanti.'; if (host.failed) host.failed(e); if (phase === 'end') render(); });
     if (phase === 'end') render();
   }
   function endRun() {
+    checkAch(); Sfx.play('over');
     phase = 'end'; G.reached = G.stage + 1;
     if (G.reached > best) { best = G.reached; store.set(BEST, String(best)); }
     means = {}; sendState = ''; sendResult();
@@ -637,20 +782,30 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     else if (o.type === 'fabric') { if (G.fabrics.length < E.CFG.slots) { G.fabrics.push(o.id); after(); } else { modal = { t: 'replace', id: o.id, after: after }; render(); } }
   }
   function beginRound() { R = E.makeRound(G, rng); sel = []; msg = ''; last = null; phase = R.boss ? 'bosspre' : 'round'; render(); }
-  function advance() { if (isBoss()) { G.stage++; G.rnd = 0; shop = E.shopItems(G, rng); phase = 'shop'; render(); } else { G.rnd++; beginRound(); } }
+  function advance() { if (isBoss()) { G.stage++; G.rnd = 0; checkAch(); shop = E.shopItems(G, rng); phase = 'shop'; render(); } else { G.rnd++; beginRound(); } }
   const A = {
     start() {
-      G = E.newGame(null); G.runId = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); G.submitted = false;
-      const ids = E.FABRICS.map(f => f.id).filter(x => ['refill', 'saver', 'recycler'].indexOf(x) === -1);
+      deckOpts = E.opened(achOwned).decks;
+      if (deckOpts.length > 1) { G = null; phase = 'deck'; modal = null; render(); return; }
+      A.pickDeck('base');
+    },
+    pickDeck(id) {
+      G = E.newGame(null, id, E.opened(achOwned).fabrics); G.runId = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); G.submitted = false; G.newAch = [];
+      const ids = E.FABRICS.filter(f => E.avail(G, f)).map(f => f.id).filter(x => ['refill', 'saver', 'recycler'].indexOf(x) === -1);
       starters = E.shuffle(ids.slice(), rng).slice(0, 3); phase = 'starter'; last = null; sel = []; modal = null; sendState = ''; render();
     },
+    achList() { phase = 'ach'; render(); },
+    achBack() { phase = 'intro'; render(); },
+    giveUp() { modal = { t: 'giveup' }; render(); },
+    giveUpYes() { modal = null; endRun(); },
+    sfx() { Sfx.toggle(); render(); },
     resume() { const s = load(); if (s) { restore(s); render(); } else A.start(); },
     pickStarter(i) { G.fabrics = [starters[+i]]; beginRound(); },
     faceBoss() { phase = 'round'; render(); },
     pick(id) {
       const t = R.hand.find(x => x.id === +id); if (!t || sel.length >= R.handSize || sel.some(s => s.id === t.id)) return;
       if (t.ch === '?') { modal = { t: 'wild', id: t.id }; render(); return; }
-      sel.push(t); msg = ''; render();
+      sel.push(t); msg = ''; Sfx.play('tick'); render();
     },
     wildAs(c) { const t = R.hand.find(x => x.id === modal.id); modal = null; if (t && !(R.boss && R.boss.block === c)) { t.as = c; sel.push(t); msg = ''; } render(); },
     unsel(i) { const t = sel.splice(+i, 1)[0]; if (t) delete t.as; render(); },
@@ -664,33 +819,35 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
         e => { means[w] = { state: 'err', open: true, msg: e && e.message ? e.message : 'Arti belum bisa dimuat.' }; if (host.failed) host.failed(e); showMeaning(w); });
     },
     send() {
-      const r = E.submit(G, R, sel, rng);
-      if (!r.ok) { msg = r.msg; shake = true; render(); return; }
+      const w = sel.map(E.txt).join('');
+      const r = E.submit(G, R, sel, rng, { inLemari: inLemari(w) });
+      if (!r.ok) { msg = r.msg; shake = true; Sfx.play('bad'); render(); return; }
+      Sfx.play('attack');
       const f = r.res.final;
       fx = { dmg: f, say: r.res.jackpot ? 'JACKPOT!' : f >= R.target * 0.35 ? 'Mantap!' : r.res.word.length >= 6 ? 'Panjang!' : '' };
       last = { res: r.res }; sel = []; msg = '';
-      if (r.won) { last.fin = E.finishRound(G, R); rewards = E.rewardOptions(G, rng); R.cleared = true; }
+      if (r.won) { last.fin = E.finishRound(G, R); rewards = E.rewardOptions(G, rng); R.cleared = true; setTimeout(() => Sfx.play('win'), 380); }
       else if (E.failed(G, R)) { endRun(); return; }
-      render();
+      checkAch(); render();
     },
-    discard() { sel.forEach(t => delete t.as); if (!E.discard(G, R, sel.slice())) return; const n = sel.length; sel = []; msg = 'Buang ' + n + ' huruf, ambil dari supply.'; if (E.failed(G, R)) { endRun(); return; } render(); },
-    goNext() { phase = 'reward'; render(); },
-    takeReward(i) { gain(rewards[+i], advance); },
+    discard() { sel.forEach(t => delete t.as); if (!E.discard(G, R, sel.slice())) return; Sfx.play('discard'); const n = sel.length; sel = []; msg = 'Buang ' + n + ' huruf, ambil dari supply.'; if (E.failed(G, R)) { endRun(); return; } render(); },
+    goNext() { phase = 'reward'; Sfx.play('coin'); render(); },
+    takeReward(i) { if (rewards[+i] && rewards[+i].type === 'coin') Sfx.play('coin'); gain(rewards[+i], advance); },
     showFab(id) { modal = { t: 'fab', id: id }; render(); },
     closeModal() { modal = null; render(); },
     doReplace(i) { const m = modal; G.fabrics[+i] = m.id; modal = null; m.after(); },
     skipReplace() { const m = modal; modal = null; m.after(); },
     buy(i) {
       const o = shop[+i]; if (!o || o.sold || G.coins < o.price) return;
-      if (o.type === 'fabric' && G.fabrics.length >= E.CFG.slots) { modal = { t: 'replace', id: o.id, after: () => { if (G.fabrics.includes(o.id)) { G.coins -= o.price; o.sold = true; } render(); } }; render(); return; }
-      G.coins -= o.price; o.sold = true; gain(o, render);
+      if (o.type === 'fabric' && G.fabrics.length >= E.CFG.slots) { modal = { t: 'replace', id: o.id, after: () => { if (G.fabrics.includes(o.id)) { G.coins -= o.price; o.sold = true; Sfx.play('coin'); } render(); } }; render(); return; }
+      G.coins -= o.price; o.sold = true; Sfx.play('coin'); gain(o, render);
     },
     buyPerm(i) {
-      const o = E.permItems(G)[+i]; if (!o || o.maxed || G.coins < o.price) return; G.coins -= o.price;
+      const o = E.permItems(G)[+i]; if (!o || o.maxed || G.coins < o.price) return; G.coins -= o.price; Sfx.play('coin');
       if (o.type === 'supply') G.extra += o.n; else if (o.type === 'discard') G.discardBonus++; else if (o.type === 'hand') G.handBonus++;
       render();
     },
-    reroll() { if (G.coins < E.CFG.price.reroll) return; G.coins -= E.CFG.price.reroll; shop = E.shopItems(G, rng); render(); },
+    reroll() { if (G.coins < E.CFG.price.reroll) return; G.coins -= E.CFG.price.reroll; Sfx.play('coin'); shop = E.shopItems(G, rng); render(); },
     leaveShop() { beginRound(); },
     retry() { sendResult(); },
     noop() { }
@@ -728,14 +885,17 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       ready.catch(() => { ready = null; });
     }
     body.innerHTML = '<div class="bq bq-center bq-mut" style="padding:40px 0">Memuat kamus…</div>';
+    try { achOwned = JSON.parse(store.get(ACHKEY) || '[]') || []; } catch (e) { achOwned = []; }
+    // the account's achievements arrive in the background (the copy on this phone is used meanwhile, or when offline)
+    if (host.profile) host.profile().then(r => { if (r && r.achievements) { setAch(r.achievements); if (phase === 'intro' || phase === 'ach') render(); } }, e => { if (host.failed) host.failed(e); });
     return ready.then(() => {
       const s = load();
       if (s && s.phase === 'end' && s.G && !s.G.submitted) { restore(s); sendState = ''; sendResult(); }   // a finished run whose result never reached the server: try again quietly
       G = null; R = null; phase = 'intro'; sel = []; modal = null; render();
     }, () => { body.innerHTML = '<div class="bq bq-center"><div class="bq-card">Kamus game belum bisa dimuat. Cek koneksi, lalu buka Game lagi.</div></div>'; });
   }
-  return { init: init, open: open, music: Music };
+  return { init: init, open: open, music: Music, sfx: Sfx };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = Engine;
-else if (typeof window !== 'undefined') window.WRGame = { init: UI.init, open: UI.open, music: UI.music, Engine: Engine };
+else if (typeof window !== 'undefined') window.WRGame = { init: UI.init, open: UI.open, music: UI.music, sfx: UI.sfx, Engine: Engine };

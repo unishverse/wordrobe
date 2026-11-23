@@ -1685,7 +1685,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       fqLoad = new Promise(function (ok, no) {
         var sc = document.createElement('script');
         // raise v when game.js changes: a new URL skips any old copy the phone or the CDN still holds
-        sc.src = 'game.js?v=4'; sc.onload = ok; sc.onerror = function () { sc.remove(); no(new Error('game')); };
+        sc.src = 'game.js?v=5'; sc.onload = ok; sc.onerror = function () { sc.remove(); no(new Error('game')); };
         document.head.appendChild(sc);
       });
       fqLoad.catch(function () { fqLoad = null; });
@@ -1703,6 +1703,9 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         submit: function (d) { return api('submitGameRun', readToken(), d); },
         addButton: function (w, meaning) { return slAddButton({ word: w, meaning: meaning || '' }, 'FabricQuest', $('gp-msg')); },
         lookup: function (w) { return api('lookupWord', readToken(), w, ''); },
+        profile: function () { return api('getGameProfile', readToken()); },
+        claim: function (ids) { return api('getGameProfile', readToken(), ids); },
+        lemariHas: function (w) { return hasWord(slKey(w)); },
         onStats: function (s) { stats = s || stats; },
         failed: function (e) { if (e && SESSION_RE.test(e.message)) signedOut(e.message); }
       });
