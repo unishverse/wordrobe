@@ -1685,7 +1685,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       fqLoad = new Promise(function (ok, no) {
         var sc = document.createElement('script');
         // raise v when game.js changes: a new URL skips any old copy the phone or the CDN still holds
-        sc.src = 'game.js?v=5'; sc.onload = ok; sc.onerror = function () { sc.remove(); no(new Error('game')); };
+        sc.src = 'game.js?v=7'; sc.onload = ok; sc.onerror = function () { sc.remove(); no(new Error('game')); };
         document.head.appendChild(sc);
       });
       fqLoad.catch(function () { fqLoad = null; });

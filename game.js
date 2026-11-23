@@ -36,7 +36,7 @@ const Engine = (function () {
   const avail = (G, f) => !f.locked || (G.unlocked || []).includes(f.id);
   const FAB = {}; FABRICS.forEach(f => FAB[f.id] = f);
   const BOSSES = [
-    { id: 'minimal', name: 'The Minimalist', desc: 'Kata minimal 5 huruf.' },
+    { id: 'minimal', name: 'The Minimalist', desc: 'Kata di bawah 5 huruf hanya dapat 50% skor.' },
     { id: 'silent', name: 'The Silent One', desc: 'Satu huruf terkunci dan tidak bisa dipakai.', pick: 'dlnrst' },
     { id: 'repeater', name: 'The Repeater', desc: 'Kata tanpa huruf kembar hanya dapat 50% skor.' },
     { id: 'short', name: 'The Short Cutter', desc: 'Kata lebih dari 5 huruf tidak dapat bonus panjang.' },
@@ -114,6 +114,7 @@ const Engine = (function () {
     tiles.forEach((t, i) => { const k = kindOf(t.ch); if ((k === 'pre' && i === 0) || (k === 'suf' && i === tiles.length - 1)) affix.push(t.ch); });
     let bossHalf = false;
     if (boss && boss.id === 'repeater' && !rep) bossHalf = true;
+    if (boss && boss.id === 'minimal' && n < 5) bossHalf = true;
     const addSum = adds.reduce((a, x) => a + x.v, 0);
     let mult = mults.reduce((a, x) => a * x.v, 1) * hand.mult * Math.pow(AFFIX_MULT, affix.length);
     if (bossHalf) mult *= 0.5;
@@ -125,7 +126,7 @@ const Engine = (function () {
 
   // a card is locked when the boss locks a letter it contains; a wild card is never locked but may not play as that letter
   const blocked = (R, t) => !!(R.boss && R.boss.block && t.ch !== '?' && t.ch.includes(R.boss.block));
-  function bossOK(R, w) { return !(R.boss && R.boss.id === 'minimal' && w.length < 5); }
+  function bossOK(R, w) { return true; }   // every boss rule now changes the score instead of refusing a word (Minimalist: owner 23 Nov)
   const usableOf = R => R.hand.filter(t => !blocked(R, t));
   // spell w with the usable cards: exact cards first (upgraded first), wild cards last. Returns [{t, as}] or null.
   function spell(R, w, usable) {
@@ -188,18 +189,20 @@ const Engine = (function () {
     { id: 'wild', name: 'Kain Wild', icon: '❓', desc: 'Supply berisi 2 kartu wild ?.', cards: ['?', '?'] }
   ];
   const DECK = {}; DECKS.forEach(d => DECK[d.id] = d);
+  /* Achievements (owner 23 Nov: hard, so they take many runs). "total" ones add up the runs saved on the server (the server decides them
+     when a run is saved); "run" ones are earned inside one run (claimed at once); lemari50 is decided by the server from the saved words. */
   const ACH = [
-    { id: 'boss1', name: 'Jahitan Pertama', desc: 'Kalahkan boss pertamamu.', open: ['fabric', 'measure'] },
-    { id: 'noun15', name: 'Kolektor Benda', desc: 'Mainkan 15 noun dalam satu run.', open: ['deck', 'noun'] },
-    { id: 'verb10', name: 'Banyak Gerak', desc: 'Mainkan 10 verb dalam satu run.', open: ['deck', 'verb'] },
-    { id: 'adj8', name: 'Tukang Warna', desc: 'Mainkan 8 adjective dalam satu run.', open: ['deck', 'adj'] },
-    { id: 'adv5', name: 'Si Paling Adverb', desc: 'Mainkan 5 adverb dalam satu run.', open: ['deck', 'adv'] },
-    { id: 'affix', name: 'Tukang Imbuhan', desc: 'Pakai prefiks dan sufiks di satu kata.', open: ['deck', 'wild'] },
-    { id: 'giant', name: 'Kata Raksasa', desc: 'Mainkan kata 10 huruf atau lebih.', open: ['deck', 'long'] },
-    { id: 'nodisc', name: 'Tanpa Buang', desc: 'Menangkan satu ronde tanpa Buang.', open: ['fabric', 'steady'] },
-    { id: 'minimal', name: 'Penakluk Minimalist', desc: 'Kalahkan The Minimalist.', open: ['deck', 'vowel'] },
-    { id: 'stage5', name: 'Sampai Stage 5', desc: 'Capai Stage 5.', open: ['deck', 'gold'] },
-    { id: 'lemari10', name: 'Pengumpul', desc: 'Simpan 10 kata dari game ke Lemari.', open: ['fabric', 'lemariku'] }
+    { id: 'boss10', name: 'Penjahit Tangguh', desc: 'Kalahkan 10 boss (total semua run).', total: 'bosses', need: 10, open: ['fabric', 'measure'] },
+    { id: 'noun150', name: 'Kolektor Benda', desc: 'Mainkan 150 noun (total semua run).', total: 'nouns', need: 150, open: ['deck', 'noun'] },
+    { id: 'verb100', name: 'Banyak Gerak', desc: 'Mainkan 100 verb (total semua run).', total: 'verbs', need: 100, open: ['deck', 'verb'] },
+    { id: 'adj60', name: 'Tukang Warna', desc: 'Mainkan 60 adjective (total semua run).', total: 'adjs', need: 60, open: ['deck', 'adj'] },
+    { id: 'adv25', name: 'Si Paling Adverb', desc: 'Mainkan 25 adverb (total semua run).', total: 'advs', need: 25, open: ['deck', 'adv'] },
+    { id: 'affix10', name: 'Tukang Imbuhan', desc: 'Mainkan 10 kata dengan prefiks dan sufiks sekaligus (total).', total: 'affix_words', need: 10, open: ['deck', 'wild'] },
+    { id: 'giant5', name: 'Kata Raksasa', desc: 'Mainkan 5 kata 10 huruf atau lebih (total).', total: 'giant_words', need: 5, open: ['deck', 'long'] },
+    { id: 'minimal5', name: 'Penakluk Minimalist', desc: 'Kalahkan The Minimalist 5 kali (total).', total: 'minimals', need: 5, open: ['deck', 'vowel'] },
+    { id: 'calm', name: 'Tangan Tenang', desc: 'Selesaikan satu stage penuh (2 ronde + boss) tanpa Buang sama sekali.', run: true, open: ['fabric', 'steady'] },
+    { id: 'stage8', name: 'Sampai Stage 8', desc: 'Capai Stage 8 dalam satu run.', run: true, open: ['deck', 'gold'] },
+    { id: 'lemari50', name: 'Pengumpul', desc: 'Simpan 50 kata dari game ke Lemari (total).', total: 'lemari', need: 50, open: ['fabric', 'lemariku'] }
   ];
   // what an achievement list opens: { fabrics: [...], decks: [...] }
   function opened(achIds) {
@@ -207,20 +210,17 @@ const Engine = (function () {
     ACH.forEach(a => { if ((achIds || []).includes(a.id)) (a.open[0] === 'deck' ? o.decks : o.fabrics).push(a.open[1]); });
     return o;
   }
-  // achievements this run has earned so far (lemari10 is decided by the server from the saved words)
+  // "run" achievements earned inside this run
   function earned(G) {
-    const st = G.stats, pc = st.pos || {}, out = [];
-    if ((st.bosses || 0) >= 1) out.push('boss1');
-    if ((pc.n || 0) >= 15) out.push('noun15');
-    if ((pc.v || 0) >= 10) out.push('verb10');
-    if ((pc.a || 0) >= 8) out.push('adj8');
-    if ((pc.r || 0) >= 5) out.push('adv5');
-    if (st.affix) out.push('affix');
-    if (st.longest.length >= 10) out.push('giant');
-    if (st.noDisc) out.push('nodisc');
-    if (st.minimal) out.push('minimal');
-    if (G.stage >= 4) out.push('stage5');
+    const out = [];
+    if (G.stats.calm) out.push('calm');
+    if (G.stage >= 7) out.push('stage8');
     return out;
+  }
+  // this run's counts, sent with the result; the server adds them up for the "total" achievements
+  function runCounts(G) {
+    const st = G.stats, pc = st.pos || {};
+    return { nouns: pc.n || 0, verbs: pc.v || 0, adjs: pc.a || 0, advs: pc.r || 0, bosses: st.bosses || 0, minimals: st.minimals || 0, affix_words: st.affixWords || 0, giant_words: st.giantWords || 0 };
   }
 
   function newGame(starterId, deckId, unlocked) {
@@ -268,7 +268,6 @@ const Engine = (function () {
     if (tl.some(t => t.ch === '?' && R.boss && t.as === R.boss.block)) return { ok: false, msg: 'Huruf ' + R.boss.block.toUpperCase() + ' sedang dikunci boss.' };
     const w = tl.map(txt).join('');
     if (w.length < 3) return { ok: false, msg: 'Minimal 3 huruf.' };
-    if (!bossOK(R, w)) return { ok: false, msg: R.boss.name + ': minimal 5 huruf.' };
     if (!isWord(w)) return { ok: false, msg: '“' + w.toUpperCase() + '” belum ada di kamus.' };
     const res = score(tl, G.fabrics, Object.assign({ first: !R.firstDone, chain: R.chain, lv: G.handLv }, ctxExtra || {}), R.boss, rng);
     R.score += res.final; R.words++; R.firstDone = true;
@@ -281,7 +280,8 @@ const Engine = (function () {
     if (res.final > st.best.s) st.best = { w, s: res.final };
     st.list.push({ w, s: res.final, p: res.hand.pos });
     st.pos = st.pos || {}; st.pos[res.hand.pos] = (st.pos[res.hand.pos] || 0) + 1;
-    if (tl.some(t => kindOf(t.ch) === 'pre') && tl.some(t => kindOf(t.ch) === 'suf') && res.affix.length === 2) st.affix = true;
+    if (res.affix.length === 2) st.affixWords = (st.affixWords || 0) + 1;   // a prefix first and a suffix last
+    if (w.length >= 10) st.giantWords = (st.giantWords || 0) + 1;
     let recycled = null;
     if (G.fabrics.includes('recycler') && rng() < 0.2) {
       const t = tl[Math.floor(rng() * tl.length)];
@@ -310,8 +310,12 @@ const Engine = (function () {
     let coins = CFG.coinRound + G.stage, saver = 0, steady = 0;
     if (G.fabrics.includes('saver')) saver = Math.floor((R.hand.length + R.supply.length) / 3);
     const st = G.stats, noDisc = R.discards === R.maxDiscards;
-    if (noDisc) { st.noDisc = true; if (G.fabrics.includes('steady')) steady = 2; }
-    if (R.boss) { st.bosses = (st.bosses || 0) + 1; if (R.boss.id === 'minimal') st.minimal = true; }
+    if (noDisc) { if (G.fabrics.includes('steady')) steady = 2; } else st.stageDisc = true;
+    if (R.boss) {
+      st.bosses = (st.bosses || 0) + 1; if (R.boss.id === 'minimal') st.minimals = (st.minimals || 0) + 1;
+      if (!st.stageDisc) st.calm = true;   // a whole stage (2 rounds + boss) won without a discard
+      st.stageDisc = false;
+    }
     G.coins += coins + saver + steady; return { coins, saver, steady };
   }
   function rewardOptions(G, rng) {
@@ -354,7 +358,7 @@ const Engine = (function () {
   function addUpgrade(G, kind, ch) { G.upgrades.push(mk(ch, kind)); }
   // after restoring a saved run: new tile ids must not collide with the restored ones
   function resumeIds(G, R) { let m = 0; const see = t => { if (t.id > m) m = t.id; }; G.upgrades.forEach(see); if (R) { R.hand.forEach(see); R.supply.forEach(see); } if (m >= UID) UID = m + 1; }
-  return { DECKS, DECK, ACH, opened, earned, avail, val, txt, kindOf, HANDS, MULTI, PRE, SUF, PAIRS, posOf, lvOf, handInfo, spell, V, LB, CFG, FABRICS, FAB, BOSSES, setDict, isWord, rngFrom, shuffle, mk, score, blocked, candidates, tilesFor, best, newGame,
+  return { DECKS, DECK, ACH, opened, earned, runCounts, avail, val, txt, kindOf, HANDS, MULTI, PRE, SUF, PAIRS, posOf, lvOf, handInfo, spell, V, LB, CFG, FABRICS, FAB, BOSSES, setDict, isWord, rngFrom, shuffle, mk, score, blocked, candidates, tilesFor, best, newGame,
     roundIndex, targetFor, handSize, permItems, makeRound, draw, submit, stuck, failed, discard, canDiscard, finishRound, rewardOptions, shopItems, addUpgrade, resumeIds, randLetter, get ARR() { return ARR; } };
 })();
 
@@ -365,7 +369,7 @@ const UI = (function () {
   const REG = [['yarn', 'Si Kusut'], ['button', 'Kancing Nakal'], ['needle', 'Jarum Jahil'], ['pin', 'Peniti Pelit'], ['iron', 'Setrika Sinis'], ['hanger', 'Hanger Galak']];
   let host = null, root = null, body = null, ready = null, mounted = false;
   let best = 0, G = null, R = null, phase = 'intro', sel = [], msg = '', last = null, starters = [], rewards = [], shop = [], modal = null, fx = null, shake = false;
-  let sendState = '', sendErr = '', means = {}, achOwned = [], deckOpts = [], toastTimer = null;
+  let sendState = '', sendErr = '', means = {}, achOwned = [], achTotals = {}, achNew = [], deckOpts = [], toastTimer = null;
   const ACHKEY = 'wr_game_ach';
   const rng = Math.random;
   const store = {
@@ -421,7 +425,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 .bq-chip.h{background:var(--blue);color:#fff;font-weight:800}
 .bq-mute.off{opacity:.35;text-decoration:line-through}.bq-toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:30;background:var(--yellow);color:var(--on-accent);border-radius:16px;padding:10px 16px;font-weight:800;font-size:14px;box-shadow:0 6px 20px #0006;max-width:92vw;animation:bq-pop .3s}
 .bq-giveup{border:0;background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:2px 0;align-self:center}
-.bq-ach{display:flex;gap:10px;align-items:center;background:var(--card);border-radius:16px;padding:10px 12px}.bq-ach.lock{opacity:.5}.bq-ach .ic{font-size:24px}.bq-ach b{display:block}
+.bq-ach{display:flex;gap:10px;align-items:center;background:var(--card);border-radius:16px;padding:10px 12px}.bq-ach.lock{opacity:.6}.bq-ach .ic{font-size:24px}.bq-ach b{display:block}
 .bq-mute{border:0;background:var(--card-2);color:var(--text);border-radius:999px;width:36px;height:30px;font-size:15px;cursor:pointer;flex:none}
 .bq-abc{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}.bq-abc .bq-tile{width:auto;height:46px;font-size:20px}
 .bq-wl .row{cursor:pointer}.bq-wl .row s{text-decoration:none;font-size:11px;font-weight:800;color:var(--accent-text);margin-left:6px}
@@ -634,7 +638,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     let pv = '';
     if (sel.length) {
       const w = sel.map(E.txt).join('');
-      if (w.length >= 3 && E.isWord(w) && (!R.boss || R.boss.id !== 'minimal' || w.length >= 5)) {
+      if (w.length >= 3 && E.isWord(w)) {
         const s = E.score(sel, G.fabrics, { first: !R.firstDone, chain: R.chain, lv: G.handLv, inLemari: inLemari(w) }, R.boss, () => 1);
         pv = `<div class="bq-pl"><b>${w.toUpperCase()}</b> · ${s.letters} + ${s.lenBonus} panjang → <b>${s.final}</b> poin</div><div class="bq-chips">${chipsOf(Object.assign({}, s, { jackpot: undefined }))}${G.fabrics.includes('jackpot') ? '<span class="bq-chip">🎰 bisa ×2</span>' : ''}</div>`;
       } else pv = `<div class="bq-pl">${w.length < 3 ? 'Pilih minimal 3 huruf untuk kata, atau langsung Buang' : '<b>' + w.toUpperCase() + '</b> belum jadi kata valid (boleh Buang huruf ini)'}</div>`;
@@ -674,8 +678,10 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     const open = what => what[0] === 'deck' ? E.DECK[what[1]] : E.FAB[what[1]];
     return `<div class="bq-top"><h2 style="flex:1">🏆 Achievement</h2><button type="button" class="bq-btn sm" data-a="achBack">Kembali</button></div>
       <div class="bq-mut">Tersimpan di akunmu. Tiap achievement membuka Kain (dek awal) atau Fabric baru.</div>
-      ${E.ACH.map(a => { const got = achOwned.includes(a.id), o = open(a.open);
-        return `<div class="bq-ach ${got ? '' : 'lock'}"><span class="ic">${got ? '🏆' : '🔒'}</span><div><b>${a.name}</b><span class="bq-mut">${a.desc}</span><div style="font-size:13px">Membuka ${a.open[0] === 'deck' ? 'Kain' : 'Fabric'}: ${o.icon} <b style="display:inline">${o.name}</b></div></div></div>`; }).join('')}`;
+      ${E.ACH.map(a => { const got = achOwned.includes(a.id), o = open(a.open), have = Math.min(a.need || 0, achTotals[a.total] || 0);
+        const prog = !got && a.total ? `<div class="bq-hp" style="margin-top:4px"><i style="width:${have / a.need * 100}%;background:var(--mint)"></i></div><div class="bq-mut" style="font-size:12px">${have}/${a.need}</div>` : '';
+        return `<div class="bq-ach ${got ? '' : 'lock'}"><span class="ic">${got ? '🏆' : '🔒'}</span><div style="flex:1"><b>${a.name}</b><span class="bq-mut">${a.desc}</span><div style="font-size:13px">Membuka ${a.open[0] === 'deck' ? 'Kain' : 'Fabric'}: ${o.icon} <b style="display:inline">${o.name}</b></div>${prog}</div></div>`; }).join('')}
+      <div class="bq-mut">Hitungan total bertambah saat run selesai (kalah atau Akhiri run).</div>`;
   }
   function toast(text) {
     let el = document.getElementById('bq-toast');
@@ -690,16 +696,19 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     fresh.forEach(id => {
       const a = E.ACH.find(x => x.id === id); G.newAch.push(id);
       if (a.open[0] === 'fabric' && !G.unlocked.includes(a.open[1])) G.unlocked.push(a.open[1]);
-      const o = a.open[0] === 'deck' ? E.DECK[a.open[1]] : E.FAB[a.open[1]];
-      toast('🏆 ' + a.name + ' · terbuka: ' + o.icon + ' ' + o.name);
+      toast('🏆 ' + achText(id));
     });
     if (fresh.length) {
       Sfx.play('unlock');
-      if (host.claim) host.claim(fresh).then(r => { if (r && r.achievements) setAch(r.achievements); }, () => { /* kept in G.newAch: sent again with the run */ });
+      if (host.claim) host.claim(fresh).then(r => { if (r && r.achievements) setAch(r.achievements, r.totals); }, () => { /* kept in G.newAch: sent again with the run */ });
     }
   }
   const inLemari = w => { try { return !!(host.lemariHas && host.lemariHas(w)); } catch (e) { return false; } };
-  function setAch(list) { achOwned = (list || []).slice(); store.set(ACHKEY, JSON.stringify(achOwned)); }
+  function setAch(list, totals) {
+    achOwned = (list || []).slice(); if (totals) achTotals = totals;
+    store.set(ACHKEY, JSON.stringify({ list: achOwned, totals: achTotals }));
+  }
+  const achText = id => { const a = E.ACH.find(x => x.id === id), o = a.open[0] === 'deck' ? E.DECK[a.open[1]] : E.FAB[a.open[1]]; return a.name + ' · terbuka: ' + o.icon + ' ' + o.name; };
   function endHtml() {
     const s = G.stats, uniq = []; const seen = {};
     s.list.slice().sort((a, b) => b.s - a.s).forEach(x => { if (!seen[x.w]) { seen[x.w] = 1; uniq.push(x); } });
@@ -707,6 +716,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     const sendLine = sendState === 'ok' ? '<div class="bq-mut">Hasil tersimpan.</div>' : sendState === 'sending' ? '<div class="bq-mut">Menyimpan hasil…</div>' : sendState === 'fail' ? `<div class="bq-msg">Hasil belum tersimpan: ${sendErr} <button type="button" class="bq-btn sm" data-a="retry">Coba lagi</button></div>` : '';
     return `<div class="bq-top"><div class="t"><b>${label()}</b><h2>Run berakhir</h2></div></div>${arenaHtml()}
       <div class="bq-card bq-center"><div class="bq-mut">Skor ronde ${R.score} dari ${R.target}.</div><div style="margin-top:6px">${G.reached >= best ? '🏅 Rekor baru!' : 'Rekor: Stage ' + best}</div>${sendLine}</div>
+      ${achNew.length || (G.newAch || []).length ? `<div class="bq-card"><b>🏆 Achievement baru</b>${[...new Set((G.newAch || []).concat(achNew))].map(id => `<div class="bq-mut">${achText(id)}</div>`).join('')}</div>` : ''}
       <div class="bq-card"><b>Kata-katamu</b><div class="bq-mut">Ketuk kata untuk melihat artinya, lalu simpan ke Lemari.</div>
         <div class="bq-wl">${uniq.map(x => `<div class="row" data-a="meaning" data-i="${x.w}"><b>${x.w}${POSN[x.p] ? `<s>${POSN[x.p]}</s>` : ''}</b><i>${x.s} poin</i><span data-add="${x.w}"></span></div><div class="mean" data-mean="${x.w}" hidden></div>`).join('') || '<div class="bq-mut">Belum ada kata.</div>'}</div></div>
       <div class="bq-card"><div class="bq-info" style="font-size:13px"><span>🏔️ Stage ${G.reached}</span><span>📝 ${s.words} kata</span><span>🔤 terpanjang: ${s.longest ? s.longest.toUpperCase() : '-'}</span><span>⭐ terbaik: ${s.best.w ? s.best.w.toUpperCase() + ' (' + s.best.s + ')' : '-'}</span><span>Σ ${s.total} poin</span></div>
@@ -762,8 +772,14 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     if (!g || g.submitted || sendState === 'sending') return;
     const s = g.stats;
     sendState = 'sending'; sendErr = '';
-    host.submit({ run_id: g.runId, stage: g.reached, round: g.rnd + 1, words: s.words, longest: s.longest, best_word: s.best.w, best_score: s.best.s, total_score: s.total, fabrics: g.fabrics.slice(), deck: g.deck || 'base', achievements: (g.newAch || []).slice() })
-      .then(function (r) { markSent(g); sendState = 'ok'; if (r && r.achievements) setAch(r.achievements); if (r && r.stats && host.onStats) host.onStats(r.stats); if (phase === 'end') render(); },
+    host.submit({ run_id: g.runId, stage: g.reached, round: g.rnd + 1, words: s.words, longest: s.longest, best_word: s.best.w, best_score: s.best.s, total_score: s.total, fabrics: g.fabrics.slice(), deck: g.deck || 'base', achievements: (g.newAch || []).slice(), counts: E.runCounts(g) })
+      .then(function (r) {
+        markSent(g); sendState = 'ok';
+        if (r && r.achievements) {
+          const fresh = r.achievements.filter(id => !achOwned.includes(id) && E.ACH.some(a => a.id === id));
+          setAch(r.achievements, r.totals);
+          if (fresh.length) { achNew = achNew.concat(fresh); toast('🏆 ' + achText(fresh[0]) + (fresh.length > 1 ? ' (+' + (fresh.length - 1) + ' lagi)' : '')); Sfx.play('unlock'); }
+        } if (r && r.stats && host.onStats) host.onStats(r.stats); if (phase === 'end') render(); },
         function (e) { sendState = 'fail'; sendErr = e && e.message ? e.message : 'Coba lagi nanti.'; if (host.failed) host.failed(e); if (phase === 'end') render(); });
     if (phase === 'end') render();
   }
@@ -771,7 +787,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     checkAch(); Sfx.play('over');
     phase = 'end'; G.reached = G.stage + 1;
     if (G.reached > best) { best = G.reached; store.set(BEST, String(best)); }
-    means = {}; sendState = ''; sendResult();
+    means = {}; achNew = []; sendState = ''; sendResult();
   }
   function gain(o, after) {
     if (o.type === 'coin') { G.coins += o.n; after(); }
@@ -885,9 +901,9 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       ready.catch(() => { ready = null; });
     }
     body.innerHTML = '<div class="bq bq-center bq-mut" style="padding:40px 0">Memuat kamus…</div>';
-    try { achOwned = JSON.parse(store.get(ACHKEY) || '[]') || []; } catch (e) { achOwned = []; }
+    try { const c = JSON.parse(store.get(ACHKEY) || '{}') || {}; achOwned = Array.isArray(c) ? [] : (c.list || []); achTotals = c.totals || {}; } catch (e) { achOwned = []; achTotals = {}; }
     // the account's achievements arrive in the background (the copy on this phone is used meanwhile, or when offline)
-    if (host.profile) host.profile().then(r => { if (r && r.achievements) { setAch(r.achievements); if (phase === 'intro' || phase === 'ach') render(); } }, e => { if (host.failed) host.failed(e); });
+    if (host.profile) host.profile().then(r => { if (r && r.achievements) { setAch(r.achievements, r.totals); if (phase === 'intro' || phase === 'ach') render(); } }, e => { if (host.failed) host.failed(e); });
     return ready.then(() => {
       const s = load();
       if (s && s.phase === 'end' && s.G && !s.G.submitted) { restore(s); sendState = ''; sendResult(); }   // a finished run whose result never reached the server: try again quietly
