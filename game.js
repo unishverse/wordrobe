@@ -10,7 +10,7 @@ const Engine = (function () {
   const CFG = {
     hand: 8, supply: 32, slots: 5, maxWord: 12, discards: 3, letterMul: 3, lenMul: 3, addMul: 3,
     base: 220, growth: 1.8, ramp: 0.08, roundMul: [1, 1.3, 1.4], // endless: target = base * growth^stage * (1 + ramp*stage) * roundMul
-    coinRound: 3, price: { fabric: 6, gold: 4, glass: 6, supply: 3, letter: 4, reroll: 2, book: 5, multi: 5, wild: 8 }, supplyPack: 3, handMaxBuys: 1
+    coinRound: 3, price: { fabric: 6, gold: 4, glass: 6, supply: 3, letter: 4, reroll: 2, book: 5, multi: 5, wild: 8 }, supplyPack: 3, handMaxBuys: 4
   };
   const FABRICS = [
     { id: 'long', name: 'Long Stitch', icon: '🧵', desc: 'Kata 6+ huruf ×2.', kind: 'mult' },
@@ -274,7 +274,6 @@ const Engine = (function () {
     R.chain = w.length >= 5 ? R.chain + 1 : 0;
     const ids = new Set(tl.map(t => t.id));
     R.hand = R.hand.filter(t => !ids.has(t.id));
-    G.upgrades = G.upgrades.filter(u => !ids.has(u.id));
     const st = G.stats; st.words++; st.total += res.final;
     if (w.length > st.longest.length) st.longest = w;
     if (res.final > st.best.s) st.best = { w, s: res.final };
@@ -330,20 +329,23 @@ const Engine = (function () {
       else if (k === 'multi') opts.push(multiItem(rng));
       else opts.push({ type: 'coin', n: 6 });
     }
-    while (opts.length < 3) opts.push(rng() < 0.6 ? { type: 'up', kind: rng() < 0.5 ? 'gold' : 'glass', ch: randLetter(rng) } : { type: 'coin', n: 6 + G.stage });
+    while (opts.length < 3) opts.push(rng() < 0.6 ? upItem(rng) : { type: 'coin', n: 6 + G.stage });
+    if (!opts.some(o => ['up', 'multi', 'wild', 'book', 'letter'].includes(o.type))) opts[2] = rng() < 0.5 ? upItem(rng) : multiItem(rng);   // a card upgrade is always on offer
     return opts;
   }
-  function shopItems(G, rng) {
-    const owned = new Set(G.fabrics), pool = shuffle(FABRICS.filter(f => !owned.has(f.id) && avail(G, f)), rng);
-    const items = [];
-    pool.slice(0, 2).forEach(f => items.push({ type: 'fabric', id: f.id, price: CFG.price.fabric }));
-    const kind = rng() < 0.5 ? 'gold' : 'glass';
-    items.push({ type: 'up', kind, ch: randLetter(rng), price: CFG.price[kind] });
-    items.push({ type: 'letter', ch: randLetter(rng), price: CFG.price.letter });
-    items.push(Object.assign(bookItem(rng), { price: CFG.price.book }));
-    const m = multiItem(rng); items.push(Object.assign(m, { price: CFG.price[m.type] }));
-    return items;
+  const upItem = rng => { const kind = rng() < 0.5 ? 'gold' : 'glass'; return { type: 'up', kind, ch: randLetter(rng) }; };
+  const priced = o => Object.assign(o, { price: CFG.price[o.type === 'up' ? o.kind : o.type] });
+  // card section: 2 Gold/Glass letters, 1 letter, 2 multi-letter (or wild) cards, 1 grammar book
+  function shopCards(G, rng) {
+    return [upItem(rng), upItem(rng), { type: 'letter', ch: randLetter(rng) }, multiItem(rng), multiItem(rng), bookItem(rng)].map(o => Object.assign(priced(o), { sec: 'card' }));
   }
+  function shopFabrics(G, rng) {
+    const owned = new Set(G.fabrics);
+    return shuffle(FABRICS.filter(f => !owned.has(f.id) && avail(G, f)), rng).slice(0, 3).map(f => ({ type: 'fabric', id: f.id, price: CFG.price.fabric, sec: 'fabric' }));
+  }
+  function shopItems(G, rng) { return shopCards(G, rng).concat(shopFabrics(G, rng)); }
+  // reroll one section only; the other section keeps its offers (and what was already bought)
+  function rerollShop(G, shop, sec, rng) { return shop.filter(o => (o.sec || (o.type === 'fabric' ? 'fabric' : 'card')) !== sec).concat(sec === 'fabric' ? shopFabrics(G, rng) : shopCards(G, rng)); }
   const bookItem = rng => ({ type: 'book', pos: 'nvar'[Math.floor(rng() * 4)] });
   // a multi-letter card, or (1 in 5) a wild card; both join the supply of every later round
   const multiItem = rng => rng() < 0.2 ? { type: 'wild', ch: '?' } : { type: 'multi', ch: MULTI[Math.floor(rng() * MULTI.length)] };
@@ -359,7 +361,7 @@ const Engine = (function () {
   // after restoring a saved run: new tile ids must not collide with the restored ones
   function resumeIds(G, R) { let m = 0; const see = t => { if (t.id > m) m = t.id; }; G.upgrades.forEach(see); if (R) { R.hand.forEach(see); R.supply.forEach(see); } if (m >= UID) UID = m + 1; }
   return { DECKS, DECK, ACH, opened, earned, runCounts, avail, val, txt, kindOf, HANDS, MULTI, PRE, SUF, PAIRS, posOf, lvOf, handInfo, spell, V, LB, CFG, FABRICS, FAB, BOSSES, setDict, isWord, rngFrom, shuffle, mk, score, blocked, candidates, tilesFor, best, newGame,
-    roundIndex, targetFor, handSize, permItems, makeRound, draw, submit, stuck, failed, discard, canDiscard, finishRound, rewardOptions, shopItems, addUpgrade, resumeIds, randLetter, get ARR() { return ARR; } };
+    roundIndex, targetFor, handSize, permItems, makeRound, draw, submit, stuck, failed, discard, canDiscard, finishRound, rewardOptions, shopItems, shopCards, shopFabrics, rerollShop, addUpgrade, resumeIds, randLetter, get ARR() { return ARR; } };
 })();
 
 /* ---------- UI (only runs in the browser, after the host page calls WRGame.init) ---------- */
@@ -430,6 +432,13 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 .bq-abc{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}.bq-abc .bq-tile{width:auto;height:46px;font-size:20px}
 .bq-wl .row{cursor:pointer}.bq-wl .row s{text-decoration:none;font-size:11px;font-weight:800;color:var(--accent-text);margin-left:6px}
 .bq-wl .mean{background:var(--card);border-radius:12px;padding:8px 12px;font-size:13px;margin:-2px 0 2px}.bq-wl .mean b{font-family:var(--ui);font-size:14px}
+.bq-arti{border:0;background:var(--card-2);color:var(--text);border-radius:999px;font:inherit;font-size:12px;font-weight:800;padding:3px 9px;margin-right:6px;cursor:pointer;vertical-align:middle}
+.bq-mean{font-size:15px;display:flex;flex-direction:column;gap:4px;margin-top:6px}.bq-mean b{font-size:18px}
+.bq-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.bq-gi{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:10px 10px 8px;color:var(--text);font:inherit;font-size:13px;cursor:pointer;min-height:112px}
+.bq-gi .ic{font-size:24px;margin:0}.bq-gi b{font-size:14px;line-height:1.2}.bq-gi .d{font-size:11.5px;line-height:1.3;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:0}
+.bq-gi .pr{margin-top:auto;font-weight:800;color:var(--accent-text);font-size:13px}.bq-gi.sold{opacity:.4;cursor:default}.bq-gi.poor .pr{color:var(--muted)}
+.bq-sec{display:flex;justify-content:space-between;align-items:center;margin-top:4px}.bq-sec b{font-family:var(--display);font-size:17px}
 .bq-hands{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.bq-hands span{background:var(--card);border-radius:12px;padding:6px 10px;font-size:12px}
 .bq-tile.lock{background:#3a3748;color:#888;box-shadow:none;cursor:not-allowed}.bq-tile.lock:after{content:'🔒';position:absolute;top:-4px;left:-2px;font-size:12px}
 .bq-msg{min-height:20px;font-size:13px;font-weight:700;color:var(--error)}
@@ -446,6 +455,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 .bq-wl{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .bq-wl .row{display:flex;align-items:center;gap:10px;background:var(--card-2);border-radius:14px;padding:6px 6px 6px 14px}
 .bq-wl .row b{flex:1;font-family:var(--display);font-size:16px}.bq-wl .row i{font-style:normal;color:var(--muted);font-size:12px}
+.bq-modal .add{min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--yellow);color:var(--on-accent);font:inherit;font-weight:800;font-size:14px;cursor:pointer;flex:1}.bq-modal .add:disabled{background:var(--card-2);color:var(--muted)}
 .bq-wl .add{min-height:36px;padding:0 12px;border:0;border-radius:999px;background:var(--yellow);color:var(--on-accent);font:inherit;font-weight:800;font-size:13px;cursor:pointer}
 .bq-wl .add:disabled{background:var(--card);color:var(--muted);cursor:default}
 .bq-hero img{height:120px;width:auto}
@@ -563,12 +573,23 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 
   /* ---------- end of run: meaning of a word (looked up only when tapped) ---------- */
   const escH = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  function meanHtml(m) {
+    if (m.state === 'loading') return '<span class="bq-mut">Mencari arti…</span>';
+    if (m.state === 'err') return '<span class="bq-msg">' + escH(m.msg) + '</span>';
+    const r = m.r || {};
+    return '<b>' + escH(r.translation || '-') + '</b>' + (r.phonetic ? ' <span class="bq-mut">' + escH(r.phonetic) + '</span>' : '') + (r.definition ? '<div>' + escH(r.definition) + '</div>' : '') + (r.example ? '<div class="bq-mut">“' + escH(r.example) + '”</div>' : '');
+  }
   function showMeaning(w) {
     const el = body.querySelector('[data-mean="' + w + '"]'), m = means[w]; if (!el || !m) return;
-    el.hidden = !m.open;
-    if (m.state === 'loading') el.innerHTML = '<span class="bq-mut">Mencari arti…</span>';
-    else if (m.state === 'err') el.innerHTML = '<span class="bq-msg">' + escH(m.msg) + '</span>';
-    else { const r = m.r || {}; el.innerHTML = '<b>' + escH(r.translation || '-') + '</b>' + (r.phonetic ? ' <span class="bq-mut">' + escH(r.phonetic) + '</span>' : '') + (r.definition ? '<div>' + escH(r.definition) + '</div>' : '') + (r.example ? '<div class="bq-mut">“' + escH(r.example) + '”</div>' : ''); }
+    el.hidden = !m.open; el.innerHTML = meanHtml(m);
+  }
+  // look a word up once per run; the answer is kept for the popup during play and for the summary
+  function fetchMeaning(w, done) {
+    const m = means[w];
+    if (m && m.state !== 'err') { done(); return; }
+    means[w] = { state: 'loading', open: false }; done();
+    host.lookup(w).then(r => { means[w] = { state: 'ok', open: false, r: r }; done(); },
+      e => { means[w] = { state: 'err', open: false, msg: e && e.message ? e.message : 'Arti belum bisa dimuat.' }; if (host.failed) host.failed(e); done(); });
   }
   // after the meaning arrives, "+ Lemari" saves it with that meaning
   function refreshAdd(w) {
@@ -597,7 +618,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   function optHtml(o) {
     const U = o.ch ? o.ch.toUpperCase() : '';
     if (o.type === 'fabric') return fabricCard(o.id);
-    if (o.type === 'up') return `<span class="ic">${o.kind === 'gold' ? '🥇' : '🔮'}</span><b>${o.kind === 'gold' ? 'Gold' : 'Glass'} · huruf ${U}</b><span class="d">Tile ${U} ber-upgrade ikut di ronde berikutnya sampai terpakai. ${o.kind === 'gold' ? 'Nilai huruf ×2.' : 'Nilai huruf ×3.'}</span>`;
+    if (o.type === 'up') return `<span class="ic">${o.kind === 'gold' ? '🥇' : '🔮'}</span><b>${o.kind === 'gold' ? 'Gold' : 'Glass'} · huruf ${U}</b><span class="d">Nilai huruf ${U} ${o.kind === 'gold' ? '×2' : '×3'}. Permanen: masuk supply tiap ronde sampai run selesai.</span>`;
     if (o.type === 'letter') return `<span class="ic">🔤</span><b>Huruf ${U}</b><span class="d">Satu huruf ${U} ditambahkan ke supply di semua ronde berikutnya.</span>`;
     if (o.type === 'book') { const h = E.HANDS[o.pos], now = E.handInfo(o.pos, E.lvOf(G, o.pos)), nx = E.handInfo(o.pos, now.lv + 1);
       return `<span class="ic">📖</span><b>Buku ${h.name} · Lv${nx.lv}</b><span class="d">Hand ${h.name} naik: +${now.base} ×${fmt(now.mult)} → +${nx.base} ×${fmt(nx.mult)}.</span>`; }
@@ -605,7 +626,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       return `<span class="ic">🧩</span><b>Kartu ${U}</b><span class="d">${k === 'pre' ? 'Prefiks: di awal kata ×1,5.' : k === 'suf' ? 'Sufiks: di akhir kata ×1,5.' : 'Gabungan huruf, bebas di posisi mana pun.'} 1 kartu = ${o.ch.length} huruf. Masuk supply semua ronde berikutnya.</span>`; }
     if (o.type === 'wild') return `<span class="ic">❓</span><b>Kartu wild ?</b><span class="d">Jadi huruf apa pun yang kamu pilih, nilainya setengah huruf itu. Masuk supply semua ronde berikutnya.</span>`;
     if (o.type === 'discard') return `<span class="ic">🗑️</span><b>+1 jatah Buang per ronde</b><span class="d">Sekarang ${E.CFG.discards + G.discardBonus} per ronde.</span>`;
-    if (o.type === 'hand') return `<span class="ic">✋</span><b>+1 huruf di tangan</b><span class="d">Tangan jadi ${E.handSize(G) + 1} huruf; satu kartu lagi di tangan.</span>`;
+    if (o.type === 'hand') return `<span class="ic">✋</span><b>+1 kartu di tangan</b><span class="d">Tangan jadi ${E.handSize(G) + 1} kartu (maks. 12; di atas 9 kartu tangan jadi 2 baris).</span>`;
     if (o.type === 'supply') return `<span class="ic">📦</span><b>+${o.n} huruf supply</b><span class="d">Supply tiap ronde berikutnya lebih banyak.</span>`;
     return `<span class="ic">🪙</span><b>+${o.n} koin</b><span class="d">Buat belanja di shop.</span>`;
   }
@@ -640,21 +661,21 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       const w = sel.map(E.txt).join('');
       if (w.length >= 3 && E.isWord(w)) {
         const s = E.score(sel, G.fabrics, { first: !R.firstDone, chain: R.chain, lv: G.handLv, inLemari: inLemari(w) }, R.boss, () => 1);
-        pv = `<div class="bq-pl"><b>${w.toUpperCase()}</b> · ${s.letters} + ${s.lenBonus} panjang → <b>${s.final}</b> poin</div><div class="bq-chips">${chipsOf(Object.assign({}, s, { jackpot: undefined }))}${G.fabrics.includes('jackpot') ? '<span class="bq-chip">🎰 bisa ×2</span>' : ''}</div>`;
+        pv = `<div class="bq-pl"><button type="button" class="bq-arti" data-a="artiSel">📖 Arti</button><b>${w.toUpperCase()}</b> · ${s.letters} + ${s.lenBonus} panjang → <b>${s.final}</b> poin</div><div class="bq-chips">${chipsOf(Object.assign({}, s, { jackpot: undefined }))}${G.fabrics.includes('jackpot') ? '<span class="bq-chip">🎰 bisa ×2</span>' : ''}</div>`;
       } else pv = `<div class="bq-pl">${w.length < 3 ? 'Pilih minimal 3 huruf untuk kata, atau langsung Buang' : '<b>' + w.toUpperCase() + '</b> belum jadi kata valid (boleh Buang huruf ini)'}</div>`;
     } else pv = '<div class="bq-pl">Ketuk huruf: susun kata untuk menyerang, atau buang huruf yang tidak berguna.</div>';
     const selIds = new Set(sel.map(t => t.id));
     const head = `<div class="bq-top"><div class="t"><b>${label()}</b></div>${soundHtml()}<span class="bq-coin">🪙 ${G.coins}</span></div>${arenaHtml()}
       <div class="bq-bar"><span>Skor ronde <b>${R.score}</b></span><span>Target <b>${R.target}</b></span></div>
       ${R.boss ? `<div class="bq-boss"><b>${R.boss.name}:</b> ${R.boss.desc}${R.boss.block ? ' Terkunci: <b>' + R.boss.block.toUpperCase() + '</b>' : ''}</div>` : ''}`;
-    const lastHtml = last && last.res ? `<div class="bq-last bq-pop">Terakhir: <b>${last.res.word.toUpperCase()} -${last.res.final}</b> <span class="bq-mut"></span>${last.res.recycled ? ` ♻️ ${last.res.recycled.toUpperCase()}` : ''}${last.res.extraDraw ? ' 🔄 +1' : ''}<div class="bq-chips">${chipsOf(last.res)}</div></div>` : '';
+    const lastHtml = last && last.res ? `<div class="bq-last bq-pop">Terakhir: <b>${last.res.word.toUpperCase()} -${last.res.final}</b> <button type="button" class="bq-arti" data-a="arti" data-i="${last.res.word}">📖 Arti</button> <span class="bq-mut"></span>${last.res.recycled ? ` ♻️ ${last.res.recycled.toUpperCase()}` : ''}${last.res.extraDraw ? ' 🔄 +1' : ''}<div class="bq-chips">${chipsOf(last.res)}</div></div>` : '';
     if (!sel.length && lastHtml) pv = lastHtml;
     if (R.cleared) return head + `<div class="bq-center bq-pop"><h2>${enemyInfo().n} kalah! 🎉</h2><div class="bq-mut">+${last.fin.coins} koin${last.fin.saver ? ` (+${last.fin.saver} Saver)` : ''}</div><button type="button" class="bq-btn pri" style="width:100%;margin-top:10px" data-a="goNext">Ambil hadiah</button></div>`;
     return head + slotsHtml() + `
       <div class="bq-info"><span>📦 Supply ${R.supply.length}</span><span>🗑️ Buang ${R.discards}/${R.maxDiscards}</span><span>📝 ${R.words} kata</span>${R.chain > 0 && G.fabrics.includes('chain') ? `<span>⛓️ chain ${R.chain}</span>` : ''}</div>
       <div class="bq-prev"><div class="bq-sel">${sel.map((t, i) => tileHtml(t, '', `data-a="unsel" data-i="${i}"`)).join('')}</div>${pv}</div>
       <div class="bq-msg" role="status">${msg}</div>
-      <div class="bq-hand" style="--bq-n:${R.handSize}">${R.hand.map(t => { const lk = E.blocked(R, t), us = selIds.has(t.id); return tileHtml(t, lk ? 'lock' : us ? 'used' : '', lk ? 'disabled' : `data-a="pick" data-i="${t.id}"`); }).join('')}</div>
+      <div class="bq-hand" style="--bq-n:${R.handSize <= 9 ? R.handSize : Math.ceil(R.handSize / 2)}">${R.hand.map(t => { const lk = E.blocked(R, t), us = selIds.has(t.id); return tileHtml(t, lk ? 'lock' : us ? 'used' : '', lk ? 'disabled' : `data-a="pick" data-i="${t.id}"`); }).join('')}</div>
       <div class="bq-btns"><button type="button" class="bq-btn" data-a="clr" ${sel.length ? '' : 'disabled'}>Hapus</button><button type="button" class="bq-btn mint" data-a="discard" ${sel.length && E.canDiscard(R) ? '' : 'disabled'}>🗑️ Buang${sel.length ? ' ' + sel.length : ''}</button><button type="button" class="bq-btn pri" data-a="send" ${sel.length >= 3 ? '' : 'disabled'}>⚔️ Serang</button></div>
       <button type="button" class="bq-giveup" data-a="giveUp">🏳️ Akhiri run</button>
       <div class="bq-mut bq-kb">Di laptop: ketik huruf untuk memilih, Backspace menghapus, Enter menyerang.</div>`;
@@ -725,6 +746,20 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       <button type="button" class="bq-btn pri" data-a="start">Main lagi</button>`;
   }
   function modalHtml() {
+    if (modal.t === 'mean') {
+      const w = modal.w, m = means[w] || { state: 'loading' }, P = { n: 'noun', v: 'verb', a: 'adjective', r: 'adverb' }[E.posOf(w)];
+      return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2 style="font-size:24px">${w.toUpperCase()}${P ? ` <span class="bq-chip h" style="font-size:12px;vertical-align:middle">${P}</span>` : ''}</h2>
+        <div class="bq-mean">${meanHtml(m)}</div>
+        <div class="bq-btns" style="margin-top:12px;align-items:center"><span data-add="${w}"></span><button type="button" class="bq-btn" data-a="closeModal">Tutup</button></div></div></div>`;
+    }
+    if (modal.t === 'item') {
+      const perm = modal.key[0] === 'p', o = perm ? E.permItems(G)[+modal.key.slice(1)] : shop[+modal.key.slice(1)];
+      if (!o) return '';
+      const can = !o.sold && !o.maxed && G.coins >= o.price;
+      return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><div class="bq-opt" style="cursor:default">${optHtml(o)}</div>
+        <div class="bq-mut" style="margin:8px 0">Koinmu: 🪙 ${G.coins}${o.maxed ? ' · sudah maksimal' : !can ? ' · koin belum cukup' : ''}</div>
+        <div class="bq-btns"><button type="button" class="bq-btn" data-a="closeModal">Batal</button><button type="button" class="bq-btn pri" data-a="confirmBuy" ${can ? '' : 'disabled'}>${o.maxed ? 'Maksimal' : 'Beli 🪙 ' + o.price}</button></div></div></div>`;
+    }
     if (modal.t === 'giveup') return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Akhiri run?</h2><div class="bq-mut" style="margin:6px 0 12px">Run berhenti di ${label()}. Kata-katamu tetap bisa dilihat artinya dan disimpan ke Lemari.</div>
       <div class="bq-btns"><button type="button" class="bq-btn" data-a="closeModal">Lanjut main</button><button type="button" class="bq-btn pri" data-a="giveUpYes">Ya, akhiri</button></div></div></div>`;
     if (modal.t === 'wild') return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Kartu ? jadi huruf apa?</h2><div class="bq-mut">Nilainya setengah dari huruf aslinya.${R.boss && R.boss.block ? ' Huruf ' + R.boss.block.toUpperCase() + ' sedang dikunci.' : ''}</div>
@@ -743,11 +778,14 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     else if (phase === 'round') h = roundHtml();
     else if (phase === 'reward') h = `<h2>Ronde selesai! 🎉</h2><div class="bq-mut">Pilih 1 hadiah.</div><div class="bq-opts">${rewards.map((o, i) => `<button type="button" class="bq-opt" data-a="takeReward" data-i="${i}">${optHtml(o)}</button>`).join('')}</div>`;
     else if (phase === 'shop') {
-      const perm = E.permItems(G);
-      h = `<div class="bq-top"><h2 style="flex:1">🛍️ Shop</h2><span class="bq-coin">🪙 ${G.coins}</span></div><div class="bq-mut">Shop antar stage. Boleh keluar tanpa beli.</div>
-        <div class="bq-mut"><b>Tawaran stage ini</b></div><div class="bq-opts">${shop.map((o, i) => o.sold ? '' : `<button type="button" class="bq-opt" ${G.coins < o.price ? 'disabled' : ''} data-a="buy" data-i="${i}"><span class="pr">🪙 ${o.price}</span>${optHtml(o)}</button>`).join('')}</div>
-        <div class="bq-btns"><button type="button" class="bq-btn sm" ${G.coins < E.CFG.price.reroll ? 'disabled' : ''} data-a="reroll">🔁 Reroll tawaran (🪙 ${E.CFG.price.reroll})</button></div>
-        <div class="bq-mut"><b>Perlengkapan permanen</b> (selalu ada, harga naik tiap beli)</div><div class="bq-opts">${perm.map((o, i) => `<button type="button" class="bq-opt" ${(o.maxed || G.coins < o.price) ? 'disabled' : ''} data-a="buyPerm" data-i="${i}"><span class="pr">${o.maxed ? 'MAKS' : '🪙 ' + o.price}</span>${optHtml(o)}</button>`).join('')}</div>
+      const perm = E.permItems(G), secOf = o => o.sec || (o.type === 'fabric' ? 'fabric' : 'card');
+      const box = (o, key, priceTxt, off) => `<button type="button" class="bq-gi ${o.sold ? 'sold' : off ? 'poor' : ''}" data-a="item" data-i="${key}" ${o.sold ? 'disabled' : ''}>${optHtml(o)}<span class="pr">${o.sold ? 'Terjual' : priceTxt}</span></button>`;
+      const sec = name => shop.map((o, i) => secOf(o) === name ? box(o, 's' + i, '🪙 ' + o.price, G.coins < o.price) : '').join('');
+      const rr = name => `<button type="button" class="bq-btn sm" ${G.coins < E.CFG.price.reroll ? 'disabled' : ''} data-a="reroll" data-i="${name}">🔁 Reroll (🪙 ${E.CFG.price.reroll})</button>`;
+      h = `<div class="bq-top"><h2 style="flex:1">🛍️ Shop</h2><span class="bq-coin">🪙 ${G.coins}</span></div><div class="bq-mut">Ketuk barang untuk melihat detail dan membeli. Boleh keluar tanpa beli.</div>
+        <div class="bq-sec"><b>🧩 Kartu</b>${rr('card')}</div><div class="bq-grid">${sec('card')}</div>
+        <div class="bq-sec"><b>🧵 Fabric</b>${rr('fabric')}</div><div class="bq-grid">${sec('fabric') || '<div class="bq-mut">Semua Fabric sudah kamu punya.</div>'}</div>
+        <div class="bq-sec"><b>🎒 Perlengkapan</b><span class="bq-mut">harga naik tiap beli</span></div><div class="bq-grid">${perm.map((o, i) => box(o, 'p' + i, o.maxed ? 'MAKS' : '🪙 ' + o.price, o.maxed || G.coins < o.price)).join('')}</div>
         <div><div class="bq-mut">Fabric kamu</div>${slotsHtml()}</div>
         <div><div class="bq-mut">Hand kamu</div><div class="bq-hands">${'nvar'.split('').map(p => { const h = E.handInfo(p, E.lvOf(G, p)); return `<span>${h.icon} <b>${h.name}</b> Lv${h.lv} · +${h.base} ×${fmt(h.mult)}</span>`; }).join('')}</div></div>
         <button type="button" class="bq-btn pri" data-a="leaveShop">Lanjut ke ${label()}</button>`;
@@ -787,7 +825,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     checkAch(); Sfx.play('over');
     phase = 'end'; G.reached = G.stage + 1;
     if (G.reached > best) { best = G.reached; store.set(BEST, String(best)); }
-    means = {}; achNew = []; sendState = ''; sendResult();
+    achNew = []; sendState = ''; sendResult();
   }
   function gain(o, after) {
     if (o.type === 'coin') { G.coins += o.n; after(); }
@@ -806,7 +844,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       A.pickDeck('base');
     },
     pickDeck(id) {
-      G = E.newGame(null, id, E.opened(achOwned).fabrics); G.runId = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); G.submitted = false; G.newAch = [];
+      means = {}; G = E.newGame(null, id, E.opened(achOwned).fabrics); G.runId = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); G.submitted = false; G.newAch = [];
       const ids = E.FABRICS.filter(f => E.avail(G, f)).map(f => f.id).filter(x => ['refill', 'saver', 'recycler'].indexOf(x) === -1);
       starters = E.shuffle(ids.slice(), rng).slice(0, 3); phase = 'starter'; last = null; sel = []; modal = null; sendState = ''; render();
     },
@@ -829,11 +867,15 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     music() { Music.toggle(); render(); },
     meaning(w) {
       const m = means[w];
-      if (m && m.state !== 'err') { m.open = !m.open; showMeaning(w); return; }
-      means[w] = { state: 'loading', open: true }; showMeaning(w);
-      host.lookup(w).then(r => { means[w] = { state: 'ok', open: true, r: r }; showMeaning(w); refreshAdd(w); },
-        e => { means[w] = { state: 'err', open: true, msg: e && e.message ? e.message : 'Arti belum bisa dimuat.' }; if (host.failed) host.failed(e); showMeaning(w); });
+      if (m && m.state === 'ok') { m.open = !m.open; showMeaning(w); return; }
+      fetchMeaning(w, () => { if (means[w]) means[w].open = true; showMeaning(w); if (means[w] && means[w].state === 'ok') refreshAdd(w); });
     },
+    arti(w) {
+      if (!w || !E.isWord(w)) return;
+      modal = { t: 'mean', w: w }; render();
+      fetchMeaning(w, () => { if (modal && modal.t === 'mean' && modal.w === w) render(); });
+    },
+    artiSel() { A.arti(sel.map(E.txt).join('')); },
     send() {
       const w = sel.map(E.txt).join('');
       const r = E.submit(G, R, sel, rng, { inLemari: inLemari(w) });
@@ -863,7 +905,9 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       if (o.type === 'supply') G.extra += o.n; else if (o.type === 'discard') G.discardBonus++; else if (o.type === 'hand') G.handBonus++;
       render();
     },
-    reroll() { if (G.coins < E.CFG.price.reroll) return; G.coins -= E.CFG.price.reroll; Sfx.play('coin'); shop = E.shopItems(G, rng); render(); },
+    reroll(sec) { if (G.coins < E.CFG.price.reroll) return; G.coins -= E.CFG.price.reroll; Sfx.play('coin'); shop = E.rerollShop(G, shop, sec === 'fabric' ? 'fabric' : 'card', rng); render(); },
+    item(key) { modal = { t: 'item', key: key }; render(); },
+    confirmBuy() { const k = modal && modal.key; modal = null; if (!k) return; if (k[0] === 'p') A.buyPerm(k.slice(1)); else A.buy(k.slice(1)); },
     leaveShop() { beginRound(); },
     retry() { sendResult(); },
     noop() { }
