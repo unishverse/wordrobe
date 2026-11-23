@@ -3,7 +3,7 @@
    - img/*, words-en.txt, words-game.txt: cache first (bump VERSION when an image or the word list changes)
    - game.js: network first, revalidated with the server every time (so a deploy shows on the next open, not the one after)
    - everything else on this origin, and Google Fonts: stale while revalidate */
-var VERSION = 'wr-sw-4';
+var VERSION = 'wr-sw-5';
 var PAGES = VERSION + '-pages', FILES = VERSION + '-files';
 
 self.addEventListener('install', function (e) { self.skipWaiting(); });

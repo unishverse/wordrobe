@@ -2321,6 +2321,7 @@ arisesV
 arish
 arisingV
 aristaN
+aristocracyN
 aristocratN
 aristocraticA
 aristocratsN
@@ -3230,6 +3231,7 @@ backstories
 backstory
 backstreet
 backstreets
+backstrokeN
 backswing
 backtrackV
 backtrackedV
@@ -4030,6 +4032,8 @@ behavedV
 behavesV
 behavingV
 behaviorN
+behavioralA
+behaviorally
 behaviorismN
 behavioristA
 behaviorsN
@@ -5668,6 +5672,7 @@ breastedV
 breastfed
 breastfeedV
 breastplateN
+breaststrokeN
 breathN
 breathable
 breathalyzerN
@@ -6188,6 +6193,7 @@ burdensN
 burdensomeA
 burdockN
 bureauN
+bureaucracyN
 bureaucratN
 bureaucraticA
 bureaucratsN
@@ -9026,6 +9032,7 @@ colorN
 coloradoN
 colorationN
 colorblind
+colorectalA
 coloredV
 colorfulA
 colorfully
@@ -9585,6 +9592,7 @@ conf
 confectionN
 confectionerN
 confectionsN
+confederacyN
 confederateN
 confederatedV
 confederatesN
@@ -9835,6 +9843,7 @@ consortiumN
 consortsV
 conspicuousA
 conspiraciesN
+conspiracyN
 conspiratorN
 conspiratorsN
 conspireV
@@ -10622,6 +10631,8 @@ cowedV
 cowerV
 coweredV
 coweringV
+cowgirlN
+cowgirlsN
 cowherdN
 cowhideN
 cowlN
@@ -10692,6 +10703,7 @@ cranberryN
 craneV
 cranesV
 cranialA
+craniofacial
 craniumN
 crankV
 crankcaseN
@@ -11015,6 +11027,7 @@ crosswindN
 crosswiseA
 crosswordN
 crosswordsN
+crotchN
 crotchesN
 crotchetyA
 crotonN
@@ -12128,6 +12141,7 @@ defyV
 defyingV
 deg
 degasV
+degeneracyN
 degenerateA
 degeneratedV
 degeneratesN
@@ -13966,6 +13980,7 @@ doodleN
 doodlesN
 doodlingV
 doody
+doofusN
 doomV
 doomedA
 doomsV
@@ -13995,6 +14010,7 @@ dopant
 dopeN
 dopedA
 dopesN
+dopeyA
 dopingV
 doppelgangerN
 dor
@@ -14402,10 +14418,12 @@ drumroll
 drumsN
 drumstickN
 drumsticksN
+drunkV
 drunkardN
 drunkardsN
 drunkenA
 drunkenlyR
+drunkennessN
 drunkerA
 drunksN
 dryA
@@ -14507,6 +14525,7 @@ dumbledore
 dumbo
 dumbstruckA
 dummiesN
+dummyN
 dumpV
 dumpedV
 dumperN
@@ -15012,6 +15031,7 @@ electiveA
 electivesN
 electorN
 electoralA
+electorally
 electorateN
 electoratesN
 electorsN
@@ -15579,6 +15599,7 @@ enjoymentN
 enjoysV
 enlargeV
 enlargedV
+enlargementN
 enlargementsN
 enlargesV
 enlargingV
@@ -15912,9 +15933,11 @@ erasesV
 erasingV
 erasureN
 ere
+erectA
 erectedV
 erectileA
 erectingV
+erectionN
 erectionsN
 erector
 eres
@@ -16808,6 +16831,7 @@ facetN
 facetedA
 facetiousA
 facetsN
+facialA
 faciallyR
 facialsN
 facies
@@ -17045,6 +17069,7 @@ farrierN
 farrowN
 farsN
 farsightedA
+fartN
 fartedV
 fartherA
 farthestR
@@ -17091,6 +17116,7 @@ fastidiousA
 fastingV
 fastnessN
 fastsN
+fatA
 fatalA
 fatalismN
 fatalisticA
@@ -18416,6 +18442,7 @@ foreshadowedV
 foreshadowsV
 foreshoreN
 foresightN
+foreskinN
 forestN
 forestallV
 forestedA
@@ -19147,6 +19174,7 @@ gainst
 gaitN
 gaitersN
 gak
+galN
 galaN
 galacticA
 galactoseN
@@ -19394,10 +19422,12 @@ gawd
 gawkV
 gawkerN
 gawkingV
+gayA
 gaydar
 gayerA
 gayestA
 gaynessN
+gaysN
 gazeN
 gazeboN
 gazedV
@@ -19702,6 +19732,7 @@ giggledV
 gigglesN
 gigglingV
 giggly
+gigoloN
 gigsN
 gilaN
 gilbertN
@@ -19806,6 +19837,7 @@ glancingV
 glandN
 glandsN
 glandularA
+glansN
 glareN
 glaredV
 glaresN
@@ -20013,6 +20045,7 @@ goblinsN
 gobsN
 gobsmackedA
 gobyN
+godN
 goddaughterN
 godden
 goddessN
@@ -20074,6 +20107,7 @@ gomer
 gon
 gonadalA
 gonadotropinN
+gonadsN
 gondolaN
 gondolasN
 goneV
@@ -21551,6 +21585,7 @@ heathlandN
 heathsN
 heatingV
 heatsN
+heatstrokeN
 heatwave
 heatwaves
 heaveV
@@ -21695,6 +21730,7 @@ hemorrhagingV
 hemorrhoidN
 hemorrhoidsN
 hemostasisN
+hempN
 hemsN
 henN
 henceR
@@ -21787,12 +21823,14 @@ heroes
 heroicA
 heroicallyR
 heroicsN
+heroinN
 heroineN
 heroinesN
 heroismN
 heronN
 heronsN
 herosN
+herpesN
 herringN
 herringboneN
 herringsN
@@ -21815,6 +21853,7 @@ hetA
 hetero
 heterocyclicA
 heterodoxA
+heterosexualA
 heterozygousA
 heuristicA
 heuristicsN
@@ -22187,6 +22226,7 @@ homewardR
 homeware
 homewares
 homeworkN
+homeyA
 homicidalA
 homicideN
 homicidesN
@@ -22217,6 +22257,7 @@ homophobiaN
 homophobicA
 homophonesN
 homosN
+homosexualA
 homosexualsN
 homozygousA
 homs
@@ -22268,6 +22309,7 @@ honouringV
 honoursV
 hons
 hoo
+hoochN
 hoochie
 hoodN
 hoodedV
@@ -22283,6 +22325,7 @@ hoofN
 hoofedV
 hoofsN
 hookV
+hookahN
 hookedV
 hookingV
 hooksV
@@ -22615,8 +22658,10 @@ humorsN
 humourN
 humouredV
 humoursN
+humpV
 humpbackN
 humpbacksN
+humpedV
 humph
 humpsV
 humpty
@@ -22770,6 +22815,8 @@ hygienicA
 hygienistN
 hygienistsN
 hygroscopicA
+hymenN
+hymenopteraN
 hymnN
 hymnalN
 hymnsN
@@ -22984,6 +23031,7 @@ illiberalA
 illicitA
 illicitlyR
 illiquid
+illiteracyN
 illiterateA
 illiteratesN
 illnessN
@@ -23322,6 +23370,7 @@ imputedV
 inabilityN
 inaccessibleA
 inaccuraciesN
+inaccuracyN
 inaccurateA
 inaccuratelyR
 inactionN
@@ -23360,6 +23409,7 @@ inboundA
 inbounds
 inbox
 inboxes
+inbredA
 inbreedingN
 inbuiltA
 incalculableA
@@ -24265,6 +24315,7 @@ interestsN
 interfaceN
 interfaced
 interfacesN
+interfacialA
 interfacing
 interfaithA
 interfereV
@@ -24907,6 +24958,8 @@ jeopardizedV
 jeopardizesV
 jeopardizingV
 jeopardyN
+jerkV
+jerkedV
 jerkerN
 jerkinN
 jerkingV
@@ -25196,8 +25249,10 @@ junkedV
 junkerN
 junkersN
 junketN
+junkieN
 junkiesN
 junksN
+junkyN
 junkyardN
 juntaN
 juntasN
@@ -25474,6 +25529,7 @@ kievN
 kif
 kikuyu
 kileyN
+killV
 killedV
 killerN
 killersN
@@ -25602,6 +25658,7 @@ klang
 klaxonN
 klebsiellaN
 kleenexN
+kleptocracy
 klezmer
 klondikeN
 kluge
@@ -26289,6 +26346,7 @@ leaversN
 leavesN
 leavingV
 leben
+lechN
 lecherousA
 lecithinN
 lecternN
@@ -26455,6 +26513,7 @@ leopardsN
 leotardN
 leotardsN
 lep
+leperN
 lepersN
 lepidopteraN
 leprechaunN
@@ -26464,6 +26523,7 @@ leptin
 lesN
 lesbianN
 lesbianismN
+lesbiansN
 lesionN
 lesionsN
 lessR
@@ -27140,7 +27200,9 @@ logosN
 logout
 logsV
 lohanN
+loinN
 loinclothN
+loinsN
 loiterV
 loiteringV
 loke
@@ -27485,6 +27547,7 @@ lustfulA
 lustreN
 lustrousA
 lustsN
+lustyA
 luteN
 lutea
 lutesN
@@ -27652,6 +27715,7 @@ magicsN
 magister
 magisterialA
 magisterium
+magistracyN
 magistrateN
 magistratesN
 maglevN
@@ -28250,9 +28314,11 @@ masqueradesV
 masqueradingV
 masquesN
 massN
+massa
 massacreV
 massacredV
 massacresV
+massacringV
 massageV
 massagedV
 massagerN
@@ -28285,6 +28351,7 @@ mastermindsV
 masterpieceN
 masterpiecesN
 mastersV
+masterstrokeN
 masterwork
 masterworks
 masteryN
@@ -28396,17 +28463,22 @@ mawN
 mawr
 maxN
 maxed
+maxiA
 maxillaN
 maxillaryA
 maximN
 maxima
 maximalA
+maximalist
 maximallyR
 maximiseV
 maximisedV
+maximisingV
+maximizationN
 maximizeV
 maximizedV
 maximizesV
+maximizingV
 maximsN
 maximumN
 maximumsN
@@ -28714,8 +28786,10 @@ menorahN
 mensaN
 menschN
 menschen
+mensesN
 menstrualA
 menstruatingV
+menstruationN
 menswear
 ment
 mentalA
@@ -28781,6 +28855,7 @@ meringuesN
 merinoN
 meritN
 meritedV
+meritocracyN
 meritocraticA
 meritoriousA
 meritsN
@@ -28887,16 +28962,27 @@ meteredV
 meteringV
 metersN
 metforminN
+methN
+methacrylate
 methadoneN
 methaneN
 methanolN
+methicillinN
 methinks
+methionineN
 methodN
+methodicalA
+methodicallyR
 methodismN
 methodistA
+methodistsN
+methodologyN
 methodsN
+methotrexateN
 methoxy
 methylN
+methylatedA
+methylation
 methyleneN
 meticulousA
 meticulouslyR
@@ -28914,6 +29000,7 @@ metropolisN
 metropolisesN
 metropolitanA
 metrosN
+metrosexual
 mets
 mettleN
 meu
@@ -29900,6 +29987,7 @@ morne
 morningN
 morningsN
 moroccoN
+moronN
 moronicA
 moronsN
 moroseA
@@ -30268,6 +30356,7 @@ muppets
 mura
 muralA
 muralsN
+murderV
 murderedV
 murdererN
 murderersN
@@ -30468,6 +30557,7 @@ naiveA
 naivelyR
 naiveteN
 naivetyN
+nakedA
 nakedlyR
 nakednessN
 nala
@@ -30509,6 +30599,7 @@ nanotubesN
 nanowires
 napN
 napaN
+napalmN
 napeN
 naphthaN
 naphthaleneN
@@ -30520,6 +30611,7 @@ nappedA
 napperV
 nappiesN
 nappingA
+nappyA
 naproxenN
 napsN
 narcN
@@ -30989,6 +31081,7 @@ nieves
 niftyA
 nigellaN
 nigerN
+niggleV
 nigglingV
 nighA
 nightN
@@ -31024,6 +31117,7 @@ nimN
 nimbleA
 nimblyR
 nimbusN
+nimrodN
 nimsN
 nineN
 ninesN
@@ -31951,6 +32045,7 @@ operculumN
 operettaN
 operonN
 ophthalmicA
+opiateN
 opiatesN
 opineV
 opinedV
@@ -31961,6 +32056,7 @@ opinionatedA
 opinionsN
 opioid
 opioids
+opiumN
 opossumN
 opossumsN
 oppo
@@ -32037,6 +32133,8 @@ opusN
 ora
 oracleN
 oraclesN
+oralA
+orallyR
 orangN
 orangeN
 orangesN
@@ -32103,22 +32201,31 @@ oreN
 oreganoN
 oresN
 orf
+organN
 organa
 organelleN
+organellesN
 organicA
+organicallyR
 organicsN
+organisationN
 organiseV
 organisedV
 organiserN
+organisersN
 organisesV
+organisingV
 organismN
 organismsN
 organistN
 organistsN
+organizationN
 organizeV
 organizedV
 organizerN
+organizersN
 organizesV
+organizingV
 organsN
 organzaN
 orielN
@@ -32428,6 +32535,7 @@ ovalA
 ovalsN
 ovarianA
 ovariesN
+ovaryN
 ovateA
 ovationN
 ovationsN
@@ -32668,6 +32776,7 @@ ovoidA
 ovulateV
 ovulatingV
 ovulationN
+ovumN
 oweV
 owedV
 owesV
@@ -32769,6 +32878,7 @@ paddlesV
 paddlingV
 paddockN
 paddocksN
+paddyN
 padi
 padlockN
 padlockedV
@@ -33331,6 +33441,7 @@ pastsN
 pastureN
 pasturedV
 pasturesN
+pastyA
 patV
 patchN
 patchedV
@@ -33588,6 +33699,7 @@ pedometerN
 pedro
 peds
 peduncleN
+peeN
 peedV
 peeingN
 peekN
@@ -33673,7 +33785,11 @@ pendragonN
 pendulousA
 pendulumN
 pendulumsN
+penetrateV
+penetratedV
+penetratesV
 penetratingV
+penetrationN
 penetrationsN
 penetrativeA
 penetratorN
@@ -33682,6 +33798,7 @@ penguinN
 penguinsN
 penicillinN
 penicilliumN
+penileA
 peninsulaN
 peninsularA
 peninsulasN
@@ -34008,6 +34125,7 @@ pervadingV
 pervasiveA
 perverseA
 perverselyR
+perversionN
 perversionsN
 perversityN
 pervertV
@@ -34078,12 +34196,14 @@ petuniasN
 pewN
 pewsN
 pewterN
+peyoteN
 phaetonN
 phageN
 phagesN
 phagocytosisN
 phalanges
 phalanxN
+phallicA
 phallusN
 phantasmN
 phantasyN
@@ -34859,6 +34979,7 @@ pluripotent
 plusA
 plusesN
 plushA
+plutocracyN
 plutocratsN
 plutonN
 plutonicA
@@ -35025,6 +35146,7 @@ pollinationN
 pollinatorN
 pollinatorsN
 pollingV
+pollockN
 pollsV
 pollsterN
 pollstersN
@@ -35306,6 +35428,7 @@ postcodeN
 postcodesN
 postcolonial
 postdocN
+postdoctoralA
 postedV
 posterN
 posteriorA
@@ -35349,6 +35472,7 @@ posturesN
 posturingV
 postwarA
 posyN
+potN
 potableA
 potashN
 potassiumN
@@ -35382,6 +35506,7 @@ pottiesN
 pottingV
 pottinger
 potts
+pottyA
 pouchN
 pouchesN
 poulter
@@ -36447,8 +36572,10 @@ proximalA
 proximateA
 proximityN
 proxyN
+prudeN
 prudenceN
 prudentA
+prudentialA
 prudentlyR
 prudishA
 pruneV
@@ -36502,6 +36629,7 @@ psychopathicA
 psychopathsN
 psychopathyN
 psychosN
+psychosexualA
 psychosisN
 psychosocial
 psychoticA
@@ -36514,6 +36642,8 @@ pterosaursN
 pubN
 pubertyN
 pubescentA
+pubicA
+pubisN
 publicA
 publicallyR
 publicanN
@@ -36661,6 +36791,7 @@ punishmentsN
 punitiveA
 punkN
 punksN
+punkyN
 punningN
 punny
 punsN
@@ -36947,7 +37078,9 @@ quebecN
 queenN
 queenie
 queensV
+queerA
 queernessN
+queersV
 quellV
 quelledV
 quellingV
@@ -37119,6 +37252,7 @@ racoonN
 racquetN
 racquetballN
 racquetsN
+racyA
 radN
 radarN
 radarsN
@@ -37913,6 +38047,7 @@ recruitingV
 recruitmentN
 recruitsV
 recs
+rectalA
 rectangleN
 rectanglesN
 rectangularA
@@ -37927,6 +38062,7 @@ rectoN
 rectorN
 rectorsN
 rectoryN
+rectusN
 recumbentA
 recuperateV
 recuperatedV
@@ -39430,6 +39566,7 @@ revolversN
 revolvesV
 revolvingV
 revsV
+revueN
 revulsionN
 revvedV
 revvingV
@@ -40160,6 +40297,7 @@ rulershipN
 rulesN
 rulingV
 rulingsN
+rumN
 rumbaN
 rumbleV
 rumbledV
@@ -40183,6 +40321,7 @@ rumorsN
 rumourN
 rumouredV
 rumoursN
+rumpN
 rumpleV
 rumpledV
 rumpusN
@@ -40521,6 +40660,7 @@ sandbagV
 sandbagsV
 sandbankN
 sandbanksN
+sandbarN
 sandboxN
 sandcastle
 sandcastles
@@ -40676,6 +40816,7 @@ saucerN
 saucersN
 saucesN
 saucyA
+sauerkrautN
 saulN
 sault
 saunaN
@@ -40803,6 +40944,7 @@ scannersN
 scanningV
 scansV
 scantA
+scantilyR
 scantyA
 scapa
 scapeN
@@ -41078,7 +41220,11 @@ screensaver
 screenshot
 screenshots
 screenwriterN
+screwN
 screwballN
+screwdriverN
+screwdriversN
+screwedV
 screwsN
 screwyA
 scribal
@@ -41157,6 +41303,7 @@ sculpturalA
 sculptureN
 sculpturedA
 sculpturesN
+scumN
 scumbag
 scumbags
 scummyA
@@ -41201,7 +41348,10 @@ sealersN
 sealingV
 sealsV
 seamN
+seamanN
+seamanshipN
 seamedA
+seamenN
 seamer
 seamlessA
 seamlessly
@@ -41742,8 +41892,13 @@ sextN
 sextantN
 sextetN
 sextonN
+sexualA
+sexualisedV
+sexualitiesN
 sexualityN
 sexualizeV
+sexualizedV
+sexualizingV
 sexuallyR
 sey
 sez
@@ -41874,6 +42029,7 @@ sharpiesN
 sharplyR
 sharpnessN
 sharpsN
+sharpshooterN
 shat
 shatterV
 shatteredV
@@ -42613,6 +42769,7 @@ sirsN
 sisN
 sisalN
 sissiesN
+sissyA
 sisterN
 sisterhoodN
 sisterlyA
@@ -42858,7 +43015,9 @@ slaughterN
 slaughteredV
 slaughteringV
 slaughtersN
+slaveN
 slavedV
+slaveholdersN
 slaverV
 slaversV
 slaveryN
@@ -42874,6 +43033,8 @@ slayersN
 slayingN
 slayingsN
 slaysV
+sleazeN
+sleazyA
 sledN
 sleddingN
 sledgeV
@@ -42987,6 +43148,7 @@ sloopN
 sloopsN
 sloot
 slopV
+slopeN
 slopedA
 slopesN
 slopingA
@@ -43262,6 +43424,7 @@ sniggeringV
 snipN
 snipeV
 snipedV
+sniperN
 snipersN
 snipesV
 snipingV
@@ -43347,6 +43510,7 @@ snubbedA
 snubbingV
 snubsV
 snuck
+snuffN
 snuffedV
 snuffingV
 snugA
@@ -43427,6 +43591,7 @@ sodasN
 soddenA
 soddingA
 sodiumN
+sodomN
 sodsN
 sofaN
 sofasN
@@ -43963,6 +44128,8 @@ spendsV
 spendthriftA
 spentV
 sperling
+spermN
+spermatozoa
 spermsN
 spetsnaz
 spewV
@@ -44673,6 +44840,7 @@ steamrollerV
 steamsV
 steamshipN
 steamshipsN
+steamyA
 steedN
 steedsN
 steelN
@@ -44932,6 +45100,7 @@ stomperN
 stompingV
 stompsV
 stoneN
+stonedV
 stonemasonN
 stonemasonsN
 stonerA
@@ -45182,6 +45351,7 @@ stringersN
 stringingV
 stringsV
 stringyA
+stripV
 stripeN
 stripedA
 stripesN
@@ -45193,6 +45363,7 @@ stripperN
 strippersN
 strippingV
 stripsV
+stripteaseN
 stripyA
 striveV
 strivedV
@@ -45203,6 +45374,7 @@ strobeN
 strobesN
 strodeV
 stroganoff
+strokeN
 strokedV
 strokesN
 strokingV
@@ -45306,6 +45478,7 @@ stupaN
 stupefiedV
 stupefyingA
 stupendousA
+stupidA
 stupiderA
 stupidestA
 stupidityN
@@ -45593,6 +45766,7 @@ suchlikeA
 suckerN
 suckered
 suckersN
+suckingV
 suckleV
 sucklingN
 sucralose
@@ -45652,6 +45826,7 @@ suggestivelyR
 suggestsV
 sui
 suicidalA
+suicideN
 suicidesN
 suingV
 suitV
@@ -46588,6 +46763,7 @@ tamalesN
 tamara
 tamarackN
 tamarindN
+tambourineN
 tameV
 tamedV
 tamerA
@@ -46600,6 +46776,7 @@ tamperV
 tamperedV
 tamperingV
 tampingV
+tamponN
 tamponsN
 tamsN
 tamworth
@@ -46793,6 +46970,7 @@ taverna
 tavernsN
 tawN
 tawa
+tawdryA
 tawneyN
 tawnyA
 taxV
@@ -46867,6 +47045,7 @@ teasingV
 teasinglyR
 teaspoonN
 teaspoonsN
+teatN
 teatimeN
 teatsN
 tecN
@@ -46885,6 +47064,7 @@ technics
 techniqueN
 techniquesN
 technoN
+technocracyN
 technocratN
 technocratic
 technocratsN
@@ -47028,6 +47208,7 @@ templesN
 tempoN
 temporalA
 temporalityN
+temporallyR
 temporarilyR
 temporaryA
 tempore
@@ -47059,6 +47240,7 @@ tendencyN
 tenderA
 tenderedV
 tenderingV
+tenderloinN
 tenderlyR
 tendernessN
 tendersV
@@ -47199,6 +47381,7 @@ testatorN
 testedV
 testerN
 testersN
+testesV
 testifiedV
 testifiesV
 testifyV
@@ -47208,6 +47391,7 @@ testimonialsN
 testimoniesN
 testimonyN
 testingV
+testisN
 testosteroneN
 testsN
 testyA
@@ -47541,6 +47725,7 @@ throwsV
 thru
 thrushN
 thrushesN
+thrustV
 thrusterN
 thrustersN
 thrustingV
@@ -47548,6 +47733,7 @@ thrustsV
 thruwayN
 thudV
 thuddingV
+thugN
 thuggeryN
 thuggish
 thugsN
@@ -47747,6 +47933,7 @@ tinkerV
 tinkeredV
 tinkeringV
 tinkersV
+tinkleN
 tinkler
 tinklingV
 tinnedA
@@ -47803,6 +47990,8 @@ titheV
 tithesV
 tithingV
 titianN
+titillatingA
+titillationN
 titleN
 titledV
 titlesN
@@ -47975,6 +48164,7 @@ toothpickN
 toothpicksN
 toothyA
 tootingV
+tootsN
 tootsie
 topN
 topazN
@@ -48274,11 +48464,15 @@ traitsN
 trajectoriesN
 trajectoryN
 tramN
+trampN
 trampingV
 trampleV
 trampledV
 tramplesV
 tramplingV
+trampolineN
+trampolinesN
+trampolining
 trampsN
 tramsN
 tramwayN
@@ -48422,6 +48616,7 @@ trashcan
 trashedV
 trashesN
 trashingV
+trashyA
 trattoria
 traumaN
 traumasN
@@ -48888,6 +49083,7 @@ tumbledV
 tumblerN
 tumblersN
 tumblesV
+tumbleweedN
 tumbleweedsN
 tumblingV
 tummiesN
@@ -48985,6 +49181,7 @@ turretsN
 turtleN
 turtleneckN
 turtlesN
+tushN
 tuskN
 tusksN
 tussleV
@@ -49145,6 +49342,7 @@ uglierA
 uglies
 ugliestA
 uglinessN
+uglyA
 uhuru
 ukeN
 ukuleleN
@@ -49511,6 +49709,7 @@ undeterredA
 undevelopedA
 undiagnosedA
 undid
+undiesN
 undigestedA
 undignifiedA
 undilutedA
@@ -50070,6 +50269,7 @@ unwaryA
 unwashedA
 unwatchable
 unwaveringA
+unwedA
 unweighted
 unwelcomeA
 unwellA
@@ -50215,12 +50415,15 @@ urgentlyR
 urgesV
 urgingV
 uricA
+urinalN
 urinalsN
+urinalysisN
 urinaryA
 urinateV
 urinatedV
 urinatingV
 urinationN
+urineN
 urnN
 urnsN
 urologic
@@ -50267,6 +50470,7 @@ uteN
 utensilN
 utensilsN
 uterineA
+uterusN
 utesN
 utilisationN
 utiliseV
@@ -50364,6 +50568,7 @@ validityN
 validlyR
 valineN
 valiseN
+valiumN
 valkyrieN
 valkyriesN
 valleyN
@@ -50888,6 +51093,7 @@ vipersN
 viragoN
 viralA
 vires
+virginN
 virginalA
 virginiaN
 virginityN
@@ -50983,6 +51189,7 @@ vividlyR
 vividnessN
 vivisectionN
 vivo
+vixenN
 vixensN
 vizierN
 vlog
@@ -51007,6 +51214,7 @@ vocationalA
 vocationsN
 vociferousA
 vociferouslyR
+vodkaN
 vodkasN
 vogueN
 voiceN
@@ -51064,6 +51272,7 @@ volunteeringV
 volunteerism
 volunteersV
 voluptuousA
+vomitV
 vomitedV
 vomitingN
 vomitsV
@@ -51106,6 +51315,7 @@ vroomN
 vulcanN
 vulcanizedV
 vulcansN
+vulgarA
 vulgarityN
 vulgateN
 vulnerableA
@@ -51117,6 +51327,7 @@ wacker
 wackoN
 wackosN
 wackyA
+wadV
 waddingV
 waddleN
 waddledV
@@ -51587,9 +51798,11 @@ weddingsN
 wedgeN
 wedgedV
 wedgesN
+wedgieN
 wedlockN
 wedsV
 weeA
+weedN
 weededV
 weedingV
 weedsN
@@ -51638,6 +51851,7 @@ weirderA
 weirdestA
 weirdlyR
 weirdnessN
+weirdoN
 weirdosN
 weirsN
 weise
@@ -51671,6 +51885,7 @@ welterN
 welterweightN
 weltsN
 wenN
+wenchN
 wenchesN
 wendV
 wendigo
@@ -51871,6 +52086,7 @@ whitishA
 whittleN
 whittledV
 whittlingV
+whizN
 whizzV
 whizzedV
 whizzingV
@@ -52230,6 +52446,7 @@ womanizingV
 womankindN
 womanlyA
 womansN
+wombN
 wombatN
 wombatsN
 wombsN
@@ -52282,6 +52499,7 @@ woodworkN
 woodworkerN
 woodworkersN
 woodworkingN
+woodyA
 wooedV
 woofN
 wooferN
