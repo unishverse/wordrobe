@@ -4,13 +4,13 @@ const Engine = (function () {
   const V = {};
   [['aeiou', 1], ['rstln', 1], ['dg', 2], ['bcmp', 3], ['fhvwy', 4], ['k', 5], ['jx', 8], ['qz', 10]]
     .forEach(([s, v]) => { for (const c of s) V[c] = v; });
-  const LB = { 3: 0, 4: 2, 5: 5, 6: 10, 7: 15, 8: 22, 9: 30 };
+  const LB = { 3: 0, 4: 2, 5: 5, 6: 10, 7: 15, 8: 22, 9: 30, 10: 40, 11: 50, 12: 60 };
   const VOW = 'aeiou';
   const BAG = { e: 12, a: 9, i: 9, o: 8, n: 6, r: 6, t: 6, l: 4, s: 4, u: 4, d: 4, g: 3, b: 2, c: 2, m: 2, p: 2, f: 2, h: 2, v: 2, w: 2, y: 2, k: 1, j: 1, x: 1, q: 1, z: 1 };
   const CFG = {
-    hand: 8, supply: 24, slots: 5, discards: 3, letterMul: 3, lenMul: 3, addMul: 3,
-    base: 60, growth: 1.8, ramp: 0.08, roundMul: [1, 1.3, 1.6], // endless: target = base * growth^stage * (1 + ramp*stage) * roundMul
-    coinRound: 3, price: { fabric: 6, gold: 4, glass: 6, supply: 3, letter: 4, reroll: 2 }, supplyPack: 3, handMaxBuys: 1
+    hand: 8, supply: 24, slots: 5, maxWord: 12, discards: 3, letterMul: 3, lenMul: 3, addMul: 3,
+    base: 80, growth: 2.15, ramp: 0.08, roundMul: [1, 1.3, 1.6], // endless: target = base * growth^stage * (1 + ramp*stage) * roundMul
+    coinRound: 3, price: { fabric: 6, gold: 4, glass: 6, supply: 3, letter: 4, reroll: 2, book: 5, multi: 5, wild: 8 }, supplyPack: 3, handMaxBuys: 1
   };
   const FABRICS = [
     { id: 'long', name: 'Long Stitch', icon: '🧵', desc: 'Kata 6+ huruf ×2.', kind: 'mult' },
@@ -38,12 +38,34 @@ const Engine = (function () {
     { id: 'vthief', name: 'The Vowel Thief', desc: 'Satu huruf vokal terkunci dan tidak bisa dipakai.', pick: 'aeiou' }
   ];
 
-  let DICT = new Set(), ARR = [];
-  function setDict(words) {
-    ARR = words.filter(w => w.length >= 3 && w.length <= 9 && /[aeiouy]/.test(w));
-    DICT = new Set(ARR);
+  /* Hands (Balatro's poker hands): the part of speech of the word. Level-ups are sold in the shop ("Buku Tata Bahasa"). */
+  const HANDS = {
+    o: { name: 'Kata lain', icon: '🔤', base: 0, mult: 1, step: [5, 0.25] },
+    n: { name: 'Noun', icon: '📦', base: 15, mult: 1, step: [10, 0.5] },
+    v: { name: 'Verb', icon: '🏃', base: 20, mult: 1.5, step: [10, 0.5] },
+    a: { name: 'Adjective', icon: '🎨', base: 30, mult: 2, step: [15, 0.5] },
+    r: { name: 'Adverb', icon: '⚡', base: 45, mult: 3, step: [20, 1] }
+  };
+  /* Multi-letter cards (Paperback) and the wild card. Affixes in the right place (prefix first, suffix last) give x1.5 each. */
+  const PRE = ['un', 're', 'dis'], SUF = ['ly', 'ing', 'ed', 'er', 'est', 'ful', 'ness'], PAIRS = ['th', 'ch', 'sh', 'qu', 'ck'];
+  const MULTI = PRE.concat(SUF, PAIRS), AFFIX_MULT = 1.5;
+  const kindOf = ch => ch === '?' ? 'wild' : PRE.includes(ch) ? 'pre' : SUF.includes(ch) ? 'suf' : ch.length > 1 ? 'pair' : 'letter';
+  const txt = t => t.ch === '?' ? (t.as || '') : t.ch;
+
+  let DICT = new Map(), ARR = [];
+  // one word per line, lower case, optional upper-case part-of-speech mark at the end: catN, runV, happyA, slowlyR, the
+  function setDict(lines) {
+    DICT = new Map(); ARR = [];
+    lines.forEach(l => {
+      const m = /^([a-z]+)([NVAR]?)$/.exec(String(l).trim());
+      if (!m || m[1].length < 3 || m[1].length > CFG.maxWord || !/[aeiouy]/.test(m[1])) return;
+      DICT.set(m[1], m[2] ? m[2].toLowerCase() : 'o'); ARR.push(m[1]);
+    });
   }
   const isWord = w => DICT.has(w);
+  const posOf = w => DICT.get(w) || 'o';
+  const lvOf = (G, p) => (G && G.handLv && G.handLv[p]) || 1;
+  function handInfo(p, lv) { const h = HANDS[p] || HANDS.o, l = lv || 1; return { pos: p, name: h.name, icon: h.icon, lv: l, base: h.base + (l - 1) * h.step[0], mult: Math.round((h.mult + (l - 1) * h.step[1]) * 100) / 100 }; }
 
   function rngFrom(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
   function shuffle(a, rng) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -54,9 +76,14 @@ const Engine = (function () {
     return all[Math.floor(rng() * all.length)];
   }
 
-  function val(t) { return V[t.ch] * CFG.letterMul * (t.up === 'gold' ? 2 : t.up === 'glass' ? 3 : 1); }
+  // card value: letters x3 (gold x2, glass x3); multi-letter = sum of its letters; wild = half of the letter it plays as (rounded up)
+  function val(t) {
+    if (t.ch === '?') return t.as ? Math.ceil(V[t.as] * CFG.letterMul / 2) : 0;
+    let v = 0; for (const c of t.ch) v += V[c];
+    return v * CFG.letterMul * (t.up === 'gold' ? 2 : t.up === 'glass' ? 3 : 1);
+  }
   function score(tiles, fab, ctx, boss, rng) {
-    const w = tiles.map(t => t.ch).join(''), n = w.length, has = id => fab.includes(id);
+    const w = tiles.map(txt).join(''), n = w.length, has = id => fab.includes(id);
     const lv = tiles.map(t => val(t));
     const letters = lv.reduce((a, b) => a + b, 0);
     let lenBonus = (LB[n] || 0) * CFG.lenMul;
@@ -75,49 +102,75 @@ const Engine = (function () {
     if (has('first') && ctx.first) mults.push({ id: 'first', v: 3 });
     if (has('patch') && new Set(vow).size >= 3) mults.push({ id: 'patch', v: 2 });
     if (has('chain') && n >= 5) { const k = ctx.chain + 1; if (k >= 2) mults.push({ id: 'chain', v: Math.min(3, 1 + 0.5 * (k - 1)) }); }
+    const hand = handInfo(posOf(w), ctx.lv ? ctx.lv[posOf(w)] : 1);
+    const affix = [];
+    tiles.forEach((t, i) => { const k = kindOf(t.ch); if ((k === 'pre' && i === 0) || (k === 'suf' && i === tiles.length - 1)) affix.push(t.ch); });
     let bossHalf = false;
     if (boss && boss.id === 'repeater' && !rep) bossHalf = true;
     const addSum = adds.reduce((a, x) => a + x.v, 0);
-    let mult = mults.reduce((a, x) => a * x.v, 1);
+    let mult = mults.reduce((a, x) => a * x.v, 1) * hand.mult * Math.pow(AFFIX_MULT, affix.length);
     if (bossHalf) mult *= 0.5;
     let jackpot = null;
     if (has('jackpot')) { jackpot = rng() < 0.2; if (jackpot) mult *= 2; }
-    const subtotal = letters + lenBonus + addSum;
-    return { word: w, lv, letters, lenBonus, adds, mults, bossHalf, jackpot, subtotal, mult, final: Math.round(subtotal * mult) };
+    const subtotal = letters + lenBonus + addSum + hand.base;
+    return { word: w, lv, letters, lenBonus, adds, mults, hand, affix, bossHalf, jackpot, subtotal, mult, final: Math.round(subtotal * mult) };
   }
 
-  const blocked = (R, t) => !!(R.boss && R.boss.block && t.ch === R.boss.block);
-  function counts(tiles) { const c = {}; tiles.forEach(t => c[t.ch] = (c[t.ch] || 0) + 1); return c; }
+  // a card is locked when the boss locks a letter it contains; a wild card is never locked but may not play as that letter
+  const blocked = (R, t) => !!(R.boss && R.boss.block && t.ch !== '?' && t.ch.includes(R.boss.block));
   function bossOK(R, w) { return !(R.boss && R.boss.id === 'minimal' && w.length < 5); }
-  function candidates(R) {
-    const usable = R.hand.filter(t => !blocked(R, t)), c = counts(usable), out = [];
+  const usableOf = R => R.hand.filter(t => !blocked(R, t));
+  // spell w with the usable cards: exact cards first (upgraded first), wild cards last. Returns [{t, as}] or null.
+  function spell(R, w, usable) {
+    const pool = usable.slice().sort((a, b) => (a.ch === '?') - (b.ch === '?') || (b.ch.length - a.ch.length) || ((b.up ? 1 : 0) - (a.up ? 1 : 0)));
+    const lock = R.boss && R.boss.block, used = new Set(), out = [];
+    (function go(i) {
+      if (i === w.length) return true;
+      for (const t of pool) {
+        if (used.has(t.id)) continue;
+        let as = null, len;
+        if (t.ch === '?') { if (w[i] === lock) continue; as = w[i]; len = 1; }
+        else if (w.startsWith(t.ch, i)) len = t.ch.length; else continue;
+        used.add(t.id); out.push({ t, as });
+        if (go(i + len)) return true;
+        used.delete(t.id); out.pop();
+      }
+      return false;
+    }(0)) || (out.length = 0);
+    return out.length ? out : null;
+  }
+  // quick letter-count filter before the (rare) full spelling search
+  function feasible(w, have, wilds) {
+    const need = {}; let miss = 0;
+    for (const c of w) { need[c] = (need[c] || 0) + 1; if (need[c] > (have[c] || 0)) { miss++; if (miss > wilds) return false; } }
+    return true;
+  }
+  function candidates(R, firstOnly) {
+    const usable = usableOf(R), have = {}; let wilds = 0, letters = 0;
+    usable.forEach(t => { if (t.ch === '?') { wilds++; letters++; } else for (const c of t.ch) { have[c] = (have[c] || 0) + 1; letters++; } });
+    const out = [];
     for (const w of ARR) {
-      if (w.length > usable.length || !bossOK(R, w)) continue;
-      const need = {}; let ok = true;
-      for (const ch of w) { need[ch] = (need[ch] || 0) + 1; if (need[ch] > (c[ch] || 0)) { ok = false; break; } }
-      if (ok) out.push(w);
+      if (w.length > letters || !bossOK(R, w) || !feasible(w, have, wilds) || !spell(R, w, usable)) continue;
+      out.push(w); if (firstOnly) break;
     }
     return out;
   }
-  // pick tiles for a word, preferring higher-multiplier (upgraded) tiles
-  function tilesFor(R, w) {
-    const pool = R.hand.filter(t => !blocked(R, t)).slice().sort((a, b) => (b.up ? 1 : 0) - (a.up ? 1 : 0));
-    const used = new Set(), out = [];
-    for (const ch of w) { const t = pool.find(t => t.ch === ch && !used.has(t.id)); if (!t) return null; used.add(t.id); out.push(t); }
-    return out;
-  }
+  // cards for a word (bots/tests): wild cards get the letter they play as
+  function tilesFor(R, w) { const s = spell(R, w, usableOf(R)); return s ? s.map(x => { if (x.as) x.t.as = x.as; return x.t; }) : null; }
   function best(G, R) {
     let b = null; const nr = () => 0.99;
     for (const w of candidates(R)) {
       const tl = tilesFor(R, w); if (!tl) continue;
-      const s = score(tl, G.fabrics, { first: !R.firstDone, chain: R.chain }, R.boss, nr);
-      if (!b || s.final > b.s.final) b = { w, tl, s };
+      const s = score(tl, G.fabrics, { first: !R.firstDone, chain: R.chain, lv: G.handLv }, R.boss, nr);
+      if (!b || s.final > b.s.final) b = { w, tl: tl.slice(), as: tl.map(t => t.as), s };
     }
+    if (b) b.tl.forEach((t, i) => { t.as = b.as[i]; });
     return b;
   }
 
   function newGame(starterId) {
     return { stage: 0, rnd: 0, fabrics: starterId ? [starterId] : [], upgrades: [], coins: 0, extra: 0, letterAdds: [], handBonus: 0, discardBonus: 0, bosses: [],
+      handLv: { o: 1, n: 1, v: 1, a: 1, r: 1 },
       stats: { words: 0, longest: '', best: { w: '', s: 0 }, total: 0, list: [] } };
   }
   const roundIndex = G => G.stage * 3 + G.rnd;
@@ -149,11 +202,13 @@ const Engine = (function () {
 
   // submit tiles in order; returns {ok,msg} or {ok,res,won}
   function submit(G, R, tl, rng) {
-    const w = tl.map(t => t.ch).join('');
+    if (tl.some(t => t.ch === '?' && !t.as)) return { ok: false, msg: 'Pilih dulu huruf untuk kartu ?.' };
+    if (tl.some(t => t.ch === '?' && R.boss && t.as === R.boss.block)) return { ok: false, msg: 'Huruf ' + R.boss.block.toUpperCase() + ' sedang dikunci boss.' };
+    const w = tl.map(txt).join('');
     if (w.length < 3) return { ok: false, msg: 'Minimal 3 huruf.' };
     if (!bossOK(R, w)) return { ok: false, msg: R.boss.name + ': minimal 5 huruf.' };
     if (!isWord(w)) return { ok: false, msg: '“' + w.toUpperCase() + '” belum ada di kamus.' };
-    const res = score(tl, G.fabrics, { first: !R.firstDone, chain: R.chain }, R.boss, rng);
+    const res = score(tl, G.fabrics, { first: !R.firstDone, chain: R.chain, lv: G.handLv }, R.boss, rng);
     R.score += res.final; R.words++; R.firstDone = true;
     R.chain = w.length >= 5 ? R.chain + 1 : 0;
     const ids = new Set(tl.map(t => t.id));
@@ -162,7 +217,7 @@ const Engine = (function () {
     const st = G.stats; st.words++; st.total += res.final;
     if (w.length > st.longest.length) st.longest = w;
     if (res.final > st.best.s) st.best = { w, s: res.final };
-    st.list.push({ w, s: res.final });
+    st.list.push({ w, s: res.final, p: res.hand.pos });
     let recycled = null;
     if (G.fabrics.includes('recycler') && rng() < 0.2) {
       const t = tl[Math.floor(rng() * tl.length)];
@@ -176,7 +231,7 @@ const Engine = (function () {
     res.recycled = recycled; res.extraDraw = extra;
     return { ok: true, res, won: R.score >= R.target };
   }
-  const stuck = R => candidates(R).length === 0;
+  const stuck = R => candidates(R, true).length === 0;
   const failed = (G, R) => R.score < R.target && stuck(R) && (R.supply.length === 0 || R.discards === 0);
   // Balatro-style discard: limited per round; tiles vanish for this round, supply refills the hand.
   // Upgraded tiles are not lost: they stay in G.upgrades and come back next round.
@@ -195,11 +250,13 @@ const Engine = (function () {
   function rewardOptions(G, rng) {
     const owned = new Set(G.fabrics), pool = FABRICS.filter(f => !owned.has(f.id));
     const opts = [];
-    const kinds = shuffle(['fabric', 'fabric', 'up', 'coin'], rng);
+    const kinds = shuffle(['fabric', 'fabric', 'up', 'coin', 'book', 'multi'], rng);
     for (const k of kinds) {
       if (opts.length >= 3) break;
       if (k === 'fabric') { const f = pool.filter(f => !opts.some(o => o.id === f.id))[Math.floor(rng() * pool.length)]; if (f) opts.push({ type: 'fabric', id: f.id }); }
       else if (k === 'up') opts.push({ type: 'up', kind: rng() < 0.5 ? 'gold' : 'glass', ch: randLetter(rng) });
+      else if (k === 'book') opts.push(bookItem(rng));
+      else if (k === 'multi') opts.push(multiItem(rng));
       else opts.push({ type: 'coin', n: 6 });
     }
     while (opts.length < 3) opts.push(rng() < 0.6 ? { type: 'up', kind: rng() < 0.5 ? 'gold' : 'glass', ch: randLetter(rng) } : { type: 'coin', n: 6 + G.stage });
@@ -212,8 +269,13 @@ const Engine = (function () {
     const kind = rng() < 0.5 ? 'gold' : 'glass';
     items.push({ type: 'up', kind, ch: randLetter(rng), price: CFG.price[kind] });
     items.push({ type: 'letter', ch: randLetter(rng), price: CFG.price.letter });
+    items.push(Object.assign(bookItem(rng), { price: CFG.price.book }));
+    const m = multiItem(rng); items.push(Object.assign(m, { price: CFG.price[m.type] }));
     return items;
   }
+  const bookItem = rng => ({ type: 'book', pos: 'nvar'[Math.floor(rng() * 4)] });
+  // a multi-letter card, or (1 in 5) a wild card; both join the supply of every later round
+  const multiItem = rng => rng() < 0.2 ? { type: 'wild', ch: '?' } : { type: 'multi', ch: MULTI[Math.floor(rng() * MULTI.length)] };
   // always-available permanent upgrades; price rises with each purchase
   function permItems(G) {
     const out = [];
@@ -225,7 +287,7 @@ const Engine = (function () {
   function addUpgrade(G, kind, ch) { G.upgrades.push(mk(ch, kind)); }
   // after restoring a saved run: new tile ids must not collide with the restored ones
   function resumeIds(G, R) { let m = 0; const see = t => { if (t.id > m) m = t.id; }; G.upgrades.forEach(see); if (R) { R.hand.forEach(see); R.supply.forEach(see); } if (m >= UID) UID = m + 1; }
-  return { val, V, LB, CFG, FABRICS, FAB, BOSSES, setDict, isWord, rngFrom, shuffle, mk, score, blocked, candidates, tilesFor, best, newGame,
+  return { val, txt, kindOf, HANDS, MULTI, PRE, SUF, PAIRS, posOf, lvOf, handInfo, spell, V, LB, CFG, FABRICS, FAB, BOSSES, setDict, isWord, rngFrom, shuffle, mk, score, blocked, candidates, tilesFor, best, newGame,
     roundIndex, targetFor, handSize, permItems, makeRound, draw, submit, stuck, failed, discard, canDiscard, finishRound, rewardOptions, shopItems, addUpgrade, resumeIds, randLetter, get ARR() { return ARR; } };
 })();
 
@@ -236,7 +298,7 @@ const UI = (function () {
   const REG = [['yarn', 'Si Kusut'], ['button', 'Kancing Nakal'], ['needle', 'Jarum Jahil'], ['pin', 'Peniti Pelit'], ['iron', 'Setrika Sinis'], ['hanger', 'Hanger Galak']];
   let host = null, root = null, body = null, ready = null, mounted = false;
   let best = 0, G = null, R = null, phase = 'intro', sel = [], msg = '', last = null, starters = [], rewards = [], shop = [], modal = null, fx = null, shake = false;
-  let showAll = false, sendState = '', sendErr = '';
+  let sendState = '', sendErr = '', means = {};
   const rng = Math.random;
   const store = {
     get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -286,6 +348,14 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 .bq-tile.gold{background:linear-gradient(135deg,#ffe27a,#f2b705);box-shadow:0 3px 0 #a47c00}
 .bq-tile.glass{background:linear-gradient(135deg,#d4f2ff,#8fd3f5);box-shadow:0 3px 0 #4a93b5}
 .bq-tile.used{opacity:.25;transform:translateY(3px);box-shadow:none}
+.bq-tile.multi{font-size:16px;letter-spacing:-.5px}.bq-tile.wild{background:linear-gradient(135deg,#ffd9e6,#c9b8ff);box-shadow:0 3px 0 #8f7bc8}
+.bq-tile.wild i{position:absolute;left:4px;top:1px;font:800 10px var(--ui);font-style:normal;opacity:.7}
+.bq-chip.h{background:var(--blue);color:#fff;font-weight:800}
+.bq-mute{border:0;background:var(--card-2);color:var(--text);border-radius:999px;width:36px;height:30px;font-size:15px;cursor:pointer;flex:none}
+.bq-abc{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}.bq-abc .bq-tile{width:auto;height:46px;font-size:20px}
+.bq-wl .row{cursor:pointer}.bq-wl .row s{text-decoration:none;font-size:11px;font-weight:800;color:var(--accent-text);margin-left:6px}
+.bq-wl .mean{background:var(--card);border-radius:12px;padding:8px 12px;font-size:13px;margin:-2px 0 2px}.bq-wl .mean b{font-family:var(--ui);font-size:14px}
+.bq-hands{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.bq-hands span{background:var(--card);border-radius:12px;padding:6px 10px;font-size:12px}
 .bq-tile.lock{background:#3a3748;color:#888;box-shadow:none;cursor:not-allowed}.bq-tile.lock:after{content:'🔒';position:absolute;top:-4px;left:-2px;font-size:12px}
 .bq-msg{min-height:20px;font-size:13px;font-weight:700;color:var(--error)}
 .bq-last{background:var(--card);border-radius:16px;padding:10px 12px;font-size:13px}.bq-last b{color:var(--accent-text)}
@@ -340,28 +410,90 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   function restore(s) {
     G = s.G; R = s.R; phase = s.phase; starters = s.starters || []; rewards = s.rewards || []; shop = s.shop || []; last = s.last || null;
     sel = []; msg = ''; modal = null; fx = null; E.resumeIds(G, R);
+    G.handLv = G.handLv || { o: 1, n: 1, v: 1, a: 1, r: 1 };
+    if (R) [].concat(R.hand, R.supply).forEach(t => { delete t.as; });
+  }
+
+  /* ---------- background music: a soft loop made in the browser (Web Audio), no file to download ---------- */
+  const Music = (function () {
+    const KEYM = 'wr_game_music', STEP = 60 / 84 / 2;   // eighth notes at 84 bpm
+    const CHORDS = [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62]];   // C, Am, F, G
+    const MEL = [72, null, 76, 74, null, 72, 69, null, 72, null, 69, 67, null, 64, 67, null, 69, null, 72, 69, null, 65, 67, null, 67, null, 71, 74, null, 72, null, null];
+    let ac = null, out = null, timer = null, step = 0, next = 0, on = store.get(KEYM) !== '0';
+    const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+    function note(m, t, dur, type, vol) {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type; o.frequency.value = hz(m);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.05);
+    }
+    function tick() {
+      while (next < ac.currentTime + 0.25) {
+        const ch = CHORDS[Math.floor(step / 8) % 4], i = step % 8, mel = MEL[step % 32];
+        if (i === 0) note(ch[0] - 24, next, STEP * 7, 'triangle', 0.5);
+        note(ch[[0, 1, 2, 1][i % 4]] + (i >= 4 ? 12 : 0), next, STEP * 1.6, 'sine', 0.16);
+        if (mel) note(mel, next, STEP * 2.4, 'sine', 0.22);
+        next += STEP; step++;
+      }
+    }
+    function start() {
+      if (!on || timer) return;
+      try {
+        if (!ac) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return; ac = new C(); const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1600; out = ac.createGain(); out.gain.value = 0.09; out.connect(f); f.connect(ac.destination); }
+        ac.resume(); next = ac.currentTime + 0.1; timer = setInterval(tick, 60); tick();
+      } catch (e) { timer = null; /* no audio on this device: play silently */ }
+    }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } try { if (ac) ac.suspend(); } catch (e) { /* ignore */ } }
+    function toggle() { on = !on; store.set(KEYM, on ? '1' : '0'); if (on) start(); else stop(); }
+    return { start, stop, toggle, get on() { return on; }, get playing() { return !!timer; } };
+  })();
+  const muteHtml = () => `<button type="button" class="bq-mute" data-a="music" aria-label="${Music.on ? 'Matikan musik' : 'Nyalakan musik'}" aria-pressed="${Music.on}">${Music.on ? '🔊' : '🔇'}</button>`;
+
+  /* ---------- end of run: meaning of a word (looked up only when tapped) ---------- */
+  const escH = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  function showMeaning(w) {
+    const el = body.querySelector('[data-mean="' + w + '"]'), m = means[w]; if (!el || !m) return;
+    el.hidden = !m.open;
+    if (m.state === 'loading') el.innerHTML = '<span class="bq-mut">Mencari arti…</span>';
+    else if (m.state === 'err') el.innerHTML = '<span class="bq-msg">' + escH(m.msg) + '</span>';
+    else { const r = m.r || {}; el.innerHTML = '<b>' + escH(r.translation || '-') + '</b>' + (r.phonetic ? ' <span class="bq-mut">' + escH(r.phonetic) + '</span>' : '') + (r.definition ? '<div>' + escH(r.definition) + '</div>' : '') + (r.example ? '<div class="bq-mut">“' + escH(r.example) + '”</div>' : ''); }
+  }
+  // after the meaning arrives, "+ Lemari" saves it with that meaning
+  function refreshAdd(w) {
+    const row = body.querySelector('.row[data-i="' + w + '"]'); if (!row) return;
+    const old = row.querySelector('.add'); if (!old || old.disabled) return;
+    try { const b = host.addButton(w, means[w].r.translation || ''); if (b) { b.addEventListener('click', ev => ev.stopPropagation()); old.replaceWith(b); } } catch (e) { /* keep the old button */ }
   }
 
   /* ---------- html pieces ---------- */
   const label = () => 'Stage ' + (G.stage + 1) + ' · ' + (G.rnd === 2 ? 'Boss' : 'Ronde ' + (G.rnd + 1));
   const isBoss = () => G.rnd === 2;
   function chipsOf(s) {
-    let h = '';
+    let h = s.hand ? handChip(s.hand) : '';
+    (s.affix || []).forEach(a => h += `<span class="bq-chip m">✂️ ${a.toUpperCase()} ×1,5</span>`);
     s.adds.forEach(a => h += `<span class="bq-chip a">${F(a.id).icon} +${a.v}</span>`);
     s.mults.forEach(m => h += `<span class="bq-chip m">${F(m.id).icon} ×${m.v}</span>`);
     if (s.bossHalf) h += '<span class="bq-chip j">Boss ×0,5</span>';
     if (s.jackpot === true) h += '<span class="bq-chip j">🎰 JACKPOT ×2</span>'; else if (s.jackpot === false) h += '<span class="bq-chip">🎰 tidak kena</span>';
     return h;
   }
-  const tileHtml = (t, cls, attrs) => `<button type="button" class="bq-tile ${t.up || ''} ${cls || ''}" ${attrs || ''}>${t.ch}<small>${E.val(t)}</small></button>`;
+  const tileHtml = (t, cls, attrs) => { const k = E.kindOf(t.ch), face = k === 'wild' ? (t.as || '?') : t.ch;
+    return `<button type="button" class="bq-tile ${t.up || ''} ${k === 'wild' ? 'wild' : k !== 'letter' ? 'multi' : ''} ${cls || ''}" ${attrs || ''}>${k === 'wild' && t.as ? '<i>?</i>' : ''}${face}<small>${k === 'wild' && !t.as ? '½' : E.val(t)}</small></button>`; };
+  const fmt = n => String(n).replace('.', ',');
+  const handChip = h => `<span class="bq-chip h">${h.icon} ${h.name} Lv${h.lv} +${h.base} ×${fmt(h.mult)}</span>`;
   const fabricCard = (id, tag) => { const f = F(id); return `<span class="ic">${f.icon}</span><b>${f.name}</b>${tag || ''}<span class="d">${f.desc}</span>`; };
   function optHtml(o) {
     const U = o.ch ? o.ch.toUpperCase() : '';
     if (o.type === 'fabric') return fabricCard(o.id);
     if (o.type === 'up') return `<span class="ic">${o.kind === 'gold' ? '🥇' : '🔮'}</span><b>${o.kind === 'gold' ? 'Gold' : 'Glass'} · huruf ${U}</b><span class="d">Tile ${U} ber-upgrade ikut di ronde berikutnya sampai terpakai. ${o.kind === 'gold' ? 'Nilai huruf ×2.' : 'Nilai huruf ×3.'}</span>`;
     if (o.type === 'letter') return `<span class="ic">🔤</span><b>Huruf ${U}</b><span class="d">Satu huruf ${U} ditambahkan ke supply di semua ronde berikutnya.</span>`;
+    if (o.type === 'book') { const h = E.HANDS[o.pos], now = E.handInfo(o.pos, E.lvOf(G, o.pos)), nx = E.handInfo(o.pos, now.lv + 1);
+      return `<span class="ic">📖</span><b>Buku ${h.name} · Lv${nx.lv}</b><span class="d">Hand ${h.name} naik: +${now.base} ×${fmt(now.mult)} → +${nx.base} ×${fmt(nx.mult)}.</span>`; }
+    if (o.type === 'multi') { const k = E.kindOf(o.ch);
+      return `<span class="ic">🧩</span><b>Kartu ${U}</b><span class="d">${k === 'pre' ? 'Prefiks: di awal kata ×1,5.' : k === 'suf' ? 'Sufiks: di akhir kata ×1,5.' : 'Gabungan huruf, bebas di posisi mana pun.'} 1 kartu = ${o.ch.length} huruf. Masuk supply semua ronde berikutnya.</span>`; }
+    if (o.type === 'wild') return `<span class="ic">❓</span><b>Kartu wild ?</b><span class="d">Jadi huruf apa pun yang kamu pilih, nilainya setengah huruf itu. Masuk supply semua ronde berikutnya.</span>`;
     if (o.type === 'discard') return `<span class="ic">🗑️</span><b>+1 jatah Buang per ronde</b><span class="d">Sekarang ${E.CFG.discards + G.discardBonus} per ronde.</span>`;
-    if (o.type === 'hand') return `<span class="ic">✋</span><b>+1 huruf di tangan</b><span class="d">Tangan jadi ${E.handSize(G) + 1} huruf; kata boleh sampai ${E.handSize(G) + 1} huruf (maks. 9).</span>`;
+    if (o.type === 'hand') return `<span class="ic">✋</span><b>+1 huruf di tangan</b><span class="d">Tangan jadi ${E.handSize(G) + 1} huruf; satu kartu lagi di tangan.</span>`;
     if (o.type === 'supply') return `<span class="ic">📦</span><b>+${o.n} huruf supply</b><span class="d">Supply tiap ronde berikutnya lebih banyak.</span>`;
     return `<span class="ic">🪙</span><b>+${o.n} koin</b><span class="d">Buat belanja di shop.</span>`;
   }
@@ -393,17 +525,17 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   function roundHtml() {
     let pv = '';
     if (sel.length) {
-      const w = sel.map(t => t.ch).join('');
+      const w = sel.map(E.txt).join('');
       if (w.length >= 3 && E.isWord(w) && (!R.boss || R.boss.id !== 'minimal' || w.length >= 5)) {
-        const s = E.score(sel, G.fabrics, { first: !R.firstDone, chain: R.chain }, R.boss, () => 1);
+        const s = E.score(sel, G.fabrics, { first: !R.firstDone, chain: R.chain, lv: G.handLv }, R.boss, () => 1);
         pv = `<div class="bq-pl"><b>${w.toUpperCase()}</b> · ${s.letters} + ${s.lenBonus} panjang → <b>${s.final}</b> poin</div><div class="bq-chips">${chipsOf(Object.assign({}, s, { jackpot: undefined }))}${G.fabrics.includes('jackpot') ? '<span class="bq-chip">🎰 bisa ×2</span>' : ''}</div>`;
-      } else pv = `<div class="bq-pl">${w.length < 3 ? 'Pilih minimal 3 huruf untuk kata, atau langsung Buang' : 'Belum jadi kata valid (boleh Buang huruf ini)'}</div>`;
+      } else pv = `<div class="bq-pl">${w.length < 3 ? 'Pilih minimal 3 huruf untuk kata, atau langsung Buang' : '<b>' + w.toUpperCase() + '</b> belum jadi kata valid (boleh Buang huruf ini)'}</div>`;
     } else pv = '<div class="bq-pl">Ketuk huruf: susun kata untuk menyerang, atau buang huruf yang tidak berguna.</div>';
     const selIds = new Set(sel.map(t => t.id));
-    const head = `<div class="bq-top"><div class="t"><b>${label()}</b></div><span class="bq-coin">🪙 ${G.coins}</span></div>${arenaHtml()}
+    const head = `<div class="bq-top"><div class="t"><b>${label()}</b></div>${muteHtml()}<span class="bq-coin">🪙 ${G.coins}</span></div>${arenaHtml()}
       <div class="bq-bar"><span>Skor ronde <b>${R.score}</b></span><span>Target <b>${R.target}</b></span></div>
       ${R.boss ? `<div class="bq-boss"><b>${R.boss.name}:</b> ${R.boss.desc}${R.boss.block ? ' Terkunci: <b>' + R.boss.block.toUpperCase() + '</b>' : ''}</div>` : ''}`;
-    const lastHtml = last && last.res ? `<div class="bq-last bq-pop">Terakhir: <b>${last.res.word.toUpperCase()} -${last.res.final}</b> <span class="bq-mut">(${last.res.letters} + ${last.res.lenBonus})</span>${last.res.recycled ? ` ♻️ ${last.res.recycled.toUpperCase()}` : ''}${last.res.extraDraw ? ' 🔄 +1' : ''}<div class="bq-chips">${chipsOf(last.res)}</div></div>` : '';
+    const lastHtml = last && last.res ? `<div class="bq-last bq-pop">Terakhir: <b>${last.res.word.toUpperCase()} -${last.res.final}</b> <span class="bq-mut"></span>${last.res.recycled ? ` ♻️ ${last.res.recycled.toUpperCase()}` : ''}${last.res.extraDraw ? ' 🔄 +1' : ''}<div class="bq-chips">${chipsOf(last.res)}</div></div>` : '';
     if (!sel.length && lastHtml) pv = lastHtml;
     if (R.cleared) return head + `<div class="bq-center bq-pop"><h2>${enemyInfo().n} kalah! 🎉</h2><div class="bq-mut">+${last.fin.coins} koin${last.fin.saver ? ` (+${last.fin.saver} Saver)` : ''}</div><button type="button" class="bq-btn pri" style="width:100%;margin-top:10px" data-a="goNext">Ambil hadiah</button></div>`;
     return head + slotsHtml() + `
@@ -421,24 +553,31 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
         <li>Tangan 8 huruf, supply 24. Ketuk huruf berurutan untuk menyusun kata (3 huruf sampai sebesar tanganmu), lalu Serang.</li>
         <li>Skor kata jadi serangan Bibo. Capai target ronde untuk mengalahkan musuh.</li>
         <li>Huruf jelek? Pilih lalu Buang: ambil huruf baru dari supply (3 kali per ronde).</li>
+        <li>Jenis kata = hand: Noun +15, Verb +20 ×1,5, Adjective +30 ×2, Adverb +45 ×3. Naikkan levelnya dengan Buku di shop.</li>
+        <li>Di shop ada kartu imbuhan (UN, LY, ING…), gabungan huruf (TH, QU…), dan kartu wild ?.</li>
         <li>Tiap stage: 2 ronde + 1 boss, lalu shop. Run tak berujung; target makin berat tiap stage.</li></ul></div>
+      <div class="bq-btns" style="justify-content:center">${muteHtml()}<span class="bq-mut" style="align-self:center">Musik latar</span></div>
       ${best ? `<div class="bq-card bq-center">🏅 Rekor kamu: <b>Stage ${best}</b></div>` : ''}
       ${resumable ? '<button type="button" class="bq-btn pri" style="width:100%" data-a="resume">Lanjutkan run</button><button type="button" class="bq-btn" style="width:100%" data-a="start">Mulai run baru</button>' : '<button type="button" class="bq-btn pri" style="width:100%" data-a="start">Mulai run</button>'}`;
   }
   function endHtml() {
     const s = G.stats, uniq = []; const seen = {};
     s.list.slice().sort((a, b) => b.s - a.s).forEach(x => { if (!seen[x.w]) { seen[x.w] = 1; uniq.push(x); } });
-    const shown = showAll ? uniq : uniq.slice(0, 10);
+    const POSN = { n: 'noun', v: 'verb', a: 'adjective', r: 'adverb' };
     const sendLine = sendState === 'ok' ? '<div class="bq-mut">Hasil tersimpan.</div>' : sendState === 'sending' ? '<div class="bq-mut">Menyimpan hasil…</div>' : sendState === 'fail' ? `<div class="bq-msg">Hasil belum tersimpan: ${sendErr} <button type="button" class="bq-btn sm" data-a="retry">Coba lagi</button></div>` : '';
     return `<div class="bq-top"><div class="t"><b>${label()}</b><h2>Run berakhir</h2></div></div>${arenaHtml()}
       <div class="bq-card bq-center"><div class="bq-mut">Skor ronde ${R.score} dari ${R.target}.</div><div style="margin-top:6px">${G.reached >= best ? '🏅 Rekor baru!' : 'Rekor: Stage ' + best}</div>${sendLine}</div>
+      <div class="bq-card"><b>Kata-katamu</b><div class="bq-mut">Ketuk kata untuk melihat artinya, lalu simpan ke Lemari.</div>
+        <div class="bq-wl">${uniq.map(x => `<div class="row" data-a="meaning" data-i="${x.w}"><b>${x.w}${POSN[x.p] ? `<s>${POSN[x.p]}</s>` : ''}</b><i>${x.s} poin</i><span data-add="${x.w}"></span></div><div class="mean" data-mean="${x.w}" hidden></div>`).join('') || '<div class="bq-mut">Belum ada kata.</div>'}</div></div>
       <div class="bq-card"><div class="bq-info" style="font-size:13px"><span>🏔️ Stage ${G.reached}</span><span>📝 ${s.words} kata</span><span>🔤 terpanjang: ${s.longest ? s.longest.toUpperCase() : '-'}</span><span>⭐ terbaik: ${s.best.w ? s.best.w.toUpperCase() + ' (' + s.best.s + ')' : '-'}</span><span>Σ ${s.total} poin</span></div>
         <div class="bq-mut" style="margin-top:10px">Fabric yang dikumpulkan</div><div class="bq-chips">${G.fabrics.map(id => `<span class="bq-chip">${F(id).icon} ${F(id).name}</span>`).join('') || '-'}</div>
-        <div class="bq-mut" style="margin-top:10px">Kata-katamu (simpan ke Lemari)</div><div class="bq-wl">${shown.map(x => `<div class="row"><b>${x.w}</b><i>${x.s} poin</i><span data-add="${x.w}"></span></div>`).join('') || '<div class="bq-mut">Belum ada kata.</div>'}</div>
-        ${uniq.length > 10 && !showAll ? `<button type="button" class="bq-btn sm" style="margin-top:8px" data-a="showAll">Tampilkan semua (${uniq.length})</button>` : ''}</div>
+</div>
       <button type="button" class="bq-btn pri" data-a="start">Main lagi</button>`;
   }
   function modalHtml() {
+    if (modal.t === 'wild') return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Kartu ? jadi huruf apa?</h2><div class="bq-mut">Nilainya setengah dari huruf aslinya.${R.boss && R.boss.block ? ' Huruf ' + R.boss.block.toUpperCase() + ' sedang dikunci.' : ''}</div>
+      <div class="bq-abc">${'abcdefghijklmnopqrstuvwxyz'.split('').map(c => `<button type="button" class="bq-tile" data-a="wildAs" data-i="${c}" ${R.boss && R.boss.block === c ? 'disabled' : ''}>${c}<small>${Math.ceil(E.V[c] * E.CFG.letterMul / 2)}</small></button>`).join('')}</div>
+      <button type="button" class="bq-btn" style="width:100%;margin-top:10px" data-a="closeModal">Batal</button></div></div>`;
     if (modal.t === 'fab') return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><div class="bq-opt" style="cursor:default">${fabricCard(modal.id)}</div><button type="button" class="bq-btn" style="width:100%;margin-top:10px" data-a="closeModal">Tutup</button></div></div>`;
     return `<div class="bq-modal"><div class="bq-card"><h2>Slot penuh</h2><div class="bq-mut" style="margin:4px 0 8px">Ganti salah satu Fabric dengan:</div><div class="bq-opt" style="margin-bottom:8px;cursor:default">${fabricCard(modal.id)}</div><div class="bq-mut">Ketuk Fabric yang diganti, atau lewati.</div><div class="bq-opts" style="margin-top:6px">${G.fabrics.map((id, i) => `<button type="button" class="bq-opt" data-a="doReplace" data-i="${i}"><span class="ic">${F(id).icon}</span><b>${F(id).name}</b></button>`).join('')}</div><button type="button" class="bq-btn" style="width:100%;margin-top:8px" data-a="skipReplace">Lewati Fabric baru</button></div></div>`;
   }
@@ -456,12 +595,14 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
         <div class="bq-btns"><button type="button" class="bq-btn sm" ${G.coins < E.CFG.price.reroll ? 'disabled' : ''} data-a="reroll">🔁 Reroll tawaran (🪙 ${E.CFG.price.reroll})</button></div>
         <div class="bq-mut"><b>Perlengkapan permanen</b> (selalu ada, harga naik tiap beli)</div><div class="bq-opts">${perm.map((o, i) => `<button type="button" class="bq-opt" ${(o.maxed || G.coins < o.price) ? 'disabled' : ''} data-a="buyPerm" data-i="${i}"><span class="pr">${o.maxed ? 'MAKS' : '🪙 ' + o.price}</span>${optHtml(o)}</button>`).join('')}</div>
         <div><div class="bq-mut">Fabric kamu</div>${slotsHtml()}</div>
+        <div><div class="bq-mut">Hand kamu</div><div class="bq-hands">${'nvar'.split('').map(p => { const h = E.handInfo(p, E.lvOf(G, p)); return `<span>${h.icon} <b>${h.name}</b> Lv${h.lv} · +${h.base} ×${fmt(h.mult)}</span>`; }).join('')}</div></div>
         <button type="button" class="bq-btn pri" data-a="leaveShop">Lanjut ke ${label()}</button>`;
     } else if (phase === 'end') h = endHtml();
     body.innerHTML = '<div class="bq' + (phase === 'round' ? ' bq-r' : '') + '">' + h + (modal ? modalHtml() : '') + '</div>';
     if (shake) { const p = body.querySelector('.bq-prev'); if (p) p.classList.add('bq-shake'); }
     shake = false;
-    body.querySelectorAll('[data-add]').forEach(el => { try { const b = host.addButton(el.getAttribute('data-add')); if (b) el.replaceWith(b); } catch (e) { /* host without Lemari: no add button */ } });
+    body.querySelectorAll('[data-add]').forEach(el => { try { const w = el.getAttribute('data-add'), m = means[w]; const b = host.addButton(w, m && m.r ? m.r.translation : ''); if (b) { b.addEventListener('click', ev => ev.stopPropagation()); el.replaceWith(b); } } catch (e) { /* host without Lemari: no add button */ } });
+    Object.keys(means).forEach(showMeaning);
     save();
   }
 
@@ -485,13 +626,14 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   function endRun() {
     phase = 'end'; G.reached = G.stage + 1;
     if (G.reached > best) { best = G.reached; store.set(BEST, String(best)); }
-    showAll = false; sendState = ''; sendResult();
+    means = {}; sendState = ''; sendResult();
   }
   function gain(o, after) {
     if (o.type === 'coin') { G.coins += o.n; after(); }
     else if (o.type === 'up') { E.addUpgrade(G, o.kind, o.ch); after(); }
     else if (o.type === 'supply') { G.extra += o.n; after(); }
-    else if (o.type === 'letter') { G.letterAdds.push(o.ch); after(); }
+    else if (o.type === 'letter' || o.type === 'multi' || o.type === 'wild') { G.letterAdds.push(o.ch); after(); }
+    else if (o.type === 'book') { G.handLv = G.handLv || { o: 1, n: 1, v: 1, a: 1, r: 1 }; G.handLv[o.pos] = E.lvOf(G, o.pos) + 1; after(); }
     else if (o.type === 'fabric') { if (G.fabrics.length < E.CFG.slots) { G.fabrics.push(o.id); after(); } else { modal = { t: 'replace', id: o.id, after: after }; render(); } }
   }
   function beginRound() { R = E.makeRound(G, rng); sel = []; msg = ''; last = null; phase = R.boss ? 'bosspre' : 'round'; render(); }
@@ -505,9 +647,22 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     resume() { const s = load(); if (s) { restore(s); render(); } else A.start(); },
     pickStarter(i) { G.fabrics = [starters[+i]]; beginRound(); },
     faceBoss() { phase = 'round'; render(); },
-    pick(id) { const t = R.hand.find(x => x.id === +id); if (!t || sel.length >= R.handSize || sel.some(s => s.id === t.id)) return; sel.push(t); msg = ''; render(); },
-    unsel(i) { sel.splice(+i, 1); render(); },
-    clr() { sel = []; msg = ''; render(); },
+    pick(id) {
+      const t = R.hand.find(x => x.id === +id); if (!t || sel.length >= R.handSize || sel.some(s => s.id === t.id)) return;
+      if (t.ch === '?') { modal = { t: 'wild', id: t.id }; render(); return; }
+      sel.push(t); msg = ''; render();
+    },
+    wildAs(c) { const t = R.hand.find(x => x.id === modal.id); modal = null; if (t && !(R.boss && R.boss.block === c)) { t.as = c; sel.push(t); msg = ''; } render(); },
+    unsel(i) { const t = sel.splice(+i, 1)[0]; if (t) delete t.as; render(); },
+    clr() { sel.forEach(t => delete t.as); sel = []; msg = ''; render(); },
+    music() { Music.toggle(); render(); },
+    meaning(w) {
+      const m = means[w];
+      if (m && m.state !== 'err') { m.open = !m.open; showMeaning(w); return; }
+      means[w] = { state: 'loading', open: true }; showMeaning(w);
+      host.lookup(w).then(r => { means[w] = { state: 'ok', open: true, r: r }; showMeaning(w); refreshAdd(w); },
+        e => { means[w] = { state: 'err', open: true, msg: e && e.message ? e.message : 'Arti belum bisa dimuat.' }; if (host.failed) host.failed(e); showMeaning(w); });
+    },
     send() {
       const r = E.submit(G, R, sel, rng);
       if (!r.ok) { msg = r.msg; shake = true; render(); return; }
@@ -518,7 +673,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       else if (E.failed(G, R)) { endRun(); return; }
       render();
     },
-    discard() { if (!E.discard(G, R, sel.slice())) return; const n = sel.length; sel = []; msg = 'Buang ' + n + ' huruf, ambil dari supply.'; if (E.failed(G, R)) { endRun(); return; } render(); },
+    discard() { sel.forEach(t => delete t.as); if (!E.discard(G, R, sel.slice())) return; const n = sel.length; sel = []; msg = 'Buang ' + n + ' huruf, ambil dari supply.'; if (E.failed(G, R)) { endRun(); return; } render(); },
     goNext() { phase = 'reward'; render(); },
     takeReward(i) { gain(rewards[+i], advance); },
     showFab(id) { modal = { t: 'fab', id: id }; render(); },
@@ -537,11 +692,11 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     },
     reroll() { if (G.coins < E.CFG.price.reroll) return; G.coins -= E.CFG.price.reroll; shop = E.shopItems(G, rng); render(); },
     leaveShop() { beginRound(); },
-    showAll() { showAll = true; render(); },
     retry() { sendResult(); },
     noop() { }
   };
   function onClick(ev) {
+    if (!root.hidden && !document.hidden) Music.start();
     const t = ev.target.closest ? ev.target.closest('[data-a]') : null;
     if (!t || !body.contains(t)) return;
     const fn = A[t.getAttribute('data-a')]; if (fn) fn(t.getAttribute('data-i'));
@@ -551,7 +706,8 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
     if (ev.key === 'Enter') { if (sel.length >= 3) { ev.preventDefault(); A.send(); } }
     else if (ev.key === 'Backspace') { ev.preventDefault(); sel.pop(); render(); }
-    else if (/^[a-z]$/i.test(ev.key)) { const c = ev.key.toLowerCase(); const t = R.hand.find(t => t.ch === c && !E.blocked(R, t) && !sel.some(s => s.id === t.id)); if (t) A.pick(t.id); }
+    else if (/^[a-z]$/i.test(ev.key)) { const c = ev.key.toLowerCase(); const t = R.hand.find(t => t.ch === c && !E.blocked(R, t) && !sel.some(s => s.id === t.id)); if (t) A.pick(t.id);
+      else { const wd = R.hand.find(t => t.ch === '?' && !sel.some(s => s.id === t.id)); if (wd && !(R.boss && R.boss.block === c)) { wd.as = c; sel.push(wd); msg = ''; render(); } } }
   }
 
   /* ---------- entry points ---------- */
@@ -561,6 +717,8 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       mounted = true;
       const st = document.createElement('style'); st.id = 'bq-css'; st.textContent = CSS; document.head.appendChild(st);
       body.addEventListener('click', onClick); document.addEventListener('keydown', onKey);
+      document.addEventListener('visibilitychange', () => { if (document.hidden) Music.stop(); });
+      if (window.MutationObserver) new MutationObserver(() => { if (root.hidden) Music.stop(); }).observe(root, { attributes: true, attributeFilter: ['hidden'] });
     }
     best = +store.get(BEST) || 0;
   }
@@ -576,8 +734,8 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       G = null; R = null; phase = 'intro'; sel = []; modal = null; render();
     }, () => { body.innerHTML = '<div class="bq bq-center"><div class="bq-card">Kamus game belum bisa dimuat. Cek koneksi, lalu buka Game lagi.</div></div>'; });
   }
-  return { init: init, open: open };
+  return { init: init, open: open, music: Music };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = Engine;
-else if (typeof window !== 'undefined') window.WRGame = { init: UI.init, open: UI.open, Engine: Engine };
+else if (typeof window !== 'undefined') window.WRGame = { init: UI.init, open: UI.open, music: UI.music, Engine: Engine };
