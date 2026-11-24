@@ -371,7 +371,7 @@ const UI = (function () {
   const REG = [['yarn', 'Si Kusut'], ['button', 'Kancing Nakal'], ['needle', 'Jarum Jahil'], ['pin', 'Peniti Pelit'], ['iron', 'Setrika Sinis'], ['hanger', 'Hanger Galak']];
   let host = null, root = null, body = null, ready = null, mounted = false;
   let best = 0, G = null, R = null, phase = 'intro', sel = [], msg = '', last = null, starters = [], rewards = [], shop = [], modal = null, fx = null, shake = false;
-  let sendState = '', sendErr = '', means = {}, achOwned = [], achTotals = {}, achNew = [], deckOpts = [], toastTimer = null;
+  let anim = null, sendState = '', sendErr = '', means = {}, achOwned = [], achTotals = {}, achNew = [], deckOpts = [], toastTimer = null;
   const ACHKEY = 'wr_game_ach';
   const rng = Math.random;
   const store = {
@@ -432,6 +432,18 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 .bq-abc{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}.bq-abc .bq-tile{width:auto;height:46px;font-size:20px}
 .bq-wl .row{cursor:pointer}.bq-wl .row s{text-decoration:none;font-size:11px;font-weight:800;color:var(--accent-text);margin-left:6px}
 .bq-wl .mean{background:var(--card);border-radius:12px;padding:8px 12px;font-size:13px;margin:-2px 0 2px}.bq-wl .mean b{font-family:var(--ui);font-size:14px}
+.bq-bar.cm{align-items:center;gap:8px}.bq-cm{display:flex;align-items:center;gap:5px;font-weight:800}
+.bq-cm b{display:inline-block;min-width:46px;text-align:center;border-radius:10px;padding:3px 8px;font:800 17px var(--display);color:#fff;transition:transform .12s}
+.bq-cm .c{background:#2f7fd1}.bq-cm .m{background:#e0475f}.bq-cm .x{color:var(--muted)}
+.bq-cm b.pulse{transform:scale(1.25)}.bq-cm .tot{background:none;color:var(--text);min-width:0;padding:0 2px}
+.bq-cm .tot.rain{background:linear-gradient(90deg,#ff6b6b,#ffd23f,#7ee0b5,#4fa3ff,#c08bff);-webkit-background-clip:text;background-clip:text;color:transparent;animation:bq-pop .4s}
+.bq-sc{margin-left:auto;text-align:right;font-size:11.5px;line-height:1.25;color:var(--muted)}.bq-sc b{color:var(--text)}
+.bq-speed{border:0;background:var(--card-2);color:var(--text);border-radius:999px;height:30px;padding:0 9px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;flex:none}
+.bq-tile.hit{transform:translateY(-6px) scale(1.08);box-shadow:0 0 0 3px var(--yellow)}.bq-slot.hit{animation:bq-sh .3s;box-shadow:0 0 0 2px var(--yellow)}
+.bq-fly{position:absolute;left:50%;top:-6px;transform:translateX(-50%);font:800 13px var(--ui);color:#fff;background:#2f7fd1;border-radius:8px;padding:1px 6px;pointer-events:none;white-space:nowrap;animation:bq-fly .6s forwards;z-index:3}
+.bq-fly.m{background:#e0475f}.bq-fly.l{left:0;top:-22px;animation-name:bq-flyl}@keyframes bq-flyl{from{opacity:0;transform:translateY(6px)}25%{opacity:1}to{opacity:0;transform:translateY(-14px)}}@keyframes bq-fly{from{opacity:0;transform:translate(-50%,6px)}25%{opacity:1}to{opacity:0;transform:translate(-50%,-26px)}}
+.bq-spark{position:absolute;width:7px;height:7px;border-radius:2px;pointer-events:none;animation:bq-spark .55s forwards}@keyframes bq-spark{to{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(160deg)}}
+.bq-tile i.af{position:absolute;left:3px;top:1px;font:800 9px var(--ui);font-style:normal;color:#e0475f}
 .bq-arti{border:0;background:var(--card-2);color:var(--text);border-radius:999px;font:inherit;font-size:12px;font-weight:800;padding:3px 9px;margin-right:6px;cursor:pointer;vertical-align:middle}
 .bq-mean{font-size:15px;display:flex;flex-direction:column;gap:4px;margin-top:6px}.bq-mean b{font-size:18px}
 .bq-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -552,7 +564,8 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   const Sfx = (function () {
     const KEYS = 'wr_game_sfx'; let on = store.get(KEYS) !== '0', lastPlayed = '';
     const SOUNDS = {
-      tick(t) { tone(sfxOut, 1400, t, 0.04, 'sine', 0.12); },
+      tick(t, k) { tone(sfxOut, 1400 * Math.pow(1.06, k || 0), t, 0.05, 'sine', 0.13); },
+      ding(t, k) { tone(sfxOut, hz(79 + 2 * (k || 0)), t, 0.25, 'triangle', 0.4); tone(sfxOut, hz(91 + 2 * (k || 0)), t + 0.03, 0.2, 'sine', 0.15); },
       attack(t) { noise(sfxOut, t, 0.22, 0.5, 600, 3000); tone(sfxOut, 160, t + 0.18, 0.25, 'sine', 0.9, 55); },
       coin(t) { tone(sfxOut, 1319, t, 0.12, 'square', 0.12); tone(sfxOut, 1760, t + 0.07, 0.35, 'sine', 0.5); tone(sfxOut, 2637, t + 0.07, 0.25, 'sine', 0.15); },
       win(t) { [72, 76, 79, 84].forEach((m, i) => tone(sfxOut, hz(m), t + i * 0.09, 0.35, 'triangle', 0.5)); },
@@ -561,10 +574,10 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       over(t) { [67, 64, 60, 55].forEach((m, i) => tone(sfxOut, hz(m), t + i * 0.18, 0.4, 'triangle', 0.45)); },
       unlock(t) { [79, 84, 88, 91].forEach((m, i) => tone(sfxOut, hz(m), t + i * 0.07, 0.3, 'sine', 0.4)); SOUNDS.coin(t + 0.3); }
     };
-    function play(name) {
+    function play(name, k) {
       lastPlayed = name;
       if (!on || document.hidden || (root && root.hidden)) return;
-      try { if (!audio()) return; ac.resume(); SOUNDS[name](ac.currentTime + 0.01); } catch (e) { /* no audio */ }
+      try { if (!audio()) return; ac.resume(); SOUNDS[name](ac.currentTime + 0.01, k); } catch (e) { /* no audio */ }
     }
     function toggle() { on = !on; store.set(KEYS, on ? '1' : '0'); if (on) play('coin'); }
     return { play, toggle, get on() { return on; }, get last() { return lastPlayed; } };
@@ -648,32 +661,43 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     return sel.length ? 'thinking' : 'idle';
   }
   function arenaHtml() {
-    const en = enemyInfo(), left = Math.max(0, R.target - R.score), pct = left / R.target * 100, f = fx; fx = null;
+    const en = enemyInfo(), left = Math.max(0, R.target - (anim ? anim.before : R.score)), pct = left / R.target * 100, f = fx; fx = null;
     const say = f && f.say ? `<div class="bq-say">${f.say}</div>` : '';
     const art = `<img src="${en.img}" alt="">`;
     return `<div class="bq-arena">${say}${f ? `<div class="bq-dmg">-${f.dmg}</div>` : ''}
       <div class="bq-fig"><div class="bq-img ${f ? 'bq-atk' : ''}"><img src="img/game/bibo-${pose()}.webp" alt="Bibo"></div><div class="bq-name">Bibo</div></div><div class="bq-vs">VS</div>
-      <div class="bq-fig"><div class="bq-img ${f ? 'bq-ehit' : ''} ${R.cleared ? 'bq-dead' : ''}">${art}</div><div class="bq-hp"><i style="width:${pct}%"></i></div><div class="bq-name">${en.n} · ${left}/${R.target}</div></div></div>`;
+      <div class="bq-fig"><div class="bq-img ${f ? 'bq-ehit' : ''} ${R.cleared && !anim ? 'bq-dead' : ''}">${art}</div><div class="bq-hp"><i style="width:${pct}%"></i></div><div class="bq-name">${en.n} · ${left}/${R.target}</div></div></div>`;
+  }
+  const fmtM = m => String(Math.round(m * 100) / 100).replace('.', ',');
+  function cmHtml(cm, shown) {
+    return `<div class="bq-bar cm"><span class="bq-cm"><b class="c" id="bq-c">${cm ? cm.c : 0}</b><span class="x">×</span><b class="m" id="bq-m">${cm ? fmtM(cm.m) : 0}</b>${cm && cm.t !== undefined ? `<span class="x">=</span><b class="tot" id="bq-t">${cm.t}</b>` : '<b class="tot" id="bq-t"></b>'}</span>
+      <span class="bq-sc">Skor ronde <b>${shown}</b><br>Target <b>${R.target}</b></span></div>`;
   }
   function roundHtml() {
-    let pv = '';
-    if (sel.length) {
+    let pv = '', cm = null;
+    const shown = anim ? anim.before : R.score;
+    if (anim) {
+      cm = { c: 0, m: 1 };
+      pv = `<div class="bq-pl"><b>${anim.res.word.toUpperCase()}</b> · menghitung… <span class="bq-mut">(ketuk untuk lewati)</span></div>`;
+    } else if (sel.length) {
       const w = sel.map(E.txt).join('');
       if (w.length >= 3 && E.isWord(w)) {
         const s = E.score(sel, G.fabrics, { first: !R.firstDone, chain: R.chain, lv: G.handLv, inLemari: inLemari(w) }, R.boss, () => 1);
+        cm = { c: s.subtotal, m: s.mult, t: s.final };
         pv = `<div class="bq-pl"><button type="button" class="bq-arti" data-a="artiSel">📖 Arti</button><b>${w.toUpperCase()}</b> · ${s.letters} + ${s.lenBonus} panjang → <b>${s.final}</b> poin</div><div class="bq-chips">${chipsOf(Object.assign({}, s, { jackpot: undefined }))}${G.fabrics.includes('jackpot') ? '<span class="bq-chip">🎰 bisa ×2</span>' : ''}</div>`;
       } else pv = `<div class="bq-pl">${w.length < 3 ? 'Pilih minimal 3 huruf untuk kata, atau langsung Buang' : '<b>' + w.toUpperCase() + '</b> belum jadi kata valid (boleh Buang huruf ini)'}</div>`;
     } else pv = '<div class="bq-pl">Ketuk huruf: susun kata untuk menyerang, atau buang huruf yang tidak berguna.</div>';
     const selIds = new Set(sel.map(t => t.id));
-    const head = `<div class="bq-top"><div class="t"><b>${label()}</b></div>${soundHtml()}<span class="bq-coin">🪙 ${G.coins}</span></div>${arenaHtml()}
-      <div class="bq-bar"><span>Skor ronde <b>${R.score}</b></span><span>Target <b>${R.target}</b></span></div>
+    const head = `<div class="bq-top"><div class="t"><b>${label()}</b></div><button type="button" class="bq-speed" data-a="speed" aria-label="Kecepatan hitung skor">${['⚡', '1×', '2×'][speed()]}</button>${soundHtml()}<span class="bq-coin">🪙 ${G.coins}</span></div>${arenaHtml()}
+      ${cmHtml(cm, shown)}
       ${R.boss ? `<div class="bq-boss"><b>${R.boss.name}:</b> ${R.boss.desc}${R.boss.block ? ' Terkunci: <b>' + R.boss.block.toUpperCase() + '</b>' : ''}</div>` : ''}`;
     const lastHtml = last && last.res ? `<div class="bq-last bq-pop">Terakhir: <b>${last.res.word.toUpperCase()} -${last.res.final}</b> <button type="button" class="bq-arti" data-a="arti" data-i="${last.res.word}">📖 Arti</button> <span class="bq-mut"></span>${last.res.recycled ? ` ♻️ ${last.res.recycled.toUpperCase()}` : ''}${last.res.extraDraw ? ' 🔄 +1' : ''}<div class="bq-chips">${chipsOf(last.res)}</div></div>` : '';
-    if (!sel.length && lastHtml) pv = lastHtml;
-    if (R.cleared) return head + `<div class="bq-center bq-pop"><h2>${enemyInfo().n} kalah! 🎉</h2><div class="bq-mut">+${last.fin.coins} koin${last.fin.saver ? ` (+${last.fin.saver} Saver)` : ''}</div><button type="button" class="bq-btn pri" style="width:100%;margin-top:10px" data-a="goNext">Ambil hadiah</button></div>`;
+    if (!sel.length && lastHtml && !anim) pv = lastHtml;
+    if (R.cleared && !anim) return head + `<div class="bq-center bq-pop"><h2>${enemyInfo().n} kalah! 🎉</h2><div class="bq-mut">+${last.fin.coins} koin${last.fin.saver ? ` (+${last.fin.saver} Saver)` : ''}</div><button type="button" class="bq-btn pri" style="width:100%;margin-top:10px" data-a="goNext">Ambil hadiah</button></div>`;
     return head + slotsHtml() + `
       <div class="bq-info"><span>📦 Supply ${R.supply.length}</span><span>🗑️ Buang ${R.discards}/${R.maxDiscards}</span><span>📝 ${R.words} kata</span>${R.chain > 0 && G.fabrics.includes('chain') ? `<span>⛓️ chain ${R.chain}</span>` : ''}</div>
-      <div class="bq-prev"><div class="bq-sel">${sel.map((t, i) => tileHtml(t, '', `data-a="unsel" data-i="${i}"`)).join('')}</div>${pv}</div>
+      <div class="bq-prev"><div class="bq-sel">${(anim ? anim.tiles : sel).map((t, i, a) => { const k = E.kindOf(t.ch), af = (k === 'pre' && i === 0) || (k === 'suf' && i === a.length - 1);
+        return tileHtml(t, '', anim ? '' : `data-a="unsel" data-i="${i}"`).replace('</button>', af ? '<i class="af">×1,5</i></button>' : '</button>'); }).join('')}</div>${pv}</div>
       <div class="bq-msg" role="status">${msg}</div>
       <div class="bq-hand" style="--bq-n:${R.handSize <= 9 ? R.handSize : Math.ceil(R.handSize / 2)}">${R.hand.map(t => { const lk = E.blocked(R, t), us = selIds.has(t.id); return tileHtml(t, lk ? 'lock' : us ? 'used' : '', lk ? 'disabled' : `data-a="pick" data-i="${t.id}"`); }).join('')}</div>
       <div class="bq-btns"><button type="button" class="bq-btn" data-a="clr" ${sel.length ? '' : 'disabled'}>Hapus</button><button type="button" class="bq-btn mint" data-a="discard" ${sel.length && E.canDiscard(R) ? '' : 'disabled'}>🗑️ Buang${sel.length ? ' ' + sel.length : ''}</button><button type="button" class="bq-btn pri" data-a="send" ${sel.length >= 3 ? '' : 'disabled'}>⚔️ Serang</button></div>
@@ -835,6 +859,89 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     else if (o.type === 'book') { G.handLv = G.handLv || { o: 1, n: 1, v: 1, a: 1, r: 1 }; G.handLv[o.pos] = E.lvOf(G, o.pos) + 1; after(); }
     else if (o.type === 'fabric') { if (G.fabrics.length < E.CFG.slots) { G.fabrics.push(o.id); after(); } else { modal = { t: 'replace', id: o.id, after: after }; render(); } }
   }
+  /* Balatro-style scoring: each card adds its chips, then the length bonus, the hand and every Fabric fire one by one,
+     then Chips × Mult becomes the attack. The numbers come from the engine's result, so the total always equals res.final.
+     Tap to skip; speed 1× / 2× / instant (⚡); instant when the phone asks for reduced motion. */
+  const SPEEDKEY = 'wr_game_speed';
+  function speed() {
+    const v = store.get(SPEEDKEY);
+    if (v === null && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 0;
+    return v === null ? 1 : (+v || 0) % 3;
+  }
+  function scoreSteps(res, tiles) {
+    const st = [];
+    tiles.forEach((t, i) => {
+      st.push({ c: res.lv[i], tile: i });
+      const k = E.kindOf(t.ch);
+      if ((k === 'pre' && i === 0) || (k === 'suf' && i === tiles.length - 1)) st.push({ m: 1.5, tile: i, label: '×1,5' });
+    });
+    if (res.lenBonus) st.push({ c: res.lenBonus, label: '+' + res.lenBonus + ' panjang' });
+    if (res.hand) st.push({ c: res.hand.base, m: res.hand.mult, label: res.hand.icon + ' ' + res.hand.name, big: true });
+    res.adds.forEach(a => st.push({ c: a.v, slot: a.id, label: '+' + a.v, big: true }));
+    res.mults.forEach(x => st.push({ m: x.v, slot: x.id, label: '×' + fmtM(x.v), big: true }));
+    if (res.bossHalf) st.push({ m: 0.5, label: 'Boss ×0,5', big: true });
+    if (res.jackpot) st.push({ m: 2, slot: 'jackpot', label: 'JACKPOT ×2', big: true });
+    return st;
+  }
+  function pop(el, text, mult) {
+    if (!el) return;
+    const f = document.createElement('span'); f.className = 'bq-fly' + (mult ? ' m' : '') + (el.id === 'bq-c' || el.id === 'bq-m' ? ' l' : ''); f.textContent = text;
+    if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    el.appendChild(f); setTimeout(() => f.remove(), 650);
+  }
+  function sparks(el) {
+    if (!el) return;
+    const cols = ['#ffd23f', '#ff8fb1', '#7ee0b5', '#4fa3ff', '#c08bff'];
+    el.parentNode.style.position = 'relative';
+    for (let i = 0; i < 7; i++) {
+      const p = document.createElement('span'); p.className = 'bq-spark';
+      p.style.background = cols[i % cols.length]; p.style.left = (el.offsetLeft + el.offsetWidth / 2) + 'px'; p.style.top = (el.offsetTop + el.offsetHeight / 2) + 'px';
+      p.style.setProperty('--dx', Math.round(Math.cos(i) * 34) + 'px'); p.style.setProperty('--dy', Math.round(Math.sin(i * 1.7) * 26) + 'px');
+      el.parentNode.appendChild(p); setTimeout(() => p.remove(), 600);
+    }
+  }
+  function playScore(tiles, res, before, done) {
+    const sp = speed();
+    anim = { tiles, res, before, chips: 0, mult: 1, timers: [], done };
+    if (!sp) { finishScore(); return; }
+    render();
+    const unit = sp === 2 ? 0.5 : 1, steps = scoreSteps(res, tiles);
+    let at = 120 * unit, k = 0;
+    steps.forEach((s0, idx) => {
+      anim.timers.push(setTimeout(() => {
+        if (!anim) return;
+        if (s0.c) anim.chips += s0.c;
+        if (s0.m) anim.mult *= s0.m;
+        const ce = body.querySelector('#bq-c'), me = body.querySelector('#bq-m');
+        if (ce) ce.textContent = anim.chips;
+        if (me) me.textContent = fmtM(anim.mult);
+        const box = s0.m ? me : ce;
+        if (box) { box.classList.add('pulse'); setTimeout(() => box.classList.remove('pulse'), 120); }
+        if (s0.tile !== undefined) {
+          const te = body.querySelectorAll('.bq-sel .bq-tile')[s0.tile];
+          if (te) { te.classList.add('hit'); pop(te, s0.label || '+' + s0.c, !!s0.m); }
+          Sfx.play('tick', k++);
+        } else {
+          const se = s0.slot ? body.querySelector('.bq-slot[data-i="' + s0.slot + '"]') : null;
+          if (se) { se.classList.remove('hit'); void se.offsetWidth; se.classList.add('hit'); }
+          pop(se || box, s0.label, !!s0.m); if (s0.m) sparks(me);
+          Sfx.play('ding', k++);
+        }
+      }, at));
+      at += (s0.big ? 380 : s0.tile !== undefined ? 170 : 260) * unit;
+    });
+    anim.timers.push(setTimeout(() => {
+      if (!anim) return;
+      const te = body.querySelector('#bq-t');
+      if (te) { te.textContent = '= ' + res.final; te.classList.add('rain'); }
+    }, at));
+    anim.timers.push(setTimeout(finishScore, at + 520 * unit));
+  }
+  function finishScore() {
+    if (!anim) return;
+    const a = anim; a.timers.forEach(clearTimeout); anim = null; a.done();
+  }
+
   function beginRound() { R = E.makeRound(G, rng); sel = []; msg = ''; last = null; phase = R.boss ? 'bosspre' : 'round'; render(); }
   function advance() { if (isBoss()) { G.stage++; G.rnd = 0; checkAch(); shop = E.shopItems(G, rng); phase = 'shop'; render(); } else { G.rnd++; beginRound(); } }
   const A = {
@@ -853,7 +960,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     giveUp() { modal = { t: 'giveup' }; render(); },
     giveUpYes() { modal = null; endRun(); },
     sfx() { Sfx.toggle(); render(); },
-    resume() { const s = load(); if (s) { restore(s); render(); } else A.start(); },
+    resume() { const s = load(); if (!s) { A.start(); return; } restore(s); if (phase === 'round' && R && !R.cleared && E.failed(G, R)) { endRun(); return; } render(); },
     pickStarter(i) { G.fabrics = [starters[+i]]; beginRound(); },
     faceBoss() { phase = 'round'; render(); },
     pick(id) {
@@ -877,17 +984,23 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     },
     artiSel() { A.arti(sel.map(E.txt).join('')); },
     send() {
-      const w = sel.map(E.txt).join('');
+      if (anim) return;
+      const w = sel.map(E.txt).join(''), played = sel.map(t => Object.assign({}, t)), before = R.score;
       const r = E.submit(G, R, sel, rng, { inLemari: inLemari(w) });
       if (!r.ok) { msg = r.msg; shake = true; Sfx.play('bad'); render(); return; }
-      Sfx.play('attack');
-      const f = r.res.final;
-      fx = { dmg: f, say: r.res.jackpot ? 'JACKPOT!' : f >= R.target * 0.35 ? 'Mantap!' : r.res.word.length >= 6 ? 'Panjang!' : '' };
       last = { res: r.res }; sel = []; msg = '';
-      if (r.won) { last.fin = E.finishRound(G, R); rewards = E.rewardOptions(G, rng); R.cleared = true; setTimeout(() => Sfx.play('win'), 380); }
-      else if (E.failed(G, R)) { endRun(); return; }
-      checkAch(); render();
+      const lost = !r.won && E.failed(G, R);
+      if (r.won) { last.fin = E.finishRound(G, R); rewards = E.rewardOptions(G, rng); R.cleared = true; }
+      playScore(played, r.res, before, () => {
+        const f = r.res.final;
+        Sfx.play('attack');
+        fx = { dmg: f, say: r.res.jackpot ? 'JACKPOT!' : f >= R.target * 0.35 ? 'Mantap!' : r.res.word.length >= 6 ? 'Panjang!' : '' };
+        if (r.won) setTimeout(() => Sfx.play('win'), 380);
+        if (lost) { endRun(); return; }
+        checkAch(); render();
+      });
     },
+    speed() { store.set(SPEEDKEY, String((speed() + 1) % 3)); render(); },
     discard() { sel.forEach(t => delete t.as); if (!E.discard(G, R, sel.slice())) return; Sfx.play('discard'); const n = sel.length; sel = []; msg = 'Buang ' + n + ' huruf, ambil dari supply.'; if (E.failed(G, R)) { endRun(); return; } render(); },
     goNext() { phase = 'reward'; Sfx.play('coin'); render(); },
     takeReward(i) { if (rewards[+i] && rewards[+i].type === 'coin') Sfx.play('coin'); gain(rewards[+i], advance); },
@@ -914,11 +1027,13 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   };
   function onClick(ev) {
     if (!root.hidden && !document.hidden) Music.start();
+    if (anim) { finishScore(); return; }
     const t = ev.target.closest ? ev.target.closest('[data-a]') : null;
     if (!t || !body.contains(t)) return;
     const fn = A[t.getAttribute('data-a')]; if (fn) fn(t.getAttribute('data-i'));
   }
   function onKey(ev) {
+    if (anim) return;
     if (!root || root.hidden || phase !== 'round' || modal || !R || R.cleared) return;
     if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
     if (ev.key === 'Enter') { if (sel.length >= 3) { ev.preventDefault(); A.send(); } }
