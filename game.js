@@ -9,8 +9,8 @@ const Engine = (function () {
   const BAG = { e: 12, a: 9, i: 9, o: 8, n: 6, r: 6, t: 6, l: 4, s: 4, u: 4, d: 4, g: 3, b: 2, c: 2, m: 2, p: 2, f: 2, h: 2, v: 2, w: 2, y: 2, k: 1, j: 1, x: 1, q: 1, z: 1 };
   const CFG = {
     hand: 8, supply: 32, slots: 5, maxWord: 12, discards: 3, letterMul: 3, lenMul: 3, addMul: 3,
-    base: 350, growth: 1.9, ramp: 0.08, roundMul: [1, 1.3, 1.4], // endless: target = base * growth^stage * (1 + ramp*stage) * roundMul
-    coinRound: 3, price: { fabric: 6, gold: 4, ruby: 5, glass: 7, steel: 6, supply: 3, letter: 4, reroll: 2, book: 5, multi: 5, wild: 8 }, supplyPack: 3, handMaxBuys: 4
+    base: 450, growth: 1.75, ramp: 0.08, roundMul: [1, 1.3, 1.4], // endless: target = base * growth^stage * (1 + ramp*stage) * roundMul
+    coinRound: 3, price: { fabric: 6, gold: 4, ruby: 5, glass: 7, steel: 6, dbl: 7, supply: 3, letter: 4, reroll: 2, book: 5, multi: 5, wild: 8 }, supplyPack: 3, handMaxBuys: 4
   };
   /* Fabrics fire LEFT TO RIGHT in slot order (Balatro jokers): 'chips' = +Chips (blue), 'add' = +Mult (red), 'x' = xMult. */
   const FABRICS = [
@@ -31,7 +31,11 @@ const Engine = (function () {
     { id: 'patch', name: 'Patchwork', icon: '🧩', desc: '×2 Mult untuk kata dengan 3+ vokal berbeda.', kind: 'x' },
     { id: 'measure', name: 'Measuring Tape', icon: '📏', desc: '+30 Chips untuk kata 5+ huruf.', kind: 'chips', locked: true },
     { id: 'steady', name: 'Steady Hand', icon: '🤲', desc: '+2 koin tiap ronde yang dimenangkan tanpa Buang.', kind: 'util', locked: true },
-    { id: 'lemariku', name: 'Lemariku', icon: '🚪', desc: '×2 Mult untuk kata yang sudah ada di Lemarimu.', kind: 'x', locked: true }
+    { id: 'lemariku', name: 'Lemariku', icon: '🚪', desc: '×2 Mult untuk kata yang sudah ada di Lemarimu.', kind: 'x', locked: true },
+    // Tahap B (owner 25 Nov): retrigger + copy, Balatro's Mime / Blueprint / Brainstorm
+    { id: 'twin', name: 'Jarum Kembar', icon: '🪢', desc: 'Kartu di tangan terpicu 2×: tiap kartu Besi memberi ×1,25 dua kali.', kind: 'rt' },
+    { id: 'pola', name: 'Pola Salin', icon: '📐', desc: 'Menyalin efek Fabric tepat di KANANNYA (geser urutan di popup Fabric).', kind: 'copy' },
+    { id: 'cermin', name: 'Cermin', icon: '🪞', desc: 'Menyalin efek Fabric PALING KIRI.', kind: 'copy' }
   ];
   // a locked Fabric shows up in starters, rewards and the shop only after its achievement (G.unlocked)
   const avail = (G, f) => !f.locked || (G.unlocked || []).includes(f.id);
@@ -56,7 +60,8 @@ const Engine = (function () {
   const HAND_STEP = [10, 1];
   /* Card upgrades (Balatro enhancements): Gold +30 Chips, Rubi +4 Mult, Glass x1.5 Mult (when played); Besi x1.25 Mult while it stays in the hand. */
   const UPS = { gold: { name: 'Gold', icon: '🥇', desc: '+30 Chips saat dimainkan.' }, ruby: { name: 'Rubi', icon: '❤️', desc: '+4 Mult saat dimainkan.' },
-    glass: { name: 'Glass', icon: '🔮', desc: '×1,5 Mult saat dimainkan.' }, steel: { name: 'Besi', icon: '🔩', desc: '×1,25 Mult selama tetap di tangan (tidak dimainkan).' } };
+    glass: { name: 'Glass', icon: '🔮', desc: '×1,5 Mult saat dimainkan.' }, steel: { name: 'Besi', icon: '🔩', desc: '×1,25 Mult selama tetap di tangan (tidak dimainkan).' },
+    dbl: { name: 'Jahitan Ganda', icon: '🔁', desc: 'Kartu ini terpicu 2× saat dimainkan (nilai huruf + bonus imbuhan dihitung dua kali).' } };
   const AFFIX_ADD = 3;
   /* Multi-letter cards (Paperback) and the wild card. Affixes in the right place (prefix first, suffix last) give x1.5 each. */
   const PRE = ['un', 're', 'dis'], SUF = ['ly', 'ing', 'ed', 'er', 'est', 'ful', 'ness', 'ous', 'able', 'ive', 'less', 'ment', 'tion'], PAIRS = ['th', 'ch', 'sh', 'qu', 'ck'];
@@ -108,17 +113,22 @@ const Engine = (function () {
     if (boss && boss.id === 'short' && n > 5) lenBonus = 0;
     if (lenBonus) step({ c: lenBonus, label: '+' + lenBonus + ' panjang' });
     const lv = tiles.map(t => val(t)), affix = [];
-    tiles.forEach((t, i) => {
-      step({ c: lv[i], tile: i });
+    tiles.forEach((t, i) => { for (let rep2 = 0; rep2 < (t.up === 'dbl' ? 2 : 1); rep2++) {   // Jahitan Ganda: the card fires twice
+      step(rep2 ? { c: lv[i], tile: i, label: '🔁 +' + lv[i] } : { c: lv[i], tile: i });
       if (t.up === 'gold') step({ c: 30, tile: i, label: '+30' });
       if (t.up === 'ruby') step({ m: 4, tile: i, label: '+4 Mult' });
       if (t.up === 'glass') step({ x: 1.5, tile: i, label: '×1,5' });
       const k = kindOf(t.ch);
       if ((k === 'pre' && i === 0) || (k === 'suf' && i === tiles.length - 1)) { affix.push(t.ch); step({ m: AFFIX_ADD, tile: i, label: '+' + AFFIX_ADD + ' Mult' }); }
-    });
-    (ctx.held || []).forEach(t => { if (t.up === 'steel') step({ x: 1.25, held: t.id, label: '×1,25' }); });
+    } });
+    const heldTimes = has('twin') ? 2 : 1;   // Jarum Kembar retriggers the held cards
+    (ctx.held || []).forEach(t => { if (t.up === 'steel') for (let k = 0; k < heldTimes; k++) step({ x: 1.25, held: t.id, label: k ? '🔁 ×1,25' : '×1,25' }); });
     const k5 = (ctx.chain || 0) + 1;
-    fab.forEach(id => {
+    // one Fabric's scoring effect (null = nothing); Pola Salin / Cermin copy another Fabric's effect (depth guard against copy loops)
+    const eff = (id, at, depth) => {
+      if (depth > 3 || id == null) return null;
+      if (id === 'pola') return eff(fab[at + 1], at + 1, depth + 1);
+      if (id === 'cermin') return at === 0 ? null : eff(fab[0], 0, depth + 1);
       let o = null;
       if (id === 'long' && n >= 6) o = { m: 6 };
       else if (id === 'double' && rep) o = { c: 45 };
@@ -134,11 +144,15 @@ const Engine = (function () {
       else if (id === 'patch' && new Set(vow).size >= 3) o = { x: 2 };
       else if (id === 'measure' && n >= 5) o = { c: 30 };
       else if (id === 'lemariku' && ctx.inLemari) o = { x: 2 };
+      return o ? Object.assign(o, { src: id }) : null;
+    };
+    fab.forEach((id, at) => {
+      const o = eff(id, at, 0);
       if (o) step(Object.assign(o, { slot: id, label: o.c ? '+' + o.c : o.m ? '+' + o.m + ' Mult' : '×' + String(o.x).replace('.', ',') }));
     });
     const bossHalf = !!(boss && ((boss.id === 'repeater' && !rep) || (boss.id === 'minimal' && n < 5)));
     if (bossHalf) step({ x: 0.5, label: 'Boss ×0,5', boss: true });
-    const jackpot = has('jackpot') ? steps.some(x => x.slot === 'jackpot') : null;
+    const jackpot = has('jackpot') ? steps.some(x => x.src === 'jackpot') : null;
     const letters = lv.reduce((a, b) => a + b, 0);
     return { word: w, lv, letters, lenBonus, hand, affix, bossHalf, jackpot, steps, chips, mult, subtotal: chips, final: Math.round(chips * mult) };
   }
@@ -353,7 +367,7 @@ const Engine = (function () {
     if (!opts.some(o => ['up', 'multi', 'wild', 'book', 'letter'].includes(o.type))) opts[2] = rng() < 0.5 ? upItem(rng) : multiItem(rng);   // a card upgrade is always on offer
     return opts;
   }
-  const upItem = rng => ({ type: 'up', kind: ['gold', 'ruby', 'glass', 'steel'][Math.floor(rng() * 4)], ch: randLetter(rng) });
+  const upItem = rng => ({ type: 'up', kind: ['gold', 'ruby', 'glass', 'steel', 'dbl'][Math.floor(rng() * 5)], ch: randLetter(rng) });
   const priced = o => Object.assign(o, { price: CFG.price[o.type === 'up' ? o.kind : o.type] });
   // card section: 2 Gold/Glass letters, 1 letter, 2 multi-letter (or wild) cards, 1 grammar book
   function shopCards(G, rng) {
@@ -419,8 +433,8 @@ const UI = (function () {
 .bq-name{font-size:12px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bq-goal{height:11px;background:var(--card-2);border-radius:999px;overflow:hidden;margin:4px 0 0}.bq-goal i{display:block;height:100%;background:linear-gradient(90deg,#4fa3ff,#7ee0b5);transition:width .5s}.bq-goal.over i{background:linear-gradient(90deg,#ff6b6b,#ffd23f,#7ee0b5,#4fa3ff,#c08bff)}
 .bq-gt{font-size:11.5px;font-weight:800;color:var(--muted)}
-.bq-k{font-size:10.5px;font-weight:800;border-radius:6px;padding:1px 5px;background:var(--card-2);color:var(--muted);vertical-align:middle}.bq-k.c{background:#2f7fd1;color:#fff}.bq-k.m{background:#e0475f;color:#fff}.bq-k.x{background:#8a2be2;color:#fff}
-.bq-tile.ruby{background:linear-gradient(135deg,#ffb3c0,#ff5f7e);box-shadow:0 3px 0 #b8324f}.bq-tile.steel{background:linear-gradient(135deg,#e3e7ee,#9aa4b2);box-shadow:0 3px 0 #626b78}
+.bq-k{font-size:10.5px;font-weight:800;border-radius:6px;padding:1px 5px;background:var(--card-2);color:var(--muted);vertical-align:middle}.bq-k.c{background:#2f7fd1;color:#fff}.bq-k.m{background:#e0475f;color:#fff}.bq-k.x{background:#8a2be2;color:#fff}.bq-k.u{background:#1f9d6b;color:#fff}
+.bq-tile.ruby{background:linear-gradient(135deg,#ffb3c0,#ff5f7e);box-shadow:0 3px 0 #b8324f}.bq-tile.steel{background:linear-gradient(135deg,#e3e7ee,#9aa4b2);box-shadow:0 3px 0 #626b78}.bq-tile.dbl{background:linear-gradient(135deg,#c9f5dc,#5fcf98);box-shadow:0 3px 0 #2c8a5c;outline:2px dashed rgba(255,255,255,.8);outline-offset:-5px}
 .bq-hp{height:11px;background:var(--card-2);border-radius:999px;overflow:hidden;margin:4px 0 0}.bq-hp i{display:block;height:100%;background:linear-gradient(90deg,#ff6b6b,#ff9a6b);transition:width .5s}
 .bq-vs{align-self:center;font:800 18px var(--display);color:var(--line)}
 .bq-atk{animation:bq-atk .5s}@keyframes bq-atk{35%{transform:translateX(64px) rotate(6deg)}}
@@ -503,12 +517,12 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 .bq-r .bq-boss{padding:6px 10px;font-size:12px;line-height:1.3}
 .bq-r .bq-slot{min-height:40px;font-size:9.5px;border-radius:10px}.bq-r .bq-slot .ic{font-size:16px}
 .bq-r .bq-info{flex-wrap:nowrap;overflow:hidden;font-size:11.5px}.bq-r .bq-info span{padding:3px 8px;white-space:nowrap}
-.bq-r .bq-prev{min-height:84px;max-height:118px;padding:8px 10px;overflow:hidden}
+.bq-r .bq-prev{min-height:84px;max-height:118px;padding:8px 10px;overflow:hidden}.bq-r .bq-prev .bq-chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.bq-r .bq-prev .bq-chips::-webkit-scrollbar{display:none}.bq-r .bq-prev .bq-chip{flex:none}
 .bq-r .bq-sel{min-height:38px;margin-bottom:4px;flex-wrap:nowrap;gap:4px}.bq-r .bq-sel .bq-tile{width:32px;height:38px;font-size:17px}
 .bq-r .bq-last{background:none;padding:0;border-radius:0}
 .bq-r .bq-msg{min-height:16px;font-size:12px;line-height:16px;margin:-2px 0}
 .bq-r .bq-hand{display:grid;grid-template-columns:repeat(var(--bq-n,8),minmax(0,48px));gap:5px;justify-content:center}
-.bq-r .bq-hand .bq-tile{width:auto;height:50px;font-size:22px}
+.bq-r .bq-hand .bq-tile{width:auto;height:50px;font-size:22px}.bq-tile.multi.m3{font-size:14px!important;letter-spacing:-.8px}.bq-tile.multi.m4{font-size:11px!important;letter-spacing:-.8px}
 .bq-r .bq-btn{min-height:46px;min-width:0;padding:0 8px;white-space:nowrap}
 .bq-r .bq-kb{font-size:12px}
 @media(hover:none){.bq-kb{display:none}}
@@ -641,7 +655,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   function chipsOf(s) {
     let h = s.hand ? handChip(s.hand) : '';
     (s.steps || []).forEach(x => {
-      if (x.slot) h += `<span class="bq-chip ${x.x ? 'j' : x.m ? 'm' : 'a'}">${F(x.slot).icon} ${x.label}</span>`;
+      if (x.slot) h += `<span class="bq-chip ${x.x ? 'j' : x.m ? 'm' : 'a'}">${F(x.slot).icon}${x.src && x.src !== x.slot ? '→' + F(x.src).icon : ''} ${x.label}</span>`;
       else if (x.tile !== undefined && x.label) h += `<span class="bq-chip ${x.x ? 'j' : x.m ? 'm' : 'a'}">${x.label}</span>`;
       else if (x.held) h += `<span class="bq-chip j">🔩 ${x.label}</span>`;
       else if (x.boss) h += `<span class="bq-chip j">${x.label}</span>`;
@@ -651,10 +665,10 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   }
 
   const tileHtml = (t, cls, attrs) => { const k = E.kindOf(t.ch), face = k === 'wild' ? (t.as || '?') : t.ch;
-    return `<button type="button" class="bq-tile ${t.up || ''} ${k === 'wild' ? 'wild' : k !== 'letter' ? 'multi' : ''} ${cls || ''}" ${attrs || ''}>${k === 'wild' && t.as ? '<i>?</i>' : ''}${face}<small>${k === 'wild' && !t.as ? '½' : E.val(t)}</small></button>`; };
+    return `<button type="button" class="bq-tile ${t.up || ''} ${k === 'wild' ? 'wild' : k !== 'letter' ? 'multi m' + Math.min(t.ch.length, 4) : ''} ${cls || ''}" ${attrs || ''}>${k === 'wild' && t.as ? '<i>?</i>' : ''}${face}<small>${k === 'wild' && !t.as ? '½' : E.val(t)}</small></button>`; };
   const fmt = n => String(n).replace('.', ',');
   const handChip = h => `<span class="bq-chip h">${h.icon} ${h.name} Lv${h.lv} · ${h.chips} × ${h.mult}</span>`;
-  const KINDTAG = { chips: '<span class="bq-k c">+Chips</span>', add: '<span class="bq-k m">+Mult</span>', x: '<span class="bq-k x">×Mult</span>', util: '<span class="bq-k">Utilitas</span>' };
+  const KINDTAG = { chips: '<span class="bq-k c">+Chips</span>', add: '<span class="bq-k m">+Mult</span>', x: '<span class="bq-k x">×Mult</span>', util: '<span class="bq-k">Utilitas</span>', rt: '<span class="bq-k u">Ulang</span>', copy: '<span class="bq-k u">Salin</span>' };
   const fabricCard = (id, tag) => { const f = F(id); return `<span class="ic">${f.icon}</span><b>${f.name}</b> ${KINDTAG[f.kind] || ''}${tag || ''}<span class="d">${f.desc}</span>`; };
   function optHtml(o) {
     const U = o.ch ? o.ch.toUpperCase() : '';
