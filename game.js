@@ -9,6 +9,7 @@ const Engine = (function () {
   const BAG = { e: 12, a: 9, i: 9, o: 8, n: 6, r: 6, t: 6, l: 4, s: 4, u: 4, d: 4, g: 3, b: 2, c: 2, m: 2, p: 2, f: 2, h: 2, v: 2, w: 2, y: 2, k: 1, j: 1, x: 1, q: 1, z: 1 };
   const CFG = {
     hand: 8, supply: 32, slots: 5, maxWord: 12, discards: 3, letterMul: 3, lenMul: 3, addMul: 3,
+    stages: 8,   // a standard run (owner 25 Nov): 8 stages x (Ronde Kecil, Ronde Besar, Boss) = 24 rounds; beating the stage-8 boss wins, endless may follow
     base: 450, growth: 1.75, ramp: 0.08, roundMul: [1, 1.3, 1.4], // endless: target = base * growth^stage * (1 + ramp*stage) * roundMul
     coinRound: 3, price: { fabric: 6, gold: 4, ruby: 5, glass: 7, steel: 6, dbl: 7, supply: 3, letter: 4, reroll: 2, book: 5, multi: 5, wild: 8 }, supplyPack: 3, handMaxBuys: 4
   };
@@ -227,7 +228,7 @@ const Engine = (function () {
   /* Achievements (owner 23 Nov: hard, so they take many runs). "total" ones add up the runs saved on the server (the server decides them
      when a run is saved); "run" ones are earned inside one run (claimed at once); lemari50 is decided by the server from the saved words. */
   const ACH = [
-    { id: 'boss10', name: 'Penjahit Tangguh', desc: 'Kalahkan 10 boss (total semua run).', total: 'bosses', need: 10, open: ['fabric', 'measure'] },
+    { id: 'boss10', name: 'Penjahit Tangguh', desc: 'Kalahkan 10 boss (total semua run).', total: 'bosses', need: 10, open: ['fabric', 'measure'], also: ['bg', 'weave'] },
     { id: 'noun150', name: 'Kolektor Benda', desc: 'Mainkan 150 noun (total semua run).', total: 'nouns', need: 150, open: ['deck', 'noun'] },
     { id: 'verb100', name: 'Banyak Gerak', desc: 'Mainkan 100 verb (total semua run).', total: 'verbs', need: 100, open: ['deck', 'verb'] },
     { id: 'adj60', name: 'Tukang Warna', desc: 'Mainkan 60 adjective (total semua run).', total: 'adjs', need: 60, open: ['deck', 'adj'] },
@@ -235,27 +236,32 @@ const Engine = (function () {
     { id: 'affix10', name: 'Tukang Imbuhan', desc: 'Mainkan 10 kata dengan prefiks dan sufiks sekaligus (total).', total: 'affix_words', need: 10, open: ['deck', 'wild'] },
     { id: 'giant5', name: 'Kata Raksasa', desc: 'Mainkan 5 kata 10 huruf atau lebih (total).', total: 'giant_words', need: 5, open: ['deck', 'long'] },
     { id: 'minimal5', name: 'Penakluk Minimalist', desc: 'Kalahkan The Minimalist 5 kali (total).', total: 'minimals', need: 5, open: ['deck', 'vowel'] },
-    { id: 'calm', name: 'Tangan Tenang', desc: 'Selesaikan satu stage penuh (2 ronde + boss) tanpa Buang sama sekali.', run: true, open: ['fabric', 'steady'] },
-    { id: 'stage8', name: 'Sampai Stage 8', desc: 'Capai Stage 8 dalam satu run.', run: true, open: ['deck', 'gold'] },
+    { id: 'calm', name: 'Tangan Tenang', desc: 'Selesaikan satu stage penuh (Ronde Kecil, Ronde Besar, Boss) tanpa Buang sama sekali.', run: true, open: ['fabric', 'steady'] },
+    { id: 'champ', name: 'Juara', desc: 'Menangkan satu run: kalahkan boss Stage 8.', run: true, open: ['deck', 'gold'] },
+    { id: 'power50', name: 'Kata Kekuatan', desc: 'Mainkan 50 kata dari Lemarimu di Quest (total semua run).', total: 'lemari_words', need: 50, open: ['bg', 'thread'] },
     { id: 'lemari50', name: 'Pengumpul', desc: 'Simpan 50 kata dari game ke Lemari (total).', total: 'lemari', need: 50, open: ['fabric', 'lemariku'] }
   ];
-  // what an achievement list opens: { fabrics: [...], decks: [...] }
+  // moving backgrounds of the Quest screens: Gelombang is open from the start, the others come from achievements
+  const BGS = [{ id: 'wave', name: 'Gelombang kain', icon: '🌊' }, { id: 'weave', name: 'Anyaman', icon: '🧶' }, { id: 'thread', name: 'Benang', icon: '🪡' }];
+  // owned achievements; the old "Sampai Stage 8" (stage8) counts as Juara so nobody loses Kain Emas
+  const hasAch = (achIds, id) => (achIds || []).includes(id) || (id === 'champ' && (achIds || []).includes('stage8'));
+  // what an achievement list opens: { fabrics: [...], decks: [...], bgs: [...] }
   function opened(achIds) {
-    const o = { fabrics: [], decks: ['base'] };
-    ACH.forEach(a => { if ((achIds || []).includes(a.id)) (a.open[0] === 'deck' ? o.decks : o.fabrics).push(a.open[1]); });
+    const o = { fabrics: [], decks: ['base'], bgs: ['wave'] }, put = w => (w[0] === 'deck' ? o.decks : w[0] === 'bg' ? o.bgs : o.fabrics).push(w[1]);
+    ACH.forEach(a => { if (hasAch(achIds, a.id)) { put(a.open); if (a.also) put(a.also); } });
     return o;
   }
   // "run" achievements earned inside this run
   function earned(G) {
     const out = [];
     if (G.stats.calm) out.push('calm');
-    if (G.stage >= 7) out.push('stage8');
+    if (G.won) out.push('champ');
     return out;
   }
   // this run's counts, sent with the result; the server adds them up for the "total" achievements
   function runCounts(G) {
     const st = G.stats, pc = st.pos || {};
-    return { nouns: pc.n || 0, verbs: pc.v || 0, adjs: pc.a || 0, advs: pc.r || 0, bosses: st.bosses || 0, minimals: st.minimals || 0, affix_words: st.affixWords || 0, giant_words: st.giantWords || 0 };
+    return { nouns: pc.n || 0, verbs: pc.v || 0, adjs: pc.a || 0, advs: pc.r || 0, bosses: st.bosses || 0, minimals: st.minimals || 0, affix_words: st.affixWords || 0, giant_words: st.giantWords || 0, lemari_words: st.lemariWords || 0 };
   }
 
   function newGame(starterId, deckId, unlocked) {
@@ -397,7 +403,7 @@ const Engine = (function () {
   function addUpgrade(G, kind, ch) { G.upgrades.push(mk(ch, kind)); }
   // after restoring a saved run: new tile ids must not collide with the restored ones
   function resumeIds(G, R) { let m = 0; const see = t => { if (t.id > m) m = t.id; }; G.upgrades.forEach(see); if (R) { R.hand.forEach(see); R.supply.forEach(see); } if (m >= UID) UID = m + 1; }
-  return { UPS, HAND_STEP, LEMARI_ADD, DECKS, DECK, ACH, opened, earned, runCounts, avail, val, txt, kindOf, HANDS, MULTI, PRE, SUF, PAIRS, posOf, lvOf, handInfo, spell, V, LB, CFG, FABRICS, FAB, BOSSES, setDict, isWord, rngFrom, shuffle, mk, score, blocked, candidates, tilesFor, best, newGame,
+  return { UPS, HAND_STEP, LEMARI_ADD, BGS, hasAch, DECKS, DECK, ACH, opened, earned, runCounts, avail, val, txt, kindOf, HANDS, MULTI, PRE, SUF, PAIRS, posOf, lvOf, handInfo, spell, V, LB, CFG, FABRICS, FAB, BOSSES, setDict, isWord, rngFrom, shuffle, mk, score, blocked, candidates, tilesFor, best, newGame,
     roundIndex, targetFor, handSize, permItems, makeRound, draw, submit, stuck, failed, discard, canDiscard, finishRound, rewardOptions, shopItems, shopCards, shopFabrics, rerollShop, addUpgrade, resumeIds, randLetter, get ARR() { return ARR; } };
 })();
 
@@ -512,7 +518,6 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 .bq-modal .add{min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--yellow);color:var(--on-accent);font:inherit;font-weight:800;font-size:14px;cursor:pointer;flex:1}.bq-modal .add:disabled{background:var(--card-2);color:var(--muted)}
 .bq-wl .add{min-height:36px;padding:0 12px;border:0;border-radius:999px;background:var(--yellow);color:var(--on-accent);font:inherit;font-weight:800;font-size:13px;cursor:pointer}
 .bq-wl .add:disabled{background:var(--card);color:var(--muted);cursor:default}
-.bq-hero img{height:120px;width:auto}
 /* the round screen fits one phone screen: smaller art, one-line chips, a hand that never wraps */
 .bq-r{gap:8px;--bq-art:100px}
 .bq-r .bq-name{white-space:normal;line-height:1.2}
@@ -533,21 +538,82 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 @media(max-height:740px){.bq-r{--bq-art:84px}}
 @media(max-height:680px){.bq-r{--bq-art:44px;gap:5px}.bq-r .bq-sel{min-height:34px}.bq-r .bq-sel .bq-tile{width:30px;height:34px;font-size:16px}.bq-r .bq-btn{min-height:38px}.bq-r .bq-slot{min-height:32px}.bq-r .bq-giveup{padding:0}.bq-r .bq-bar,.bq-r .bq-boss{font-size:11px}.bq-r .bq-boss{padding:4px 8px}.bq-r .bq-hand .bq-tile{height:40px}.bq-r .bq-prev{min-height:66px}}
 .bq-L,.bq-R{display:contents}
-@media(min-width:600px) and (max-width:1023.98px){.bq-r{--bq-art:150px}.bq-r .bq-hand{grid-template-columns:repeat(var(--bq-n,8),minmax(0,62px));gap:7px}.bq-r .bq-hand .bq-tile{height:64px;font-size:28px}.bq-r .bq-slot{min-height:56px;font-size:12px}.bq-r .bq-slot .ic{font-size:22px}.bq-r .bq-sel .bq-tile{width:40px;height:48px;font-size:21px}.bq-r .bq-btn{min-height:54px;font-size:16px}.bq-r .bq-prev{max-height:140px}.bq-cm b{font-size:21px}.bq-r .bq-info{font-size:13px}}
-@media(min-width:1024px) and (min-height:540px){
-.bq-r{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:20px 28px;align-items:center;align-content:center;min-height:calc(100dvh - 120px);--bq-art:min(220px,26vh)}
-.bq-r .bq-L,.bq-r .bq-R{display:flex;flex-direction:column;gap:12px;min-width:0}
-.bq-r .bq-top .t b{font-size:18px}.bq-r .bq-name{font-size:15px}.bq-r .bq-bar{font-size:14px}.bq-r .bq-boss{font-size:14px;padding:10px 14px}
-.bq-cm b{font-size:24px;min-width:64px;padding:5px 12px}
-.bq-r .bq-slot{min-height:72px;font-size:13px}.bq-r .bq-slot .ic{font-size:26px}
-.bq-r .bq-info{font-size:14px}
-.bq-r .bq-prev{min-height:130px;max-height:none;padding:12px 14px}.bq-r .bq-sel{min-height:56px}.bq-r .bq-sel .bq-tile{width:46px;height:54px;font-size:24px}.bq-r .bq-pl{font-size:16px}.bq-r .bq-chip{font-size:13px}
-.bq-r .bq-hand{grid-template-columns:repeat(var(--bq-n,8),minmax(0,70px));gap:9px}.bq-r .bq-hand .bq-tile{height:76px;font-size:34px}.bq-r .bq-hand .bq-tile small{font-size:13px}
-.bq-tile.multi.m3{font-size:20px!important}.bq-tile.multi.m4{font-size:16px!important}
-.bq-r .bq-btn{min-height:58px;font-size:18px}.bq-r .bq-kb{font-size:13px}
-.bq-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.bq-hands{grid-template-columns:repeat(5,minmax(0,1fr))}
+.bq-host>:not(.bq-bgc){position:relative;z-index:1}
+.bq-bgc{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
+.bq-bgon .bq-mut{color:var(--text);opacity:.8}
+.bq-hn,.bq-pile{display:none}
+.bq-handrow{display:flex;align-items:flex-end;justify-content:center;gap:10px}
+.bq-hand.fan .bq-tile{transform:rotate(var(--fr));transition:transform .15s}
+.bq-hand.fan .bq-tile.used{transform:translateY(6px) rotate(var(--fr))}
+.bq-hand.fan .bq-tile.hit{transform:translateY(-8px) scale(1.08)}
+@media(hover:hover){.bq-hand.fan .bq-tile:not(.used):not(.lock):hover{transform:translateY(-6px) rotate(var(--fr))}}
+button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-top:4px solid #e0475f}button.bq-slot.k-x{border-top:4px solid #8a2be2}button.bq-slot.k-rt,button.bq-slot.k-copy{border-top:4px solid #1f9d6b}
+.bq-pile{flex:none;flex-direction:column;align-items:center;justify-content:center;width:52px;height:68px;border-radius:10px;background:repeating-linear-gradient(45deg,#6c5ce7 0 6px,#5a4bd1 6px 12px);color:#fff;box-shadow:3px 3px 0 #3c3489,6px 6px 0 #2a2470}
+.bq-pile b{font:800 18px var(--display)}.bq-pile small{font-size:10px;font-weight:700;opacity:.9}
+.bq-orow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.bq-bgpick{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}.bq-bgpick .bq-btn{flex:1 1 40%}
+.bq-stages{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}.bq-stages span{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--card-2);font-weight:800;font-size:13px;color:var(--muted)}
+.bq-stages .done{background:var(--mint);color:var(--on-accent)}.bq-stages .now{background:var(--yellow);color:var(--on-accent)}
+.bq-cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.bq-ci{background:var(--card);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:3px;font-size:13px}.bq-ci .ic{font-size:24px}.bq-ci .d{font-size:12px;color:var(--muted);line-height:1.3}.bq-ci.lock{opacity:.65}.bq-ci .bq-btn{margin-top:4px}
+.bq-win{background:var(--card);border-radius:24px;padding:18px}.bq-win img{height:150px;width:auto}
+.bq-intro{min-height:calc(100dvh - 90px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:10px 0}
+.bq-title{display:flex;flex-direction:column;align-items:center}
+.bq-hero .bq-logo{width:min(92vw,680px);max-height:52vh;height:auto;object-fit:contain;filter:drop-shadow(0 6px 0 #0005);animation:bq-bob 4s ease-in-out infinite}@keyframes bq-bob{50%{transform:translateY(-6px) rotate(-1deg)}}
+.bq-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.bq-hero{display:flex;flex-direction:column;align-items:center;line-height:.9}
+.bq-menu{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:stretch}
+.bq-mbox{background:#1c1a26e8;border-radius:18px;padding:8px;display:flex;gap:8px;box-shadow:0 4px 0 #0006}
+.bq-mbox.rec{flex-direction:column;justify-content:center;align-items:center;min-width:96px;color:#d3d1c7;padding:8px 12px}.bq-mbox.rec b{background:#5f5e5a;color:#fff;border-radius:10px;padding:4px 10px;font-size:15px;margin:3px 0}.bq-mbox.rec small{font-size:12px;font-weight:700}
+.bq-mbox.side{flex-direction:column}
+.bq-mb{border:0;border-radius:12px;color:#fff;font:800 22px var(--display);letter-spacing:.5px;padding:0 22px;min-height:64px;cursor:pointer;box-shadow:0 4px 0 #0005}
+.bq-mb:active{transform:translateY(2px);box-shadow:0 2px 0 #0005}
+.bq-mb.blue{background:#2f7fd1;min-width:150px}.bq-mb.green{background:#1f9d6b;min-width:150px}.bq-mbox.side .bq-mb{min-height:28px;font-size:14px;padding:0 16px}.bq-mb.orange{background:#e8901a}.bq-mb.red{background:#e0475f}
+.bq-pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.bq-pill{border:0;background:#1c1a26e0;color:#e8e6f0;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+@media(max-width:560px){.bq-mbox.main{order:-1;width:100%}.bq-mbox.main .bq-mb{flex:1;min-width:0}.bq-mb{font-size:20px}}
+@media(prefers-reduced-motion:reduce){.bq-logo{animation:none}}
+@media(min-width:600px) and (orientation:portrait){.bq-r{--bq-art:150px}.bq-r .bq-hand{grid-template-columns:repeat(var(--bq-n,8),minmax(0,62px));gap:7px}.bq-r .bq-hand .bq-tile{height:64px;font-size:28px}.bq-r .bq-slot{min-height:56px;font-size:12px}.bq-r .bq-slot .ic{font-size:22px}.bq-r .bq-sel .bq-tile{width:40px;height:48px;font-size:21px}.bq-r .bq-btn{min-height:54px;font-size:16px}.bq-r .bq-prev{max-height:140px}.bq-cm b{font-size:21px}.bq-r .bq-info{font-size:13px}}
+@media((orientation:landscape) and (min-width:900px) and (min-height:540px)) or ((orientation:landscape) and (max-height:539.98px) and (min-width:560px)){
+.bq-r{display:grid;grid-template-columns:var(--hudw,300px) minmax(0,1fr);gap:14px 18px;align-items:stretch;min-height:calc(100dvh - 90px)}
+.bq-r .bq-L{display:flex;flex-direction:column;gap:8px;background:#16141fe0;border-radius:20px;padding:10px;color:#f1eff8;box-shadow:0 4px 0 #0005}
+.bq-r .bq-L .bq-mut,.bq-r .bq-L .bq-sc,.bq-r .bq-L .bq-gt{color:#c9c6d6}
+.bq-r .bq-R{display:flex;flex-direction:column;gap:10px;min-width:0}
+.bq-r .bq-top .t b{color:#f1eff8}
+.bq-r .bq-arena{flex-direction:row;align-items:flex-end;background:#26233380;box-shadow:none}
+.bq-r .bq-arena .bq-fig:first-of-type{width:34%}.bq-r .bq-arena .bq-fig:last-of-type{width:62%}.bq-r .bq-vs{display:none}
+.bq-r .bq-arena .bq-fig:first-of-type .bq-img{height:calc(var(--bq-art) * .55)}.bq-r .bq-arena .bq-fig:first-of-type img{max-height:calc(var(--bq-art) * .55)}
+.bq-r .bq-hn{display:block;text-align:center;font-size:15px}.bq-r .bq-hn b{font-family:var(--display);font-size:18px}
+.bq-r .bq-bar.cm{flex-direction:column;align-items:stretch;gap:6px}.bq-r .bq-cm{justify-content:center}.bq-r .bq-cm b{font-size:24px;min-width:70px;padding:6px 12px}
+.bq-r .bq-sc{margin:0;text-align:center;display:flex;justify-content:space-around;gap:6px;background:#26233380;border-radius:12px;padding:6px}.bq-r .bq-sc br{display:none}.bq-r .bq-sc b{color:#fff;display:block;font-size:16px}
+.bq-r .bq-info{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:auto}.bq-r .bq-info span{text-align:center;background:#26233380;color:#e8e6f0;border-radius:10px;padding:6px 4px;white-space:normal}
+.bq-r .bq-slots{gap:10px}.bq-r button.bq-slot,.bq-r .bq-slot{min-height:96px;border-radius:12px;font-size:12px}.bq-r .bq-slot .ic{font-size:28px}
+.bq-r .bq-prev{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;max-height:none;min-height:120px;background:#16141fb8;color:#f1eff8;border-radius:20px}
+.bq-r .bq-prev .bq-pl{color:#d9d6e6}.bq-r .bq-sel{justify-content:center;min-height:62px}.bq-r .bq-sel .bq-tile{width:52px;height:60px;font-size:28px}.bq-r .bq-prev .bq-chips{justify-content:center;max-width:100%}
+.bq-r .bq-pile{display:flex}.bq-r .bq-hand.fan{padding-bottom:8px}.bq-r .bq-hand.fan .bq-tile{transform:translateY(var(--fy)) rotate(var(--fr))}.bq-r .bq-hand.fan .bq-tile.used{transform:translateY(calc(var(--fy) + 10px)) rotate(var(--fr))}.bq-r .bq-hand.fan .bq-tile.hit{transform:translateY(-10px) scale(1.08)}
+.bq-r .bq-hand{grid-template-columns:repeat(var(--bq-n,8),minmax(0,68px));gap:8px}.bq-r .bq-hand .bq-tile{height:80px;font-size:34px}.bq-r .bq-hand .bq-tile small{font-size:13px}
+.bq-r .bq-btns{max-width:640px;width:100%;align-self:center}.bq-r .bq-btn{min-height:54px;font-size:17px}
+.bq-r .bq-giveup,.bq-r .bq-kb{align-self:center}
+.bq-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.bq-hands{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
-@media(min-width:1280px) and (min-height:860px){.bq-r{--bq-art:300px;gap:24px 36px}.bq-r .bq-hand{grid-template-columns:repeat(var(--bq-n,8),minmax(0,86px));gap:10px}.bq-r .bq-hand .bq-tile{height:94px;font-size:42px}.bq-r .bq-slot{min-height:92px;font-size:14px}.bq-r .bq-slot .ic{font-size:32px}.bq-r .bq-btn{min-height:66px;font-size:20px}.bq-r .bq-prev{min-height:160px}.bq-r .bq-sel .bq-tile{width:54px;height:62px;font-size:28px}.bq-cm b{font-size:28px}}
+@media(orientation:landscape) and (min-width:900px) and (min-height:540px){.bq-r{--hudw:300px;--bq-art:min(150px,18vh)}}
+@media(orientation:landscape) and (min-width:1280px) and (min-height:860px){.bq-r{--hudw:340px;--bq-art:180px}.bq-r .bq-hand{grid-template-columns:repeat(var(--bq-n,8),minmax(0,84px))}.bq-r .bq-hand .bq-tile{height:98px;font-size:42px}.bq-r button.bq-slot,.bq-r .bq-slot{min-height:120px;font-size:14px}.bq-r .bq-slot .ic{font-size:34px}.bq-r .bq-sel .bq-tile{width:60px;height:70px;font-size:32px}.bq-r .bq-btn{min-height:62px;font-size:19px}}
+@media(orientation:landscape) and (max-height:539.98px) and (min-width:560px){
+.bq{padding-bottom:6px}.bq>h2:first-child,.bq-top{padding-left:42px}.bq-r .bq-top{padding-left:40px}
+.bq-r{--hudw:224px;--bq-art:46px;gap:6px 10px;min-height:calc(100dvh - 24px)}.bq-r .bq-top .bq-speed{display:none}.bq-r .bq-top{flex-wrap:wrap;justify-content:flex-end}.bq-r .bq-top .t{order:2;flex-basis:100%;margin-left:-40px}.bq-r .bq-top .t b{white-space:nowrap}
+.bq-r .bq-L{gap:5px;padding:6px;border-radius:14px}.bq-r .bq-top{gap:4px}.bq-r .bq-top .t b{font-size:11px}.bq-r .bq-speed,.bq-r .bq-mute{height:24px;width:auto;padding:0 6px;font-size:11px}.bq-r .bq-coin{font-size:12px;padding:2px 6px}
+.bq-r .bq-arena{padding:4px 6px}.bq-r .bq-name{font-size:10px}.bq-r .bq-gt{font-size:10px}.bq-r .bq-goal{height:7px}
+.bq-r .bq-boss{font-size:9.5px;padding:3px 6px;line-height:1.15}
+.bq-r .bq-hn{font-size:11px}.bq-r .bq-hn b{font-size:13px}.bq-r .bq-cm b{font-size:15px;min-width:44px;padding:2px 6px}.bq-r .bq-sc{font-size:10px;padding:3px}.bq-r .bq-sc b{font-size:12px}
+.bq-r .bq-info{gap:3px}.bq-r .bq-info span{font-size:9.5px;padding:3px 2px}
+.bq-r .bq-R{gap:5px}.bq-r .bq-slots{gap:5px}.bq-r button.bq-slot,.bq-r .bq-slot{min-height:40px;font-size:9px;border-radius:8px}.bq-r .bq-slot .ic{font-size:15px}
+.bq-r .bq-prev{min-height:58px;padding:4px 8px;border-radius:14px}.bq-r .bq-sel{min-height:32px;margin-bottom:2px}.bq-r .bq-sel .bq-tile{width:28px;height:32px;font-size:16px}.bq-r .bq-pl{font-size:11px}.bq-r .bq-pl b{font-size:13px}.bq-r .bq-chip{font-size:10px}
+.bq-r .bq-msg{min-height:12px;font-size:11px;line-height:12px}
+.bq-r .bq-hand{grid-template-columns:repeat(var(--bq-n,8),minmax(0,42px));gap:4px}.bq-r .bq-hand .bq-tile{height:44px;font-size:21px}.bq-r .bq-hand .bq-tile small{font-size:9px}
+.bq-r .bq-pile{width:38px;height:46px}.bq-r .bq-pile b{font-size:14px}.bq-r .bq-pile small{font-size:8px}
+.bq-r .bq-btn{min-height:34px;font-size:13px}.bq-r .bq-giveup{font-size:10px;padding:0}.bq-r .bq-kb{display:none}
+.bq-intro{min-height:calc(100dvh - 30px);gap:8px}.bq-hero .bq-logo{max-height:46vh}.bq-mb{min-height:44px;font-size:17px}.bq-mbox.side .bq-mb{min-height:18px;font-size:12px}
+}
 @media(prefers-reduced-motion:reduce){.bq-atk,.bq-ehit,.bq-dead,.bq-dmg,.bq-say,.bq-pop,.bq-shake{animation:none}}`;
 
   /* ---------- persistence ---------- */
@@ -597,17 +663,29 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     src.connect(bp); bp.connect(g); g.connect(out); src.start(t); src.stop(t + dur);
   }
   const Music = (function () {
-    const KEYM = 'wr_game_music', STEP = 60 / 84 / 2;   // eighth notes at 84 bpm
-    const CHORDS = [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62]];   // C, Am, F, G
-    const MEL = [72, null, 76, 74, null, 72, 69, null, 72, null, 69, 67, null, 64, 67, null, 69, null, 72, 69, null, 65, 67, null, 67, null, 71, 74, null, 72, null, null];
-    let timer = null, step = 0, next = 0, on = store.get(KEYM) !== '0';
+    const KEYM = 'wr_game_music';
+    // calm: C, Am, F, G at 84 bpm. boss (owner 25 Nov: tenser): A minor, Am F E Am at 120 bpm, a pulsing bass on every eighth note
+    const MODES = {
+      calm: { step: 60 / 84 / 2, chords: [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62]],
+        mel: [72, null, 76, 74, null, 72, 69, null, 72, null, 69, 67, null, 64, 67, null, 69, null, 72, 69, null, 65, 67, null, 67, null, 71, 74, null, 72, null, null] },
+      boss: { step: 60 / 120 / 2, chords: [[57, 60, 64], [53, 57, 60], [52, 56, 59], [57, 60, 64]],
+        mel: [69, null, 72, null, 71, 69, 68, null, 69, null, 72, 76, null, 75, 76, null, 77, null, 76, 74, null, 72, 71, null, 68, null, 71, null, 74, 71, 68, null] }
+    };
+    let timer = null, step = 0, next = 0, on = store.get(KEYM) !== '0', cur = 'calm';
     function tick() {
+      const M = MODES[cur];
       while (next < ac.currentTime + 0.25) {
-        const ch = CHORDS[Math.floor(step / 8) % 4], i = step % 8, mel = MEL[step % 32];
-        if (i === 0) tone(musicOut, hz(ch[0] - 24), next, STEP * 7, 'triangle', 0.5);
-        tone(musicOut, hz(ch[[0, 1, 2, 1][i % 4]] + (i >= 4 ? 12 : 0)), next, STEP * 1.6, 'sine', 0.16);
-        if (mel) tone(musicOut, hz(mel), next, STEP * 2.4, 'sine', 0.22);
-        next += STEP; step++;
+        const ch = M.chords[Math.floor(step / 8) % 4], i = step % 8, mel = M.mel[step % 32];
+        if (cur === 'boss') {
+          tone(musicOut, hz(ch[0] - 24), next, M.step * 0.8, 'sawtooth', 0.22);   // pulsing bass
+          if (i % 2 === 0) tone(musicOut, hz(ch[[0, 1, 2, 1][(i / 2) % 4]] + 12), next, M.step * 1.2, 'triangle', 0.12);
+          if (i === 0 || i === 4) noise(musicOut, next, 0.08, 0.25, 3000, 1500);   // a soft tick on the beat
+        } else {
+          if (i === 0) tone(musicOut, hz(ch[0] - 24), next, M.step * 7, 'triangle', 0.5);
+          tone(musicOut, hz(ch[[0, 1, 2, 1][i % 4]] + (i >= 4 ? 12 : 0)), next, M.step * 1.6, 'sine', 0.16);
+        }
+        if (mel) tone(musicOut, hz(mel), next, M.step * 2.4, cur === 'boss' ? 'square' : 'sine', cur === 'boss' ? 0.07 : 0.22);
+        next += M.step; step++;
       }
     }
     function start() {
@@ -616,7 +694,74 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     }
     function stop() { if (timer) { clearInterval(timer); timer = null; } }
     function toggle() { on = !on; store.set(KEYM, on ? '1' : '0'); if (on) start(); else stop(); }
-    return { start, stop, toggle, get on() { return on; }, get playing() { return !!timer; } };
+    // switch calm <-> boss with a short fade, restarting the bar
+    function mode(m) {
+      if (m === cur || !MODES[m]) return;
+      cur = m; step = 0;
+      if (!timer || !ac) return;
+      try { const g = musicOut.gain, t = ac.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.0001, t + 0.25); g.linearRampToValueAtTime(0.09, t + 0.9); next = t + 0.3; } catch (e) { /* keep playing */ }
+    }
+    return { start, stop, toggle, mode, get on() { return on; }, get playing() { return !!timer; }, get current() { return cur; } };
+  })();
+  /* moving background behind the Quest screens (owner 25 Nov): Gelombang kain (open), Anyaman and Benang (achievements), or off.
+     One colour set per stage, dark red for a boss; still when the device asks for less motion; paused when the screen is hidden. */
+  const Bg = (function () {
+    const KEYB = 'wr_game_bg';
+    const DARK = [['#26215C', '#3C3489', '#534AB7', '#7F77DD'], ['#04342C', '#085041', '#0F6E56', '#1D9E75'], ['#042C53', '#0C447C', '#185FA5', '#378ADD'], ['#4A1B0C', '#712B13', '#993C1D', '#D85A30'],
+      ['#4B1528', '#72243E', '#993556', '#D4537E'], ['#173404', '#27500A', '#3B6D11', '#639922'], ['#412402', '#633806', '#854F0B', '#BA7517'], ['#2C2C2A', '#444441', '#5F5E5A', '#888780']];
+    const LIGHT = [['#EEEDFE', '#CECBF6', '#AFA9EC', '#7F77DD'], ['#E1F5EE', '#9FE1CB', '#5DCAA5', '#1D9E75'], ['#E6F1FB', '#B5D4F4', '#85B7EB', '#378ADD'], ['#FAECE7', '#F5C4B3', '#F0997B', '#D85A30'],
+      ['#FBEAF0', '#F4C0D1', '#ED93B1', '#D4537E'], ['#EAF3DE', '#C0DD97', '#97C459', '#639922'], ['#FAEEDA', '#FAC775', '#EF9F27', '#BA7517'], ['#F1EFE8', '#D3D1C7', '#B4B2A9', '#888780']];
+    const BOSSD = ['#2C0B0B', '#501313', '#791F1F', '#A32D2D'], BOSSL = ['#FCEBEB', '#F7C1C1', '#F09595', '#E24B4A'];
+    let cv = null, cx = null, raf = 0, t = 0, last = 0, style = 'wave', pal = 0, boss = false;
+    const choice = () => store.get(KEYB) || 'wave';
+    const still = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
+    function light() { const c = (getComputedStyle(document.body).backgroundColor.match(/\d+/g) || [0, 0, 0]).map(Number); return c[0] + c[1] + c[2] > 382; }
+    function size() { if (!cv) return; const d = Math.min(2, window.devicePixelRatio || 1); cv.width = Math.round(innerWidth * d); cv.height = Math.round(innerHeight * d); cx.setTransform(d, 0, 0, d, 0, 0); if (style !== 'off') draw(); }
+    function ensure() {
+      if (cv) return;
+      cv = document.createElement('canvas'); cv.className = 'bq-bgc'; cv.setAttribute('aria-hidden', 'true'); root.insertBefore(cv, root.firstChild);
+      cx = cv.getContext('2d'); root.classList.add('bq-host'); window.addEventListener('resize', size); size();
+    }
+    function draw() {
+      if (!cx) return;
+      const W = innerWidth, H = innerHeight, p = boss ? (light() ? BOSSL : BOSSD) : (light() ? LIGHT : DARK)[pal % 8];
+      cx.globalAlpha = 1; cx.fillStyle = p[0]; cx.fillRect(0, 0, W, H);
+      if (style === 'wave') {
+        for (let b = 0; b < 7; b++) { cx.fillStyle = p[1 + (b % 3)]; cx.globalAlpha = 0.5; cx.beginPath(); const base = H * (b / 6) - 20; cx.moveTo(0, H);
+          for (let i = 0; i <= W; i += 10) cx.lineTo(i, base + Math.sin(i / 110 + t * 0.5 + b * 1.3) * 30 + Math.sin(i / 43 - t * 0.35 + b) * 10);
+          cx.lineTo(W, H); cx.closePath(); cx.fill(); }
+      } else if (style === 'weave') {
+        const sz = 26, o = (t * 7) % (sz * 2);
+        for (let y = -sz * 2; y < H + sz * 2; y += sz) for (let x = -sz * 2; x < W + sz * 2; x += sz) {
+          const k = ((x + y) / sz) & 1; cx.fillStyle = k ? p[1] : p[2]; cx.globalAlpha = 0.6;
+          if (k) cx.fillRect(x + o + 2, y + o + 7, sz - 4, sz - 14); else cx.fillRect(x + o + 7, y + o + 2, sz - 14, sz - 4); }
+      } else {
+        for (let b = 0; b < 7; b++) { const y0 = H * (b + 0.5) / 7;
+          cx.beginPath(); cx.moveTo(-20, y0); cx.bezierCurveTo(W * 0.3, y0 + Math.sin(t * 0.45 + b) * 60, W * 0.6, y0 - Math.cos(t * 0.35 + b) * 60, W + 20, y0 + Math.sin(t * 0.3 + b * 2) * 24);
+          cx.globalAlpha = 0.8; cx.lineWidth = 3; cx.strokeStyle = p[1 + (b % 3)]; cx.setLineDash([]); cx.stroke();
+          cx.globalAlpha = 0.5; cx.lineWidth = 1.5; cx.strokeStyle = p[3]; cx.setLineDash([7, 9]); cx.stroke(); }
+        cx.setLineDash([]);
+      }
+      cx.globalAlpha = 1;
+    }
+    const running = () => style !== 'off' && !still() && !root.hidden && !document.hidden;
+    function frame(ts) {
+      raf = 0; if (!running()) return;
+      if (ts - last >= 33) { t += Math.min(0.1, (ts - last) / 1000); last = ts; draw(); }
+      raf = requestAnimationFrame(frame);
+    }
+    function update(stage, isBoss) {
+      ensure();
+      const c = choice(), open = E.opened(achOwned).bgs;
+      style = c === 'off' ? 'off' : open.includes(c) ? c : 'wave'; pal = stage || 0; boss = !!isBoss;
+      cv.hidden = style === 'off'; root.classList.toggle('bq-bgon', style !== 'off');
+      if (style === 'off') return;
+      draw();
+      if (running() && !raf) { last = performance.now(); raf = requestAnimationFrame(frame); }
+    }
+    function set(v) { store.set(KEYB, v); }
+    function wake() { if (cv && running() && !raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+    return { update, set, wake, get choice() { return choice(); }, get style() { return style; } };
   })();
   /* sound effects, also made in the browser: attack, coin "cring", win, wrong word, discard, run over, letter tap, achievement */
   const Sfx = (function () {
@@ -670,7 +815,9 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   }
 
   /* ---------- html pieces ---------- */
-  const label = () => 'Stage ' + (G.stage + 1) + ' · ' + (G.rnd === 2 ? 'Boss' : 'Ronde ' + (G.rnd + 1));
+  const RND = ['Ronde Kecil', 'Ronde Besar', 'Boss'];
+  const stageTxt = () => 'Stage ' + (G.stage + 1) + (G.stage + 1 > E.CFG.stages ? ' · Endless' : '/' + E.CFG.stages);
+  const label = () => stageTxt() + ' · ' + RND[G.rnd];
   const isBoss = () => G.rnd === 2;
   function chipsOf(s) {
     let h = s.hand ? handChip(s.hand) : '';
@@ -708,7 +855,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   }
   function slotsHtml() {
     let h = '<div class="bq-slots">';
-    for (let i = 0; i < E.CFG.slots; i++) { const id = G.fabrics[i]; h += id ? `<button type="button" class="bq-slot" data-a="showFab" data-i="${id}"><span class="ic">${F(id).icon}</span>${F(id).name}</button>` : '<div class="bq-slot">kosong</div>'; }
+    for (let i = 0; i < E.CFG.slots; i++) { const id = G.fabrics[i]; h += id ? `<button type="button" class="bq-slot k-${F(id).kind}" data-a="showFab" data-i="${id}"><span class="ic">${F(id).icon}</span>${F(id).name}</button>` : '<div class="bq-slot">kosong</div>'; }
     return h + '</div>';
   }
   function enemyInfo() {
@@ -747,57 +894,66 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     let pv = '', cm = null;
     const shown = anim ? anim.before : R.score;
     if (anim) {
-      cm = { c: 0, m: 0 };
+      cm = { c: 0, m: 0, h: anim.res.hand };
       pv = `<div class="bq-pl"><b>${anim.res.word.toUpperCase()}</b> · menghitung… <span class="bq-mut">(ketuk untuk lewati)</span></div>`;
     } else if (sel.length) {
       const w = sel.map(E.txt).join('');
       if (w.length >= 3 && E.isWord(w)) {
         const ids = new Set(sel.map(t => t.id)), s = E.score(sel, G.fabrics, { first: !R.firstDone, chain: R.chain, lv: G.handLv, inLemari: inLemari(w), held: R.hand.filter(t => !ids.has(t.id)) }, R.boss, () => 1);
-        cm = { c: s.chips, m: s.mult, t: s.final };
+        cm = { c: s.chips, m: s.mult, t: s.final, h: s.hand };
         pv = `<div class="bq-pl"><button type="button" class="bq-arti" data-a="artiSel">📖 Arti</button><b>${w.toUpperCase()}</b> → <b>${fmtN(s.final)}</b> poin</div><div class="bq-chips">${chipsOf(Object.assign({}, s, { jackpot: undefined }))}${G.fabrics.includes('jackpot') ? '<span class="bq-chip">🎰 bisa ×2</span>' : ''}</div>`;
       } else pv = `<div class="bq-pl">${w.length < 3 ? 'Pilih minimal 3 huruf untuk kata, atau langsung Buang' : '<b>' + w.toUpperCase() + '</b> belum jadi kata valid (boleh Buang huruf ini)'}</div>`;
     } else pv = '<div class="bq-pl">Ketuk huruf: susun kata untuk menyerang, atau buang huruf yang tidak berguna.</div>';
     const selIds = new Set(sel.map(t => t.id));
-    const head = `<div class="bq-top"><div class="t"><b>${label()}</b></div><button type="button" class="bq-speed" data-a="speed" aria-label="Kecepatan hitung skor">${['⚡', '1×', '2×'][speed()]}</button>${soundHtml()}<span class="bq-coin">🪙 ${G.coins}</span></div>${arenaHtml()}
-      ${cmHtml(cm, shown)}
+    const head = `<div class="bq-top"><div class="t"><b>${label()}</b></div><button type="button" class="bq-mute" data-a="runInfo" aria-label="Info run">ℹ️</button><button type="button" class="bq-mute" data-a="opts" aria-label="Opsi">⚙️</button><span class="bq-coin">🪙 ${G.coins}</span></div>${arenaHtml()}
+      <div class="bq-hn">${cm && cm.h ? `${cm.h.icon} <b>${cm.h.name}</b> Lv${cm.h.lv}` : '<span class="bq-mut">Susun kata…</span>'}</div>${cmHtml(cm, shown)}
       ${R.boss ? `<div class="bq-boss"><b>${R.boss.name}:</b> ${R.boss.desc}${R.boss.block ? ' Terkunci: <b>' + R.boss.block.toUpperCase() + '</b>' : ''}</div>` : ''}`;
     const lastHtml = last && last.res ? `<div class="bq-last bq-pop">Terakhir: <b>${last.res.word.toUpperCase()} +${fmtN(last.res.final)}</b> <button type="button" class="bq-arti" data-a="arti" data-i="${last.res.word}">📖 Arti</button> <span class="bq-mut"></span>${last.res.recycled ? ` ♻️ ${last.res.recycled.toUpperCase()}` : ''}${last.res.extraDraw ? ' 🔄 +1' : ''}<div class="bq-chips">${chipsOf(last.res)}</div></div>` : '';
     if (!sel.length && lastHtml && !anim) pv = lastHtml;
     if (R.cleared && !anim) return '<div class="bq-L">' + head + '</div><div class="bq-R">' + `<div class="bq-center bq-pop"><h2>${enemyInfo().n} kalah! 🎉</h2><div class="bq-mut">+${last.fin.coins} koin${last.fin.saver ? ` (+${last.fin.saver} Saver)` : ''}</div><button type="button" class="bq-btn pri" style="width:100%;margin-top:10px" data-a="goNext">Ambil hadiah</button></div></div>`;
-    return '<div class="bq-L">' + head + '</div><div class="bq-R">' + slotsHtml() + `
-      <div class="bq-info"><span>📦 Supply ${R.supply.length}</span><span>🗑️ Buang ${R.discards}/${R.maxDiscards}</span><span>📝 ${R.words} kata</span>${R.chain > 0 && G.fabrics.includes('chain') ? `<span>⛓️ chain ${R.chain}</span>` : ''}</div>
+    const info = `<div class="bq-info"><span>📦 Supply ${R.supply.length}</span><span>🗑️ Buang ${R.discards}/${R.maxDiscards}</span><span>📝 ${R.words} kata</span>${R.chain > 0 && G.fabrics.includes('chain') ? `<span>⛓️ chain ${R.chain}</span>` : ''}</div>`;
+    return '<div class="bq-L">' + head + info + '</div><div class="bq-R">' + slotsHtml() + `
       <div class="bq-prev"><div class="bq-sel">${(anim ? anim.tiles : sel).map((t, i, a) => { const k = E.kindOf(t.ch), af = (k === 'pre' && i === 0) || (k === 'suf' && i === a.length - 1);
         return tileHtml(t, '', anim ? '' : `data-a="unsel" data-i="${i}"`).replace('</button>', af ? '<i class="af">+3</i></button>' : '</button>'); }).join('')}</div>${pv}</div>
       <div class="bq-msg" role="status">${msg}</div>
-      <div class="bq-hand" style="--bq-n:${R.handSize <= 9 ? R.handSize : Math.ceil(R.handSize / 2)}">${R.hand.map(t => { const lk = E.blocked(R, t), us = selIds.has(t.id); return tileHtml(t, lk ? 'lock' : us ? 'used' : '', lk ? 'disabled' : `data-a="pick" data-i="${t.id}"`); }).join('')}</div>
+      <div class="bq-handrow"><div class="bq-hand ${R.hand.length <= 9 ? 'fan' : ''}" style="--bq-n:${R.handSize <= 9 ? R.handSize : Math.ceil(R.handSize / 2)}">${R.hand.map((t, i, a) => { const lk = E.blocked(R, t), us = selIds.has(t.id), off = i - (a.length - 1) / 2;
+        return tileHtml(t, lk ? 'lock' : us ? 'used' : '', (lk ? 'disabled' : `data-a="pick" data-i="${t.id}"`) + ` style="--fr:${(off * 2.4).toFixed(1)}deg;--fy:${(off * off * 0.9).toFixed(1)}px"`); }).join('')}</div><div class="bq-pile" aria-label="Supply ${R.supply.length} huruf"><b>${R.supply.length}</b><small>supply</small></div></div>
       <div class="bq-btns"><button type="button" class="bq-btn" data-a="clr" ${sel.length ? '' : 'disabled'}>Hapus</button><button type="button" class="bq-btn mint" data-a="discard" ${sel.length && E.canDiscard(R) ? '' : 'disabled'}>🗑️ Buang${sel.length ? ' ' + sel.length : ''}</button><button type="button" class="bq-btn pri" data-a="send" ${sel.length >= 3 ? '' : 'disabled'}>⚔️ Serang</button></div>
       <button type="button" class="bq-giveup" data-a="giveUp">🏳️ Akhiri run</button>
       <div class="bq-mut bq-kb">Di laptop: ketik huruf untuk memilih, Backspace menghapus, Enter menyerang.</div></div>`;
   }
+  // the Quest title screen (owner 25 Nov, after Balatro's menu): big title over the moving background, a menu bar below
   function introHtml() {
-    const saved = load(), resumable = saved && saved.phase !== 'end';
-    return `<div class="bq-center bq-hero"><img src="img/game/bibo-idle.webp" alt="Bibo"><h2 style="margin-top:6px;font-size:26px">Wordrobe Quest</h2><div class="bq-mut">Susun kata, kalahkan musuh jahit, naik stage sejauh mungkin.</div></div>
-      <div class="bq-card"><b>Cara main</b><ul class="bq-mut" style="margin:6px 0 0;padding-left:18px">
-        <li>Tangan 8 huruf, supply 32. Ketuk huruf berurutan untuk menyusun kata (3 huruf sampai sebesar tanganmu), lalu Serang.</li>
-        <li>Skor kata jadi serangan Bibo. Capai target ronde untuk mengalahkan musuh.</li>
-        <li>Huruf jelek? Pilih lalu Buang: ambil huruf baru dari supply (3 kali per ronde).</li>
-        <li>Skor = Chips × Mult. Jenis kata = hand: Noun 10 × 2, Verb 15 × 3, Adjective 20 × 4, Adverb 30 × 5. Naikkan levelnya dengan Buku di shop.</li>
-        <li>Kata yang ada di Lemarimu = kata kekuatan: +4 Mult.</li>
-        <li>Fabric bekerja dari kiri ke kanan: seret untuk mengatur urutannya.</li>
-        <li>Di shop ada kartu imbuhan (UN, LY, ING…), gabungan huruf (TH, QU…), dan kartu wild ?.</li>
-        <li>Tiap stage: 2 ronde + 1 boss, lalu shop. Run tak berujung; target makin berat tiap stage.</li></ul></div>
-      <div class="bq-btns" style="justify-content:center;align-items:center">${soundHtml()}<span class="bq-mut">Musik 🎵 dan efek suara 🔔 (ketuk untuk menyalakan/mematikan)</span></div>
-      ${best ? `<div class="bq-card bq-center">🏅 Rekor kamu: <b>Stage ${best}</b></div>` : ''}
-      <button type="button" class="bq-btn" style="width:100%" data-a="achList">🏆 Achievement (${achOwned.filter(a => E.ACH.some(x => x.id === a)).length}/${E.ACH.length})</button>
-      ${resumable ? '<button type="button" class="bq-btn pri" style="width:100%" data-a="resume">Lanjutkan run</button><button type="button" class="bq-btn" style="width:100%" data-a="start">Mulai run baru</button>' : '<button type="button" class="bq-btn pri" style="width:100%" data-a="start">Mulai run</button>'}`;
+    const saved = load(), resumable = saved && saved.phase !== 'end', wins = achTotals.wins || 0;
+    return `<div class="bq-intro">
+      <div class="bq-title bq-hero"><img class="bq-logo" src="img/game/quest-logo.webp" width="900" height="481" alt="Wordrobe Quest"><span class="bq-sr">Wordrobe QUEST</span></div>
+      <div class="bq-menu">
+        <div class="bq-mbox rec"><small>Rekor</small><b>${best ? 'Stage ' + best : '-'}</b>${wins ? `<small>Menang ${wins}×</small>` : ''}</div>
+        <div class="bq-mbox main">${resumable ? '<button type="button" class="bq-mb blue" data-a="resume">LANJUTKAN</button>' : '<button type="button" class="bq-mb blue" data-a="start">MAIN</button>'}<button type="button" class="bq-mb green" data-a="coll">KOLEKSI</button></div>
+        <div class="bq-mbox side"><button type="button" class="bq-mb orange" data-a="opts">OPSI</button><button type="button" class="bq-mb red" data-go="home">KELUAR</button></div>
+      </div>
+      ${resumable ? '<button type="button" class="bq-pill" data-a="start">Mulai run baru</button>' : ''}
+      <div class="bq-pills"><button type="button" class="bq-pill" data-a="howto">Cara main</button><button type="button" class="bq-pill" data-a="achList">🏆 Achievement ${E.ACH.filter(a => E.hasAch(achOwned, a.id)).length}/${E.ACH.length}</button></div></div>`;
+  }
+  // Koleksi: every background, Kain and Fabric, with what opens the locked ones
+  function collHtml() {
+    const o = E.opened(achOwned), bg = Bg.choice, by = w => { const a = E.ACH.find(x => x.open[0] === w[0] && x.open[1] === w[1] || (x.also && x.also[0] === w[0] && x.also[1] === w[1])); return a ? a.name + ': ' + a.desc : ''; };
+    const bgs = E.BGS.map(b => { const ok = o.bgs.includes(b.id), on = bg === b.id || (bg !== 'off' && !o.bgs.includes(bg) && b.id === 'wave');
+      return `<div class="bq-ci ${ok ? '' : 'lock'}"><span class="ic">${ok ? b.icon : '🔒'}</span><b>${b.name}</b><span class="d">${ok ? (on ? 'Sedang dipakai' : 'Terbuka') : by(['bg', b.id])}</span>${ok && !on ? `<button type="button" class="bq-btn sm" data-a="setBg" data-i="${b.id}">Pakai</button>` : ''}</div>`; }).join('');
+    const decks = E.DECKS.map(d => { const ok = o.decks.includes(d.id); return `<div class="bq-ci ${ok ? '' : 'lock'}"><span class="ic">${ok ? d.icon : '🔒'}</span><b>${d.name}</b><span class="d">${ok ? d.desc : by(['deck', d.id])}</span></div>`; }).join('');
+    const fabs = E.FABRICS.map(f => { const ok = !f.locked || o.fabrics.includes(f.id); return `<div class="bq-ci ${ok ? '' : 'lock'}"><span class="ic">${ok ? f.icon : '🔒'}</span><b>${f.name} ${KINDTAG[f.kind] || ''}</b><span class="d">${ok ? f.desc : by(['fabric', f.id])}</span></div>`; }).join('');
+    return `<div class="bq-top"><h2 style="flex:1">Koleksi</h2><button type="button" class="bq-btn sm" data-a="achBack">Kembali</button></div>
+      <div class="bq-sec"><b>Latar</b><button type="button" class="bq-btn sm" data-a="setBg" data-i="off" ${bg === 'off' ? 'disabled' : ''}>${bg === 'off' ? 'Latar mati' : 'Matikan latar'}</button></div><div class="bq-cgrid">${bgs}</div>
+      <div class="bq-sec"><b>Kain</b></div><div class="bq-cgrid">${decks}</div>
+      <div class="bq-sec"><b>Fabric</b></div><div class="bq-cgrid">${fabs}</div>
+      <button type="button" class="bq-btn" data-a="achList">🏆 Achievement (${E.ACH.filter(a => E.hasAch(achOwned, a.id)).length}/${E.ACH.length})</button>`;
   }
   function achHtml() {
-    const open = what => what[0] === 'deck' ? E.DECK[what[1]] : E.FAB[what[1]];
     return `<div class="bq-top"><h2 style="flex:1">🏆 Achievement</h2><button type="button" class="bq-btn sm" data-a="achBack">Kembali</button></div>
-      <div class="bq-mut">Tersimpan di akunmu. Tiap achievement membuka Kain (dek awal) atau Fabric baru.</div>
-      ${E.ACH.map(a => { const got = achOwned.includes(a.id), o = open(a.open), have = Math.min(a.need || 0, achTotals[a.total] || 0);
+      <div class="bq-mut">Tersimpan di akunmu. Tiap achievement membuka Kain (dek awal), Fabric, atau Latar baru.</div>
+      ${E.ACH.map(a => { const got = E.hasAch(achOwned, a.id), have = Math.min(a.need || 0, achTotals[a.total] || 0);
         const prog = !got && a.total ? `<div class="bq-hp" style="margin-top:4px"><i style="width:${have / a.need * 100}%;background:var(--mint)"></i></div><div class="bq-mut" style="font-size:12px">${have}/${a.need}</div>` : '';
-        return `<div class="bq-ach ${got ? '' : 'lock'}"><span class="ic">${got ? '🏆' : '🔒'}</span><div style="flex:1"><b>${a.name}</b><span class="bq-mut">${a.desc}</span><div style="font-size:13px">Membuka ${a.open[0] === 'deck' ? 'Kain' : 'Fabric'}: ${o.icon} <b style="display:inline">${o.name}</b></div>${prog}</div></div>`; }).join('')}
+        return `<div class="bq-ach ${got ? '' : 'lock'}"><span class="ic">${got ? '🏆' : '🔒'}</span><div style="flex:1"><b>${a.name}</b><span class="bq-mut">${a.desc}</span><div style="font-size:13px">Membuka ${[a.open].concat(a.also ? [a.also] : []).map(w => openKind(w) + ': ' + openObj(w).icon + ' <b style="display:inline">' + openObj(w).name + '</b>').join(' · ')}</div>${prog}</div></div>`; }).join('')}
       <div class="bq-mut">Hitungan total bertambah saat run selesai (kalah atau Akhiri run).</div>`;
   }
   function toast(text) {
@@ -809,7 +965,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   function checkAch() {
     if (!G) return;
     G.newAch = G.newAch || [];
-    const fresh = E.earned(G).filter(id => !achOwned.includes(id) && !G.newAch.includes(id));
+    const fresh = E.earned(G).filter(id => !E.hasAch(achOwned, id) && !G.newAch.includes(id));
     fresh.forEach(id => {
       const a = E.ACH.find(x => x.id === id); G.newAch.push(id);
       if (a.open[0] === 'fabric' && !G.unlocked.includes(a.open[1])) G.unlocked.push(a.open[1]);
@@ -825,14 +981,16 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     achOwned = (list || []).slice(); if (totals) achTotals = totals;
     store.set(ACHKEY, JSON.stringify({ list: achOwned, totals: achTotals }));
   }
-  const achText = id => { const a = E.ACH.find(x => x.id === id), o = a.open[0] === 'deck' ? E.DECK[a.open[1]] : E.FAB[a.open[1]]; return a.name + ' · terbuka: ' + o.icon + ' ' + o.name; };
+  const openObj = w => w[0] === 'deck' ? E.DECK[w[1]] : w[0] === 'bg' ? E.BGS.find(b => b.id === w[1]) : E.FAB[w[1]];
+  const openKind = w => w[0] === 'deck' ? 'Kain' : w[0] === 'bg' ? 'Latar' : 'Fabric';
+  const achText = id => { const a = E.ACH.find(x => x.id === id); return a.name + ' · terbuka: ' + [a.open].concat(a.also ? [a.also] : []).map(w => openObj(w).icon + ' ' + openObj(w).name).join(', '); };
   function endHtml() {
     const s = G.stats, uniq = []; const seen = {};
     s.list.slice().sort((a, b) => b.s - a.s).forEach(x => { if (!seen[x.w]) { seen[x.w] = 1; uniq.push(x); } });
     const POSN = { n: 'noun', v: 'verb', a: 'adjective', r: 'adverb' };
     const sendLine = sendState === 'ok' ? '<div class="bq-mut">Hasil tersimpan.</div>' : sendState === 'sending' ? '<div class="bq-mut">Menyimpan hasil…</div>' : sendState === 'fail' ? `<div class="bq-msg">Hasil belum tersimpan: ${sendErr} <button type="button" class="bq-btn sm" data-a="retry">Coba lagi</button></div>` : '';
-    return `<div class="bq-top"><div class="t"><b>${label()}</b><h2>Run berakhir</h2></div></div>${arenaHtml()}
-      <div class="bq-card bq-center"><div class="bq-mut">Skor ronde ${R.score} dari ${R.target}.</div><div style="margin-top:6px">${G.reached >= best ? '🏅 Rekor baru!' : 'Rekor: Stage ' + best}</div>${sendLine}</div>
+    return `<div class="bq-top"><div class="t"><b>${label()}</b><h2>${G.won ? '🏆 Juara! Run dimenangkan' : 'Run berakhir'}</h2></div></div>${arenaHtml()}
+      <div class="bq-card bq-center"><div class="bq-mut">Skor ronde ${R.score} dari ${R.target}.</div><div style="margin-top:6px">${G.won ? 'Kamu menaklukkan ' + E.CFG.stages + ' stage' + (G.reached > E.CFG.stages ? ' + Endless sampai Stage ' + G.reached : '') + '. ' : ''}${G.reached >= best ? '🏅 Rekor baru!' : 'Rekor: Stage ' + best}</div>${sendLine}</div>
       ${achNew.length || (G.newAch || []).length ? `<div class="bq-card"><b>🏆 Achievement baru</b>${[...new Set((G.newAch || []).concat(achNew))].map(id => `<div class="bq-mut">${achText(id)}</div>`).join('')}</div>` : ''}
       <div class="bq-card"><b>Kata-katamu</b><div class="bq-mut">Ketuk kata untuk melihat artinya, lalu simpan ke Lemari.</div>
         <div class="bq-wl">${uniq.map(x => `<div class="row" data-a="meaning" data-i="${x.w}"><b>${x.w}${POSN[x.p] ? `<s>${POSN[x.p]}</s>` : ''}</b><i>${x.s} poin</i><span data-add="${x.w}"></span></div><div class="mean" data-mean="${x.w}" hidden></div>`).join('') || '<div class="bq-mut">Belum ada kata.</div>'}</div></div>
@@ -856,6 +1014,29 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
         <div class="bq-mut" style="margin:8px 0">Koinmu: 🪙 ${G.coins}${o.maxed ? ' · sudah maksimal' : !can ? ' · koin belum cukup' : ''}</div>
         <div class="bq-btns"><button type="button" class="bq-btn" data-a="closeModal">Batal</button><button type="button" class="bq-btn pri" data-a="confirmBuy" ${can ? '' : 'disabled'}>${o.maxed ? 'Maksimal' : 'Beli 🪙 ' + o.price}</button></div></div></div>`;
     }
+    if (modal.t === 'opts') { const o = E.opened(achOwned), bg = Bg.choice;
+      return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Opsi</h2>
+        <div class="bq-orow"><span>Musik latar</span><button type="button" class="bq-mute ${Music.on ? '' : 'off'}" data-a="music" aria-label="Musik latar" aria-pressed="${Music.on}">🎵</button></div>
+        <div class="bq-orow"><span>Efek suara</span><button type="button" class="bq-mute ${Sfx.on ? '' : 'off'}" data-a="sfx" aria-label="Efek suara" aria-pressed="${Sfx.on}">🔔</button></div>
+        <div class="bq-orow"><span>Kecepatan hitung skor</span><button type="button" class="bq-speed" data-a="speed" aria-label="Kecepatan hitung skor">${['⚡', '1×', '2×'][speed()]}</button></div>
+        <div class="bq-orow" style="flex-direction:column;align-items:stretch"><span>Latar</span><div class="bq-bgpick">${E.BGS.map(b => { const ok = o.bgs.includes(b.id); return `<button type="button" class="bq-btn sm ${bg === b.id ? 'pri' : ''}" data-a="setBg" data-i="${b.id}" ${ok ? '' : 'disabled'}>${ok ? b.icon : '🔒'} ${b.name}</button>`; }).join('')}<button type="button" class="bq-btn sm ${bg === 'off' ? 'pri' : ''}" data-a="setBg" data-i="off">Mati</button></div>
+          <span class="bq-mut">Anyaman dan Benang terbuka lewat achievement.</span></div>
+        <button type="button" class="bq-btn" style="width:100%;margin-top:10px" data-a="closeModal">Tutup</button></div></div>`; }
+    if (modal.t === 'info') return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Info run</h2>
+        <div class="bq-stages">${Array.from({ length: Math.max(E.CFG.stages, G.stage + 1) }, (x, k) => `<span class="${k < G.stage ? 'done' : k === G.stage ? 'now' : ''}">${k + 1}</span>`).join('')}</div>
+        <div class="bq-mut" style="margin:6px 0">${label()} · Kain ${E.DECK[G.deck || 'base'].icon} ${E.DECK[G.deck || 'base'].name}</div>
+        <div class="bq-sec"><b>Hand (jenis kata)</b></div><div class="bq-hands">${Object.keys(E.HANDS).map(k => { const h = E.handInfo(k, E.lvOf(G, k)); return `<span>${h.icon} ${h.name} Lv${h.lv} · ${h.chips} × ${h.mult}</span>`; }).join('')}</div>
+        <div class="bq-sec"><b>Fabric (kiri ke kanan)</b></div><div class="bq-chips">${G.fabrics.map(id => `<span class="bq-chip">${F(id).icon} ${F(id).name}</span>`).join('') || '-'}</div>
+        <button type="button" class="bq-btn" style="width:100%;margin-top:12px" data-a="closeModal">Tutup</button></div></div>`;
+    if (modal.t === 'howto') return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Cara main</h2><ul class="bq-mut" style="margin:6px 0 0;padding-left:18px">
+        <li>Satu run = ${E.CFG.stages} stage. Tiap stage: Ronde Kecil, Ronde Besar, lalu Boss (24 ronde). Kalahkan boss Stage ${E.CFG.stages} untuk menang, lalu boleh lanjut Endless.</li>
+        <li>Tangan 8 kartu huruf, supply 32. Ketuk huruf berurutan untuk menyusun kata, lalu Serang. Capai target ronde untuk mengalahkan musuh.</li>
+        <li>Huruf jelek? Pilih lalu Buang untuk mengambil huruf baru (3 kali per ronde).</li>
+        <li>Skor = Chips × Mult. Jenis kata = hand: Noun 10 × 2, Verb 15 × 3, Adjective 20 × 4, Adverb 30 × 5. Naikkan levelnya dengan Buku di shop.</li>
+        <li>Kata yang ada di Lemarimu = kata kekuatan: +4 Mult.</li>
+        <li>Fabric bekerja dari kiri ke kanan: seret untuk mengatur urutannya.</li>
+        <li>Di shop ada upgrade kartu, kartu imbuhan (UN, LY, ING…), gabungan huruf (TH, QU…), dan kartu wild ?.</li></ul>
+        <button type="button" class="bq-btn" style="width:100%;margin-top:12px" data-a="closeModal">Tutup</button></div></div>`;
     if (modal.t === 'giveup') return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Akhiri run?</h2><div class="bq-mut" style="margin:6px 0 12px">Run berhenti di ${label()}. Kata-katamu tetap bisa dilihat artinya dan disimpan ke Lemari.</div>
       <div class="bq-btns"><button type="button" class="bq-btn" data-a="closeModal">Lanjut main</button><button type="button" class="bq-btn pri" data-a="giveUpYes">Ya, akhiri</button></div></div></div>`;
     if (modal.t === 'wild') return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Kartu ? jadi huruf apa?</h2><div class="bq-mut">Nilainya setengah dari huruf aslinya.${R.boss && R.boss.block ? ' Huruf ' + R.boss.block.toUpperCase() + ' sedang dikunci.' : ''}</div>
@@ -871,6 +1052,9 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
   function render() {
     let h = '';
     if (phase === 'intro') h = introHtml();
+    else if (phase === 'coll') h = collHtml();
+    else if (phase === 'win') h = `<div class="bq-center bq-pop bq-win"><img src="img/game/bibo-victory.webp" alt="Bibo menang"><h2 style="font-size:30px">Juara! 🏆</h2><div>Kamu menaklukkan ${E.CFG.stages} stage dan ${E.CFG.stages * 3} ronde.</div><div class="bq-mut">Selesai di sini, atau lanjut ke Endless: target terus naik sampai kamu kalah.</div></div>
+      <div class="bq-btns"><button type="button" class="bq-btn pri" data-a="finishWin">Selesai & lihat hasil</button><button type="button" class="bq-btn" data-a="endless">Lanjut Endless ♾️</button></div>`;
     else if (phase === 'deck') h = `<h2>Pilih Kain</h2><div class="bq-mut">Kain menentukan isi supply-mu. Kain baru terbuka lewat achievement.</div><div class="bq-opts">${deckOpts.map(id => { const d = E.DECK[id]; return `<button type="button" class="bq-opt" data-a="pickDeck" data-i="${id}"><span class="ic">${d.icon}</span><b>${d.name}</b><span class="d">${d.desc}</span></button>`; }).join('')}</div>`;
     else if (phase === 'ach') h = achHtml();
     else if (phase === 'starter') h = `<h2>Pilih Fabric awal</h2><div class="bq-mut">Kamu mulai dengan 1 Fabric dari 3 pilihan.</div><div class="bq-opts">${starters.map((id, i) => `<button type="button" class="bq-opt" data-a="pickStarter" data-i="${i}">${fabricCard(id)}</button>`).join('')}</div>`;
@@ -890,7 +1074,9 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
         <div><div class="bq-mut">Hand kamu</div><div class="bq-hands">${'nvar'.split('').map(p => { const h = E.handInfo(p, E.lvOf(G, p)); return `<span>${h.icon} <b>${h.name}</b> Lv${h.lv} · ${h.chips} × ${h.mult}</span>`; }).join('')}</div></div>
         <button type="button" class="bq-btn pri" data-a="leaveShop">Lanjut ke ${label()}</button>`;
     } else if (phase === 'end') h = endHtml();
-    body.innerHTML = '<div class="bq' + (phase === 'round' ? ' bq-r' : '') + '">' + h + (modal ? modalHtml() : '') + '</div>';
+    body.innerHTML = '<div class="bq' + (phase === 'round' ? ' bq-r' : '') + (phase === 'intro' ? ' bq-in' : '') + '">' + h + (modal ? modalHtml() : '') + '</div>';
+    const bossOn = !!(R && R.boss && !R.cleared && (phase === 'bosspre' || phase === 'round'));
+    Bg.update(G && phase !== 'intro' && phase !== 'coll' && phase !== 'ach' ? G.stage : 0, bossOn); Music.mode(bossOn ? 'boss' : 'calm');
     if (shake) { const p = body.querySelector('.bq-prev'); if (p) p.classList.add('bq-shake'); }
     shake = false;
     body.querySelectorAll('[data-add]').forEach(el => { try { const w = el.getAttribute('data-add'), m = means[w]; const b = host.addButton(w, m && m.r ? m.r.translation : ''); if (b) { b.addEventListener('click', ev => ev.stopPropagation()); el.replaceWith(b); } } catch (e) { /* host without Lemari: no add button */ } });
@@ -910,7 +1096,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     if (!g || g.submitted || sendState === 'sending') return;
     const s = g.stats;
     sendState = 'sending'; sendErr = '';
-    host.submit({ run_id: g.runId, stage: g.reached, round: g.rnd + 1, words: s.words, longest: s.longest, best_word: s.best.w, best_score: s.best.s, total_score: s.total, fabrics: g.fabrics.slice(), deck: g.deck || 'base', achievements: (g.newAch || []).slice(), counts: E.runCounts(g) })
+    host.submit({ run_id: g.runId, stage: g.reached, round: g.rnd + 1, words: s.words, longest: s.longest, best_word: s.best.w, best_score: s.best.s, total_score: s.total, fabrics: g.fabrics.slice(), deck: g.deck || 'base', won: !!g.won, achievements: (g.newAch || []).slice(), counts: E.runCounts(g) })
       .then(function (r) {
         markSent(g); sendState = 'ok';
         if (r && r.achievements) {
@@ -1021,7 +1207,13 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     toast('Bekal misi harian: ' + [b.coins ? '+' + b.coins + ' koin' : '', got.join(', ')].filter(Boolean).join(' · '));
   }
   function beginRound() { R = E.makeRound(G, rng); sel = []; msg = ''; last = null; phase = R.boss ? 'bosspre' : 'round'; render(); }
-  function advance() { if (isBoss()) { G.stage++; G.rnd = 0; checkAch(); shop = E.shopItems(G, rng); phase = 'shop'; render(); } else { G.rnd++; beginRound(); } }
+  function toShop() { G.stage++; G.rnd = 0; checkAch(); shop = E.shopItems(G, rng); phase = 'shop'; render(); }
+  // beating the stage-8 boss wins the run (owner 25 Nov); the player may stop there or go on endless
+  function advance() {
+    if (!isBoss()) { G.rnd++; beginRound(); return; }
+    if (!G.won && G.stage + 1 >= E.CFG.stages) { G.won = true; checkAch(); Sfx.play('win'); phase = 'win'; render(); return; }
+    toShop();
+  }
   const A = {
     start() {
       deckOpts = E.opened(achOwned).decks;
@@ -1035,8 +1227,15 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     },
     achList() { phase = 'ach'; render(); },
     achBack() { phase = 'intro'; render(); },
+    coll() { phase = 'coll'; render(); },
+    opts() { modal = { t: 'opts' }; render(); },
+    runInfo() { modal = { t: 'info' }; render(); },
+    howto() { modal = { t: 'howto' }; render(); },
+    setBg(v) { Bg.set(v); render(); },
     giveUp() { modal = { t: 'giveup' }; render(); },
     giveUpYes() { modal = null; endRun(); },
+    endless() { G.endless = true; toShop(); },
+    finishWin() { endRun(); },
     sfx() { Sfx.toggle(); render(); },
     resume() { const s = load(); if (!s) { A.start(); return; } restore(s); if (phase === 'round' && R && !R.cleared && E.failed(G, R)) { endRun(); return; } render(); },
     pickStarter(i) { G.fabrics = [starters[+i]]; applyBonus(); beginRound(); },
@@ -1163,7 +1362,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       const st = document.createElement('style'); st.id = 'bq-css'; st.textContent = CSS; document.head.appendChild(st);
       body.addEventListener('click', onClick); document.addEventListener('keydown', onKey);
       body.addEventListener('pointerdown', dragStart); body.addEventListener('pointermove', dragMove, { passive: false }); body.addEventListener('pointerup', dragEnd); body.addEventListener('pointercancel', dragEnd);
-      document.addEventListener('visibilitychange', () => { if (document.hidden) Music.stop(); });
+      document.addEventListener('visibilitychange', () => { if (document.hidden) Music.stop(); else Bg.wake(); });
       if (window.MutationObserver) new MutationObserver(() => { if (root.hidden) Music.stop(); }).observe(root, { attributes: true, attributeFilter: ['hidden'] });
     }
     best = +store.get(BEST) || 0;

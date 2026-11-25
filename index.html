@@ -56,6 +56,8 @@ body { -webkit-font-smoothing: antialiased; }
 body[data-screen="gameplay"] .app { padding: max(10px, env(safe-area-inset-top)) 14px max(10px, env(safe-area-inset-bottom)); }
 #gameplay .st-wrap { gap: 8px; }
 #gameplay .fit-top .round { width: 36px; height: 36px; }
+body[data-screen="gameplay"] .app { max-width: 1360px; }
+@media (orientation: landscape) and (max-height: 539.98px) { body[data-screen="gameplay"] .app { padding-top: 6px; padding-bottom: 6px; } #gameplay .fit-top { position: absolute; top: 10px; left: 14px; z-index: 3; } #gameplay .fit-top h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }
 [hidden] { display: none !important; }
 h1, h2 { font-family: var(--display); font-weight: 800; letter-spacing: -0.5px; margin: 0; line-height: 1.05; }
 p { margin: 0; }
@@ -549,7 +551,6 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   .res-grid { column-gap: 24px; }
 }
 @media (min-width: 1280px) {
-  body[data-screen="gameplay"] .app { max-width: 1360px; }
   #lemari-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 </style>
@@ -1722,7 +1723,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       fqLoad = new Promise(function (ok, no) {
         var sc = document.createElement('script');
         // raise v when game.js changes: a new URL skips any old copy the phone or the CDN still holds
-        sc.src = 'game.js?v=15'; sc.onload = ok; sc.onerror = function () { sc.remove(); no(new Error('game')); };
+        sc.src = 'game.js?v=18'; sc.onload = ok; sc.onerror = function () { sc.remove(); no(new Error('game')); };
         document.head.appendChild(sc);
       });
       fqLoad.catch(function () { fqLoad = null; });
@@ -1794,7 +1795,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     try { run = JSON.parse(localStorage.getItem('wr_game') || 'null'); best = +localStorage.getItem('wr_game_best') || 0; } catch (e) { run = null; }
     var live = run && run.G && run.R && run.phase && run.phase !== 'end' && run.phase !== 'intro';
     $('qh-best').textContent = best ? 'Rekor ' + best.toLocaleString('id-ID') : '';
-    $('qh-state').textContent = live ? 'Stage ' + (run.G.stage + 1) + ' · Ronde ' + (run.G.rnd + 1) : 'Mulai run baru';
+    $('qh-state').textContent = live ? 'Stage ' + (run.G.stage + 1) + (run.G.stage + 1 > 8 ? ' · Endless' : '/8') + ' · ' + ['Ronde Kecil', 'Ronde Besar', 'Boss'][run.G.rnd] : 'Mulai run baru';
     $('qh-sub').textContent = live ? (run.R.score || 0).toLocaleString('id-ID') + ' / ' + (run.R.target || 0).toLocaleString('id-ID') : 'Susun kata, kalahkan boss, kumpulkan Fabric.';
     $('qh-bar').hidden = !live;
     if (live) $('qh-fill').style.width = Math.min(100, Math.round((run.R.score || 0) / Math.max(1, run.R.target || 1) * 100)) + '%';
