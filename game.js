@@ -457,7 +457,7 @@ const UI = (function () {
 .bq-slot{background:var(--card);border:1.5px dashed var(--line);border-radius:12px;min-height:58px;padding:4px;text-align:center;font:inherit;font-size:10.5px;line-height:1.15;display:flex;flex-direction:column;justify-content:center;align-items:center;color:var(--muted)}
 button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)}
 .bq-slot[data-a="showFab"]{touch-action:pan-y;user-select:none;-webkit-user-select:none}.bq-slot.drag{position:relative;z-index:5;cursor:grabbing;box-shadow:0 8px 20px #0007;transition:none;background:var(--card-2)}.bq-slot.drop{box-shadow:0 0 0 2px var(--yellow);background:var(--card-2)}.bq-slot .ic{font-size:20px}
-.bq-info{display:flex;gap:6px;font-size:12px;color:var(--muted);flex-wrap:wrap}.bq-info span{background:var(--card);padding:4px 10px;border-radius:999px}
+.bq-info{display:flex;gap:6px;font-size:12px;color:var(--muted);flex-wrap:wrap}.bq-info span,.bq-info .bq-sv{background:var(--card);padding:4px 10px;border-radius:999px}
 .bq-prev{background:var(--card);border-radius:20px;padding:12px;min-height:104px}
 .bq-sel{display:flex;gap:5px;min-height:46px;flex-wrap:wrap;margin-bottom:6px}.bq-sel .bq-tile{width:38px;height:44px;font-size:19px}
 .bq-pl{font-size:13px;color:var(--muted)}.bq-pl b{color:var(--accent-text);font-size:17px}
@@ -525,7 +525,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 .bq-r .bq-bar{font-size:12px}
 .bq-r .bq-boss{padding:6px 10px;font-size:12px;line-height:1.3}
 .bq-r .bq-slot{min-height:40px;font-size:9.5px;border-radius:10px}.bq-r .bq-slot .ic{font-size:16px}
-.bq-r .bq-info{flex-wrap:nowrap;overflow:hidden;font-size:11.5px}.bq-r .bq-info span{padding:3px 8px;white-space:nowrap}
+.bq-r .bq-info{flex-wrap:nowrap;overflow:hidden;font-size:11.5px}.bq-r .bq-info span,.bq-info .bq-sv{padding:3px 8px;white-space:nowrap}
 .bq-r .bq-prev{min-height:84px;max-height:118px;padding:8px 10px;overflow:hidden}.bq-r .bq-prev .bq-chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.bq-r .bq-prev .bq-chips::-webkit-scrollbar{display:none}.bq-r .bq-prev .bq-chip{flex:none}
 .bq-r .bq-sel{min-height:38px;margin-bottom:4px;flex-wrap:nowrap;gap:4px}.bq-r .bq-sel .bq-tile{width:32px;height:38px;font-size:17px}
 .bq-r .bq-last{background:none;padding:0;border-radius:0}
@@ -541,7 +541,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 .bq-host>:not(.bq-bgc){position:relative;z-index:1}
 .bq-bgc{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
 .bq-bgon .bq-mut{color:var(--text);opacity:.8}
-.bq-hn,.bq-pile{display:none}
+.bq-hn,.bq-pile,.bq-rs,.bq-hudg,.bq-bh,.bq-tg{display:none}
 .bq-handrow{display:flex;align-items:flex-end;justify-content:center;gap:10px}
 .bq-hand.fan .bq-tile{transform:rotate(var(--fr));transition:transform .15s}
 .bq-hand.fan .bq-tile.used{transform:translateY(6px) rotate(var(--fr))}
@@ -549,7 +549,9 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 @media(hover:hover){.bq-hand.fan .bq-tile:not(.used):not(.lock):hover{transform:translateY(-6px) rotate(var(--fr))}}
 button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-top:4px solid #e0475f}button.bq-slot.k-x{border-top:4px solid #8a2be2}button.bq-slot.k-rt,button.bq-slot.k-copy{border-top:4px solid #1f9d6b}
 .bq-pile{flex:none;flex-direction:column;align-items:center;justify-content:center;width:52px;height:68px;border-radius:10px;background:repeating-linear-gradient(45deg,#6c5ce7 0 6px,#5a4bd1 6px 12px);color:#fff;box-shadow:3px 3px 0 #3c3489,6px 6px 0 #2a2470}
-.bq-pile b{font:800 18px var(--display)}.bq-pile small{font-size:10px;font-weight:700;opacity:.9}
+.bq-pile{border:0;font:inherit;cursor:pointer}.bq-pile b{font:800 18px var(--display)}
+.bq-sv{border:0;color:inherit;font:inherit;cursor:pointer;text-decoration:underline dotted}
+.bq-sup{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:8px 6px;margin-top:8px}.bq-sup .it{display:flex;flex-direction:column;align-items:center;gap:2px}.bq-sup .bq-tile{width:40px;height:46px;font-size:20px;pointer-events:none}.bq-sup .bq-tile.multi{font-size:13px}.bq-sup i{font-style:normal;font-size:12px;font-weight:800;color:var(--muted)}.bq-sup .it.none{opacity:.3}.bq-pile small{font-size:10px;font-weight:700;opacity:.9}
 .bq-orow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
 .bq-bgpick{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}.bq-bgpick .bq-btn{flex:1 1 40%}
 .bq-stages{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}.bq-stages span{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--card-2);font-weight:800;font-size:13px;color:var(--muted)}
@@ -576,20 +578,30 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
 @media(min-width:600px) and (orientation:portrait){.bq-r{--bq-art:150px}.bq-r .bq-hand{grid-template-columns:repeat(var(--bq-n,8),minmax(0,62px));gap:7px}.bq-r .bq-hand .bq-tile{height:64px;font-size:28px}.bq-r .bq-slot{min-height:56px;font-size:12px}.bq-r .bq-slot .ic{font-size:22px}.bq-r .bq-sel .bq-tile{width:40px;height:48px;font-size:21px}.bq-r .bq-btn{min-height:54px;font-size:16px}.bq-r .bq-prev{max-height:140px}.bq-cm b{font-size:21px}.bq-r .bq-info{font-size:13px}}
 @media((orientation:landscape) and (min-width:900px) and (min-height:540px)) or ((orientation:landscape) and (max-height:539.98px) and (min-width:560px)){
 .bq-r{display:grid;grid-template-columns:var(--hudw,300px) minmax(0,1fr);gap:14px 18px;align-items:stretch;min-height:calc(100dvh - 90px)}
-.bq-r .bq-L{display:flex;flex-direction:column;gap:8px;background:#16141fe0;border-radius:20px;padding:10px;color:#f1eff8;box-shadow:0 4px 0 #0005}
+.bq-r .bq-L{display:flex;flex-direction:column;gap:8px;align-self:stretch;background:#16141fe0;border-radius:20px;padding:10px;color:#f1eff8;box-shadow:0 4px 0 #0005}
+.bq-r .bq-L .bq-coin,.bq-r .bq-L .bq-mute{background:#2a2737;color:#fff}
 .bq-r .bq-L .bq-mut,.bq-r .bq-L .bq-sc,.bq-r .bq-L .bq-gt{color:#c9c6d6}
 .bq-r .bq-R{display:flex;flex-direction:column;gap:10px;min-width:0}
 .bq-r .bq-top .t b{color:#f1eff8}
 .bq-r .bq-arena{flex-direction:row;align-items:flex-end;background:#26233380;box-shadow:none}
-.bq-r .bq-arena .bq-fig:first-of-type{width:34%}.bq-r .bq-arena .bq-fig:last-of-type{width:62%}.bq-r .bq-vs{display:none}
-.bq-r .bq-arena .bq-fig:first-of-type .bq-img{height:calc(var(--bq-art) * .55)}.bq-r .bq-arena .bq-fig:first-of-type img{max-height:calc(var(--bq-art) * .55)}
+.bq-r .bq-arena .bq-fig.me{width:34%}.bq-r .bq-arena .bq-fig.en{width:62%}.bq-r .bq-vs{display:none}
+.bq-r .bq-arena .bq-fig.me .bq-img{height:calc(var(--bq-art) * .55)}.bq-r .bq-arena .bq-fig.me img{max-height:calc(var(--bq-art) * .55)}
+.bq-r .bq-L .bq-top,.bq-r .bq-L .bq-info,.bq-r .bq-bar .bq-sc,.bq-r .bq-arena .bq-name,.bq-r .bq-arena .bq-gt{display:none}
+.bq-r .bq-arena{flex:1;flex-wrap:wrap;align-items:center;align-content:space-between;padding:0 0 8px;overflow:hidden;border-radius:14px}
+.bq-r .bq-bh{display:flex;justify-content:space-between;align-items:baseline;flex-basis:100%;font:800 16px var(--display);color:#fff;background:#2f7fd1;padding:6px 10px;margin-bottom:4px}.bq-r .bq-bh small{font:700 11px var(--ui);opacity:.9}.bq-r .bq-bh.r1{background:#d9822b}.bq-r .bq-bh.r2{background:#c0392b}
+.bq-r .bq-tg{display:flex;justify-content:space-between;align-items:center;flex-basis:100%;margin:6px 8px 0;background:#0e0d14;border-radius:10px;padding:5px 10px;font-size:12px;color:#c9c6d6}.bq-r .bq-tg b{font:800 20px var(--display);color:#ff6b6b;margin-left:4px;flex:1}.bq-r .bq-tg span{color:#ffd23f;font-weight:800}
+.bq-r .bq-rs{display:flex;align-items:center;gap:8px;background:#26233380;border-radius:12px;padding:6px 8px}.bq-r .bq-rs span{font-size:12px;line-height:1.1;font-weight:700;color:#c9c6d6;text-align:center}.bq-r .bq-rs b{flex:1;text-align:center;font:800 24px var(--display);background:#0e0d14;border-radius:10px;padding:3px 6px;color:#fff}
+.bq-r .bq-hn{background:#26233380;border-radius:12px 12px 0 0;padding:6px 6px 0;margin-bottom:-8px}.bq-r .bq-bar.cm{background:#26233380;border-radius:0 0 12px 12px;padding:6px 6px 8px}
+.bq-r .bq-hudg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.bq-hb{grid-row:span 2;border:0;border-radius:12px;color:#fff;font:800 16px/1.1 var(--display);cursor:pointer;box-shadow:0 3px 0 #0005;min-height:44px}.bq-hb.red{background:#e0475f}.bq-hb.orange{background:#e8901a;grid-row:span 1}
+.bq-hx{background:#26233380;border:0;border-radius:10px;padding:4px 2px;text-align:center;display:flex;flex-direction:column;justify-content:center;color:#e8e6f0;font:inherit;min-width:0}.bq-hx small{font-size:11px;color:#c9c6d6;font-weight:700}.bq-hx b{font:800 19px var(--display)}.bq-hx.wide{grid-column:span 2}.bq-hx.coin b{color:#ffd23f;font-size:22px}button.bq-hx{cursor:pointer;text-decoration:underline dotted #c9c6d6}
 .bq-r .bq-hn{display:block;text-align:center;font-size:15px}.bq-r .bq-hn b{font-family:var(--display);font-size:18px}
 .bq-r .bq-bar.cm{flex-direction:column;align-items:stretch;gap:6px}.bq-r .bq-cm{justify-content:center}.bq-r .bq-cm b{font-size:24px;min-width:70px;padding:6px 12px}
 .bq-r .bq-sc{margin:0;text-align:center;display:flex;justify-content:space-around;gap:6px;background:#26233380;border-radius:12px;padding:6px}.bq-r .bq-sc br{display:none}.bq-r .bq-sc b{color:#fff;display:block;font-size:16px}
-.bq-r .bq-info{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:auto}.bq-r .bq-info span{text-align:center;background:#26233380;color:#e8e6f0;border-radius:10px;padding:6px 4px;white-space:normal}
+.bq-r .bq-info{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.bq-r .bq-info span,.bq-info .bq-sv{text-align:center;background:#26233380;color:#e8e6f0;border-radius:10px;padding:6px 4px;white-space:normal}
 .bq-r .bq-slots{gap:10px}.bq-r button.bq-slot,.bq-r .bq-slot{min-height:96px;border-radius:12px;font-size:12px}.bq-r .bq-slot .ic{font-size:28px}
 .bq-r .bq-prev{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;max-height:none;min-height:120px;background:#16141fb8;color:#f1eff8;border-radius:20px}
-.bq-r .bq-prev .bq-pl{color:#d9d6e6}.bq-r .bq-sel{justify-content:center;min-height:62px}.bq-r .bq-sel .bq-tile{width:52px;height:60px;font-size:28px}.bq-r .bq-prev .bq-chips{justify-content:center;max-width:100%}
+.bq-r .bq-prev .bq-pl,.bq-r .bq-prev .bq-last{color:#d9d6e6}.bq-r .bq-prev .bq-pl b,.bq-r .bq-prev .bq-last b{color:#ffd23f}.bq-r .bq-sel{justify-content:center;min-height:62px}.bq-r .bq-sel .bq-tile{width:52px;height:60px;font-size:28px}.bq-r .bq-prev .bq-chips{justify-content:center;max-width:100%}
 .bq-r .bq-pile{display:flex}.bq-r .bq-hand.fan{padding-bottom:8px}.bq-r .bq-hand.fan .bq-tile{transform:translateY(var(--fy)) rotate(var(--fr))}.bq-r .bq-hand.fan .bq-tile.used{transform:translateY(calc(var(--fy) + 10px)) rotate(var(--fr))}.bq-r .bq-hand.fan .bq-tile.hit{transform:translateY(-10px) scale(1.08)}
 .bq-r .bq-hand{grid-template-columns:repeat(var(--bq-n,8),minmax(0,68px));gap:8px}.bq-r .bq-hand .bq-tile{height:80px;font-size:34px}.bq-r .bq-hand .bq-tile small{font-size:13px}
 .bq-r .bq-btns{max-width:640px;width:100%;align-self:center}.bq-r .bq-btn{min-height:54px;font-size:17px}
@@ -600,12 +612,12 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
 @media(orientation:landscape) and (min-width:1280px) and (min-height:860px){.bq-r{--hudw:340px;--bq-art:180px}.bq-r .bq-hand{grid-template-columns:repeat(var(--bq-n,8),minmax(0,84px))}.bq-r .bq-hand .bq-tile{height:98px;font-size:42px}.bq-r button.bq-slot,.bq-r .bq-slot{min-height:120px;font-size:14px}.bq-r .bq-slot .ic{font-size:34px}.bq-r .bq-sel .bq-tile{width:60px;height:70px;font-size:32px}.bq-r .bq-btn{min-height:62px;font-size:19px}}
 @media(orientation:landscape) and (max-height:539.98px) and (min-width:560px){
 .bq{padding-bottom:6px}.bq>h2:first-child,.bq-top{padding-left:42px}.bq-r .bq-top{padding-left:40px}
-.bq-r{--hudw:224px;--bq-art:46px;gap:6px 10px;min-height:calc(100dvh - 24px)}.bq-r .bq-top .bq-speed{display:none}.bq-r .bq-top{flex-wrap:wrap;justify-content:flex-end}.bq-r .bq-top .t{order:2;flex-basis:100%;margin-left:-40px}.bq-r .bq-top .t b{white-space:nowrap}
+.bq-r{--hudw:224px;--bq-art:38px;gap:6px 10px;min-height:calc(100dvh - 24px)}.bq-r .bq-top .bq-speed{display:none}.bq-r .bq-top{flex-wrap:wrap;justify-content:flex-end}.bq-r .bq-top .t{order:2;flex-basis:100%;margin-left:-40px}.bq-r .bq-top .t b{white-space:nowrap}
 .bq-r .bq-L{gap:5px;padding:6px;border-radius:14px}.bq-r .bq-top{gap:4px}.bq-r .bq-top .t b{font-size:11px}.bq-r .bq-speed,.bq-r .bq-mute{height:24px;width:auto;padding:0 6px;font-size:11px}.bq-r .bq-coin{font-size:12px;padding:2px 6px}
 .bq-r .bq-arena{padding:4px 6px}.bq-r .bq-name{font-size:10px}.bq-r .bq-gt{font-size:10px}.bq-r .bq-goal{height:7px}
-.bq-r .bq-boss{font-size:9.5px;padding:3px 6px;line-height:1.15}
+.bq-r .bq-boss{font-size:9.5px;padding:3px 6px;line-height:1.15}.bq-r .bq-bh{font-size:12px;padding:3px 6px 3px 42px;margin-bottom:2px}.bq-r .bq-bh small{font-size:9px}.bq-r .bq-tg{margin:3px 4px 0;padding:2px 6px;font-size:10px}.bq-r .bq-tg b{font-size:14px}.bq-r .bq-arena{padding-bottom:4px}.bq-r .bq-rs{padding:3px 6px}.bq-r .bq-rs span{font-size:9px}.bq-r .bq-rs b{font-size:15px;padding:1px 4px}.bq-r .bq-hn{padding:3px 4px 0;margin-bottom:-5px}.bq-r .bq-bar.cm{padding:3px 4px 4px}.bq-r .bq-hudg{gap:3px}.bq-hb{font-size:11px;min-height:28px;border-radius:8px}.bq-hx{padding:1px}.bq-hx small{font-size:8.5px}.bq-hx b{font-size:12px}.bq-hx.coin b{font-size:13px}
 .bq-r .bq-hn{font-size:11px}.bq-r .bq-hn b{font-size:13px}.bq-r .bq-cm b{font-size:15px;min-width:44px;padding:2px 6px}.bq-r .bq-sc{font-size:10px;padding:3px}.bq-r .bq-sc b{font-size:12px}
-.bq-r .bq-info{gap:3px}.bq-r .bq-info span{font-size:9.5px;padding:3px 2px}
+.bq-r .bq-info{gap:3px}.bq-r .bq-info span,.bq-info .bq-sv{font-size:9.5px;padding:3px 2px}
 .bq-r .bq-R{gap:5px}.bq-r .bq-slots{gap:5px}.bq-r button.bq-slot,.bq-r .bq-slot{min-height:40px;font-size:9px;border-radius:8px}.bq-r .bq-slot .ic{font-size:15px}
 .bq-r .bq-prev{min-height:58px;padding:4px 8px;border-radius:14px}.bq-r .bq-sel{min-height:32px;margin-bottom:2px}.bq-r .bq-sel .bq-tile{width:28px;height:32px;font-size:16px}.bq-r .bq-pl{font-size:11px}.bq-r .bq-pl b{font-size:13px}.bq-r .bq-chip{font-size:10px}
 .bq-r .bq-msg{min-height:12px;font-size:11px;line-height:12px}
@@ -874,9 +886,9 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     const en = enemyInfo(), sc = anim ? anim.before : R.score, pct = Math.min(100, sc / R.target * 100), over = sc > R.target, f = fx; fx = null;
     const say = f && f.say ? `<div class="bq-say">${f.say}</div>` : '';
     const art = `<img src="${en.img}" alt="">`;
-    return `<div class="bq-arena">${say}${f ? `<div class="bq-dmg">+${fmtN(f.dmg)}</div>` : ''}
-      <div class="bq-fig"><div class="bq-img ${f ? 'bq-atk' : ''}"><img src="img/game/bibo-${pose()}.webp" alt="Bibo"></div><div class="bq-name">Bibo</div></div><div class="bq-vs">VS</div>
-      <div class="bq-fig"><div class="bq-img ${f ? 'bq-ehit' : ''} ${R.cleared && !anim ? 'bq-dead' : ''}">${art}</div><div class="bq-goal ${over ? 'over' : ''}"><i style="width:${pct}%"></i></div><div class="bq-name">${en.n}</div><div class="bq-gt">${fmtN(sc)} / ${fmtN(R.target)}${over ? ' 🔥' : ''}</div></div></div>`;
+    return `<div class="bq-arena"><div class="bq-bh r${G.rnd}">${R.boss ? '👑 ' : ''}${en.n}<small>${RND[G.rnd]}</small></div>${say}${f ? `<div class="bq-dmg">+${fmtN(f.dmg)}</div>` : ''}
+      <div class="bq-fig me"><div class="bq-img ${f ? 'bq-atk' : ''}"><img src="img/game/bibo-${pose()}.webp" alt="Bibo"></div><div class="bq-name">Bibo</div></div><div class="bq-vs">VS</div>
+      <div class="bq-fig en"><div class="bq-img ${f ? 'bq-ehit' : ''} ${R.cleared && !anim ? 'bq-dead' : ''}">${art}</div><div class="bq-goal ${over ? 'over' : ''}"><i style="width:${pct}%"></i></div><div class="bq-name">${en.n}</div><div class="bq-gt">${fmtN(sc)} / ${fmtN(R.target)}${over ? ' 🔥' : ''}</div></div><div class="bq-tg">Capai <b>${fmtN(R.target)}</b><span>Hadiah 🪙 +${E.CFG.coinRound + G.stage}</span></div></div>`;
   }
 
   const fmtM = m => fmtN(Math.round(m * 100) / 100);
@@ -905,19 +917,23 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
       } else pv = `<div class="bq-pl">${w.length < 3 ? 'Pilih minimal 3 huruf untuk kata, atau langsung Buang' : '<b>' + w.toUpperCase() + '</b> belum jadi kata valid (boleh Buang huruf ini)'}</div>`;
     } else pv = '<div class="bq-pl">Ketuk huruf: susun kata untuk menyerang, atau buang huruf yang tidak berguna.</div>';
     const selIds = new Set(sel.map(t => t.id));
+    const hud = `<div class="bq-rs"><span>Skor<br>ronde</span><b>${fmtN(shown)}</b></div>`;
     const head = `<div class="bq-top"><div class="t"><b>${label()}</b></div><button type="button" class="bq-mute" data-a="runInfo" aria-label="Info run">ℹ️</button><button type="button" class="bq-mute" data-a="opts" aria-label="Opsi">⚙️</button><span class="bq-coin">🪙 ${G.coins}</span></div>${arenaHtml()}
-      <div class="bq-hn">${cm && cm.h ? `${cm.h.icon} <b>${cm.h.name}</b> Lv${cm.h.lv}` : '<span class="bq-mut">Susun kata…</span>'}</div>${cmHtml(cm, shown)}
-      ${R.boss ? `<div class="bq-boss"><b>${R.boss.name}:</b> ${R.boss.desc}${R.boss.block ? ' Terkunci: <b>' + R.boss.block.toUpperCase() + '</b>' : ''}</div>` : ''}`;
+      ${R.boss ? `<div class="bq-boss"><b>${R.boss.name}:</b> ${R.boss.desc}${R.boss.block ? ' Terkunci: <b>' + R.boss.block.toUpperCase() + '</b>' : ''}</div>` : ''}${hud}<div class="bq-hn">${cm && cm.h ? `${cm.h.icon} <b>${cm.h.name}</b> Lv${cm.h.lv}` : '<span class="bq-mut">Susun kata…</span>'}</div>${cmHtml(cm, shown)}`;
     const lastHtml = last && last.res ? `<div class="bq-last bq-pop">Terakhir: <b>${last.res.word.toUpperCase()} +${fmtN(last.res.final)}</b> <button type="button" class="bq-arti" data-a="arti" data-i="${last.res.word}">📖 Arti</button> <span class="bq-mut"></span>${last.res.recycled ? ` ♻️ ${last.res.recycled.toUpperCase()}` : ''}${last.res.extraDraw ? ' 🔄 +1' : ''}<div class="bq-chips">${chipsOf(last.res)}</div></div>` : '';
     if (!sel.length && lastHtml && !anim) pv = lastHtml;
     if (R.cleared && !anim) return '<div class="bq-L">' + head + '</div><div class="bq-R">' + `<div class="bq-center bq-pop"><h2>${enemyInfo().n} kalah! 🎉</h2><div class="bq-mut">+${last.fin.coins} koin${last.fin.saver ? ` (+${last.fin.saver} Saver)` : ''}</div><button type="button" class="bq-btn pri" style="width:100%;margin-top:10px" data-a="goNext">Ambil hadiah</button></div></div>`;
-    const info = `<div class="bq-info"><span>📦 Supply ${R.supply.length}</span><span>🗑️ Buang ${R.discards}/${R.maxDiscards}</span><span>📝 ${R.words} kata</span>${R.chain > 0 && G.fabrics.includes('chain') ? `<span>⛓️ chain ${R.chain}</span>` : ''}</div>`;
-    return '<div class="bq-L">' + head + info + '</div><div class="bq-R">' + slotsHtml() + `
+    const hudg = `<div class="bq-hudg"><button type="button" class="bq-hb red" data-a="runInfo">Info<br>run</button>
+      <button type="button" class="bq-hx" data-a="supplyView"><small>Supply</small><b>${R.supply.length}</b></button><div class="bq-hx"><small>Buang</small><b>${R.discards}/${R.maxDiscards}</b></div>
+      <div class="bq-hx wide coin"><b>🪙 ${G.coins}</b></div>
+      <button type="button" class="bq-hb orange" data-a="opts">Opsi</button><div class="bq-hx"><small>Stage</small><b>${G.stage + 1}${G.stage + 1 > E.CFG.stages ? '' : '/' + E.CFG.stages}</b></div><div class="bq-hx"><small>Ronde</small><b>${G.rnd + 1}/3</b></div></div>`;
+    const info = `<div class="bq-info"><button type="button" class="bq-sv" data-a="supplyView">📦 Supply ${R.supply.length}</button><span>🗑️ Buang ${R.discards}/${R.maxDiscards}</span><span>📝 ${R.words} kata</span>${R.chain > 0 && G.fabrics.includes('chain') ? `<span>⛓️ chain ${R.chain}</span>` : ''}</div>`;
+    return '<div class="bq-L">' + head + info + hudg + '</div><div class="bq-R">' + slotsHtml() + `
       <div class="bq-prev"><div class="bq-sel">${(anim ? anim.tiles : sel).map((t, i, a) => { const k = E.kindOf(t.ch), af = (k === 'pre' && i === 0) || (k === 'suf' && i === a.length - 1);
         return tileHtml(t, '', anim ? '' : `data-a="unsel" data-i="${i}"`).replace('</button>', af ? '<i class="af">+3</i></button>' : '</button>'); }).join('')}</div>${pv}</div>
       <div class="bq-msg" role="status">${msg}</div>
       <div class="bq-handrow"><div class="bq-hand ${R.hand.length <= 9 ? 'fan' : ''}" style="--bq-n:${R.handSize <= 9 ? R.handSize : Math.ceil(R.handSize / 2)}">${R.hand.map((t, i, a) => { const lk = E.blocked(R, t), us = selIds.has(t.id), off = i - (a.length - 1) / 2;
-        return tileHtml(t, lk ? 'lock' : us ? 'used' : '', (lk ? 'disabled' : `data-a="pick" data-i="${t.id}"`) + ` style="--fr:${(off * 2.4).toFixed(1)}deg;--fy:${(off * off * 0.9).toFixed(1)}px"`); }).join('')}</div><div class="bq-pile" aria-label="Supply ${R.supply.length} huruf"><b>${R.supply.length}</b><small>supply</small></div></div>
+        return tileHtml(t, lk ? 'lock' : us ? 'used' : '', (lk ? 'disabled' : `data-a="pick" data-i="${t.id}"`) + ` style="--fr:${(off * 2.4).toFixed(1)}deg;--fy:${(off * off * 0.9).toFixed(1)}px"`); }).join('')}</div><button type="button" class="bq-pile" data-a="supplyView" aria-label="Lihat sisa supply: ${R.supply.length} huruf"><b>${R.supply.length}</b><small>supply</small></button></div>
       <div class="bq-btns"><button type="button" class="bq-btn" data-a="clr" ${sel.length ? '' : 'disabled'}>Hapus</button><button type="button" class="bq-btn mint" data-a="discard" ${sel.length && E.canDiscard(R) ? '' : 'disabled'}>🗑️ Buang${sel.length ? ' ' + sel.length : ''}</button><button type="button" class="bq-btn pri" data-a="send" ${sel.length >= 3 ? '' : 'disabled'}>⚔️ Serang</button></div>
       <button type="button" class="bq-giveup" data-a="giveUp">🏳️ Akhiri run</button>
       <div class="bq-mut bq-kb">Di laptop: ketik huruf untuk memilih, Backspace menghapus, Enter menyerang.</div></div>`;
@@ -1028,6 +1044,15 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
         <div class="bq-sec"><b>Hand (jenis kata)</b></div><div class="bq-hands">${Object.keys(E.HANDS).map(k => { const h = E.handInfo(k, E.lvOf(G, k)); return `<span>${h.icon} ${h.name} Lv${h.lv} · ${h.chips} × ${h.mult}</span>`; }).join('')}</div>
         <div class="bq-sec"><b>Fabric (kiri ke kanan)</b></div><div class="bq-chips">${G.fabrics.map(id => `<span class="bq-chip">${F(id).icon} ${F(id).name}</span>`).join('') || '-'}</div>
         <button type="button" class="bq-btn" style="width:100%;margin-top:12px" data-a="closeModal">Tutup</button></div></div>`;
+    if (modal.t === 'supply') {
+      const rest = R.supply, plain = {}, special = {};
+      rest.forEach(t => { if (!t.up && t.ch.length === 1 && t.ch !== '?') plain[t.ch] = (plain[t.ch] || 0) + 1; else { const k = t.ch + '|' + (t.up || ''); special[k] = special[k] || { t: t, n: 0 }; special[k].n++; } });
+      const cell = (t, n) => `<span class="it ${n ? '' : 'none'}">${tileHtml(t, '', 'tabindex="-1"')}<i>${n ? '×' + n : '0'}</i></span>`;
+      const sp = Object.keys(special).sort().map(k => cell(special[k].t, special[k].n)).join('');
+      return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Sisa supply · ${rest.length} kartu</h2><div class="bq-mut">Kartu yang belum ditarik di ronde ini. Huruf di tanganmu tidak dihitung.</div>
+        <div class="bq-sup">${'abcdefghijklmnopqrstuvwxyz'.split('').map(c => cell({ ch: c }, plain[c] || 0)).join('')}</div>
+        ${sp ? `<div class="bq-sec"><b>Kartu spesial</b></div><div class="bq-sup">${sp}</div>` : ''}
+        <button type="button" class="bq-btn" style="width:100%;margin-top:12px" data-a="closeModal">Tutup</button></div></div>`; }
     if (modal.t === 'howto') return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Cara main</h2><ul class="bq-mut" style="margin:6px 0 0;padding-left:18px">
         <li>Satu run = ${E.CFG.stages} stage. Tiap stage: Ronde Kecil, Ronde Besar, lalu Boss (24 ronde). Kalahkan boss Stage ${E.CFG.stages} untuk menang, lalu boleh lanjut Endless.</li>
         <li>Tangan 8 kartu huruf, supply 32. Ketuk huruf berurutan untuk menyusun kata, lalu Serang. Capai target ronde untuk mengalahkan musuh.</li>
@@ -1231,6 +1256,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     opts() { modal = { t: 'opts' }; render(); },
     runInfo() { modal = { t: 'info' }; render(); },
     howto() { modal = { t: 'howto' }; render(); },
+    supplyView() { if (!anim && R) { modal = { t: 'supply' }; render(); } },
     setBg(v) { Bg.set(v); render(); },
     giveUp() { modal = { t: 'giveup' }; render(); },
     giveUpYes() { modal = null; endRun(); },
