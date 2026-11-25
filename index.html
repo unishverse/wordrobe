@@ -52,7 +52,7 @@ body { -webkit-font-smoothing: antialiased; }
 .app { max-width: 440px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
   padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); }
 .app.with-nav { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
-/* Bibo's Fabric Quest: a round must fit one phone screen, so this screen gets tighter padding and a small top bar */
+/* Wordrobe Quest (was Bibo's Fabric Quest): a round must fit one phone screen, so this screen gets tighter padding and a small top bar */
 body[data-screen="gameplay"] .app { padding: max(10px, env(safe-area-inset-top)) 14px max(10px, env(safe-area-inset-bottom)); }
 #gameplay .st-wrap { gap: 8px; }
 #gameplay .fit-top .round { width: 36px; height: 36px; }
@@ -184,6 +184,27 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 .rack-actions .btn { width: auto; min-height: 44px; font-size: 14px; padding: 0 16px; }
 .word-row .w small { font-size: 12px; color: var(--ok-text); font-weight: 700; }
 /* Beranda: Mini games strip (cards swipe sideways; all visible on a laptop) */
+.home-streak { margin-top: 6px; padding: 4px 10px; font-size: 13px; }
+.quest-hero { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; width: 100%; text-align: left; border: 0; border-radius: 28px; padding: 18px; background: #6c5ce7; color: #fff; font: inherit; cursor: pointer; }
+.quest-hero .qh-top { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.quest-hero .qh-top b { font-family: var(--display); font-size: 21px; }
+.quest-hero .qh-top small, .quest-hero .qh-sub, .quest-hero .qh-lemari { color: #e4e0ff; font-size: 13px; font-weight: 600; }
+.quest-hero .qh-state { grid-column: 1; font-weight: 800; font-size: 17px; }
+.quest-hero .qh-sub { grid-column: 1; }
+.quest-hero .qh-bar { grid-column: 1 / -1; height: 8px; border-radius: 999px; background: #ffffff33; overflow: hidden; margin-top: 4px; }
+.quest-hero .qh-bar i { display: block; height: 100%; background: var(--yellow); }
+.quest-hero .qh-go { grid-column: 2; grid-row: 2 / span 2; align-self: center; background: var(--yellow); color: var(--on-accent); border-radius: 999px; padding: 10px 16px; font-weight: 800; font-size: 15px; white-space: nowrap; }
+.quest-hero .qh-lemari { grid-column: 1 / -1; margin-top: 2px; }
+.quests { background: var(--card); border-radius: 24px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+.quests-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+.quests-head b { font-family: var(--display); font-size: 18px; }
+.quests-head small { font-size: 12px; font-weight: 700; color: var(--accent-text); }
+.quest { display: flex; align-items: center; gap: 10px; min-height: 36px; font-size: 14px; }
+.quest .qc { width: 20px; height: 20px; border-radius: 999px; border: 2px solid var(--muted); display: grid; place-items: center; font-size: 12px; font-weight: 800; flex: none; }
+.quest.done .qc { background: var(--mint); border-color: var(--mint); color: var(--on-accent); }
+.quest.done .qt { color: var(--muted); text-decoration: line-through; }
+.quest .qt { flex: 1; min-width: 0; } .quest .qt small { color: var(--muted); font-weight: 700; }
+.quest .qr { font-size: 12px; font-weight: 800; color: var(--muted); white-space: nowrap; }
 .home-games { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .home-games-head { display: flex; align-items: flex-end; gap: 10px; padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
 .home-games-head .w { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -363,7 +384,7 @@ textarea.input { min-height: 96px; padding: 14px 16px; resize: vertical; line-he
 
 /* nav */
 .nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--ink); border-top: 1px solid var(--card-2); padding-bottom: env(safe-area-inset-bottom); }
-.nav-inner { max-width: 440px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; padding: 6px 12px 8px; }
+.nav-inner { max-width: 480px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; padding: 6px 12px 8px; }
 .nav-btn { min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: none; border: 0; color: var(--muted); font-size: 12px; font-weight: 700; cursor: pointer; }
 .nav-btn[aria-current="page"] { color: var(--accent-text); font-weight: 800; }
 .nav-add { justify-self: center; width: 56px; height: 56px; border-radius: 999px; border: 0; background: var(--yellow); color: var(--on-accent); display: grid; place-items: center; cursor: pointer; }
@@ -513,7 +534,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   .nav-add { order: 1; width: 100%; height: 52px; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 16px; }
   .nav-add svg { width: 20px; height: 20px; }
   .nav-add-label { display: inline; font-weight: 800; font-size: 15px; }
-  #nav-home { order: 2; } #nav-lemari { order: 3; } #nav-game { order: 4; }
+  #nav-home { order: 2; } #nav-game { order: 3; } #nav-puzzle { order: 4; } #nav-lemari { order: 5; }
   .nav-btn { flex-direction: row; justify-content: flex-start; gap: 12px; min-height: 48px; padding: 0 14px; border-radius: 14px; font-size: 15px; }
   .nav-btn[aria-current="page"] { background: var(--card); }
   body[data-screen="add"] .nav, body[data-screen="result"] .nav, body[data-screen="fit"] .nav, body[data-screen="slay"] .nav, body[data-screen="speak"] .nav, body[data-screen="fix"] .nav { display: block; }
@@ -528,6 +549,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   .res-grid { column-gap: 24px; }
 }
 @media (min-width: 1280px) {
+  body[data-screen="gameplay"] .app { max-width: 1360px; }
   #lemari-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 </style>
@@ -650,7 +672,9 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
           <img src="img/bibo-wave.webp" width="320" height="257" alt="Bibo melambaikan tangan">
           <div style="min-width:0">
             <p class="note" id="home-hello">Halo!</p>
-            <h1 id="home-title">Ada kata baru<br>hari ini?</h1>
+            <h1 id="home-title">Siap main<br>hari ini?</h1>
+            <span class="streak home-streak" id="streak-pill"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 01-10 0c0-2.5 1.5-4 2.5-5 .3 1.6 1 2.6 2 3 0-3 0-5.5.5-8z"/></svg><span id="streak-text">0 hari</span></span>
+
           </div>
         </div>
         <button class="round" type="button" id="menu-btn" aria-label="Akun">
@@ -676,10 +700,31 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       </div>
       <div class="home-grid">
       <div class="home-main">
+      <button class="quest-hero" type="button" id="home-quest">
+        <span class="qh-top"><b>Wordrobe Quest</b><small id="qh-best"></small></span>
+        <span class="qh-state" id="qh-state">Mulai run baru</span>
+        <span class="qh-sub" id="qh-sub">Susun kata, kalahkan boss, kumpulkan Fabric.</span>
+        <span class="qh-bar" id="qh-bar" hidden><i id="qh-fill"></i></span>
+        <span class="qh-go" id="qh-go">Main</span>
+        <small class="qh-lemari" id="qh-lemari"></small>
+      </button>
+      <div class="quests" id="home-quests" aria-label="Misi harian"></div>
+      <div class="home-games">
+        <button class="home-games-head" type="button" id="home-stitch"><span class="w"><b>Puzzle harian</b><small id="home-stitch-sub">6 game · puzzle baru tiap hari</small></span><span class="all">Semua ›</span></button>
+        <div class="games-strip" id="home-games" aria-label="Mini games"></div>
+      </div>
+      <div class="rack-card" id="rack-card"></div>
+      <button class="drop-btn" type="button" id="home-drop">
+        <span class="plus" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+        <span><b>New drop</b><span>Masukin kata baru ke lemari</span></span>
+      </button>
+      <div class="tiles">
+        <button class="tile tile--blue" type="button" id="home-lemari"><b>Lemariku</b><small id="home-count">0 kata</small></button>
+        <button class="tile tile--pink" type="button" id="home-fit"><b>Fit check</b><small id="home-fit-sub">Latihan 5 menit</small></button>
+      </div>
       <div class="daily">
         <div class="daily-head">
-          <b>Daily Challenge</b>
-          <span class="streak" id="streak-pill"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 01-10 0c0-2.5 1.5-4 2.5-5 .3 1.6 1 2.6 2 3 0-3 0-5.5.5-8z"/></svg><span id="streak-text">0 hari</span></span>
+          <b>Latihan</b><small class="note">Fit check, Ngomong, Benerin</small>
         </div>
         <div class="rings">
           <button class="ring-btn" type="button" id="ring-fit-btn">
@@ -696,19 +741,6 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
             <span class="ring-name">Benerin</span><span class="ring-sub" id="ring-fix-sub">0/5 kalimat</span>
           </button>
         </div>
-      </div>
-      <div class="home-games">
-        <button class="home-games-head" type="button" id="home-stitch"><span class="w"><b>Mini games</b><small id="home-stitch-sub">6 game · puzzle baru tiap hari</small></span><span class="all">Semua ›</span></button>
-        <div class="games-strip" id="home-games" aria-label="Mini games"></div>
-      </div>
-      <div class="rack-card" id="rack-card"></div>
-      <button class="drop-btn" type="button" id="home-drop">
-        <span class="plus" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
-        <span><b>New drop</b><span>Masukin kata baru ke lemari</span></span>
-      </button>
-      <div class="tiles">
-        <button class="tile tile--blue" type="button" id="home-lemari"><b>Lemariku</b><small id="home-count">0 kata</small></button>
-        <button class="tile tile--pink" type="button" id="home-fit"><b>Fit check</b><small id="home-fit-sub">Latihan 5 menit</small></button>
       </div>
       </div>
       <div class="stack home-side" style="gap:10px">
@@ -1304,14 +1336,14 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     </div>
   </section>
 
-  <!-- Bibo's Fabric Quest: the game itself is game.js, loaded the first time this screen opens -->
+  <!-- Wordrobe Quest: the game itself is game.js, loaded the first time this screen opens -->
   <section id="gameplay" hidden aria-labelledby="gp-title">
     <div class="st-wrap">
       <div class="fit-top">
         <button class="round" type="button" data-go="home" aria-label="Kembali ke beranda">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
-        <h1 class="top-title" id="gp-title" style="flex:1;font-family:var(--ui);font-size:16px;letter-spacing:0;margin:0">Bibo's Fabric Quest</h1>
+        <h1 class="top-title" id="gp-title" style="flex:1;font-family:var(--ui);font-size:16px;letter-spacing:0;margin:0">Wordrobe Quest</h1>
       </div>
       <div class="msg" id="gp-msg" role="status" aria-live="polite" hidden></div>
       <div id="gp-body"></div>
@@ -1420,17 +1452,21 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
       <span>Beranda</span>
     </button>
+    <button class="nav-btn" type="button" data-go="game" id="nav-game">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="7" width="19" height="11" rx="5"/><path d="M8 10.5v4M6 12.5h4"/><circle cx="15.5" cy="11.5" r=".6"/><circle cx="17.5" cy="13.5" r=".6"/></svg>
+      <span>Quest</span>
+    </button>
     <button class="nav-add" type="button" data-go="add" id="nav-add" aria-label="New drop: tambah kata">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
       <span class="nav-add-label">New drop</span>
     </button>
+    <button class="nav-btn" type="button" data-go="stitch" id="nav-puzzle">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h3a2 2 0 104 0h3v3a2 2 0 110 4v3h-3a2 2 0 10-4 0H4v-3a2 2 0 100-4z"/></svg>
+      <span>Puzzle</span>
+    </button>
     <button class="nav-btn" type="button" data-go="lemari" id="nav-lemari">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M9.5 11v2M14.5 11v2"/></svg>
       <span>Lemari</span>
-    </button>
-    <button class="nav-btn" type="button" data-go="game" id="nav-game">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="7" width="19" height="11" rx="5"/><path d="M8 10.5v4M6 12.5h4"/><circle cx="15.5" cy="11.5" r=".6"/><circle cx="17.5" cy="13.5" r=".6"/></svg>
-      <span>Game</span>
     </button>
   </div>
 </nav>
@@ -1629,6 +1665,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('app').classList.toggle('with-nav', nav);
     $('nav-home').setAttribute('aria-current', id === 'home' ? 'page' : 'false');
     $('nav-lemari').setAttribute('aria-current', id === 'lemari' ? 'page' : 'false');
+    $('nav-puzzle').setAttribute('aria-current', id === 'stitch' ? 'page' : 'false');
     $('nav-add').setAttribute('aria-current', id === 'add' || id === 'result' ? 'page' : 'false');
     if (id !== 'lemari') $('saved-toast').hidden = true;
     window.scrollTo(0, 0);
@@ -1677,7 +1714,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     else if (id === 'home') { renderHome(); show('home'); }
     else show(id);
   }
-  /* Bibo's Fabric Quest: game.js and its word list are fetched only when this screen is opened, so the rest of the app never pays for them */
+  /* Wordrobe Quest: game.js and its word list are fetched only when this screen is opened, so the rest of the app never pays for them */
   var fqLoad = null;
   function loadFabricQuest() {
     if (window.WRGame) return Promise.resolve();
@@ -1685,7 +1722,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       fqLoad = new Promise(function (ok, no) {
         var sc = document.createElement('script');
         // raise v when game.js changes: a new URL skips any old copy the phone or the CDN still holds
-        sc.src = 'game.js?v=13'; sc.onload = ok; sc.onerror = function () { sc.remove(); no(new Error('game')); };
+        sc.src = 'game.js?v=15'; sc.onload = ok; sc.onerror = function () { sc.remove(); no(new Error('game')); };
         document.head.appendChild(sc);
       });
       fqLoad.catch(function () { fqLoad = null; });
@@ -1706,11 +1743,64 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         profile: function () { return api('getGameProfile', readToken()); },
         claim: function (ids) { return api('getGameProfile', readToken(), ids); },
         lemariHas: function (w) { return hasWord(slKey(w)); },
+        quest: questEvent,
+        takeBonus: takeQuestBonus,
         onStats: function (s) { stats = s || stats; },
         failed: function (e) { if (e && SESSION_RE.test(e.message)) signedOut(e.message); }
       });
       return window.WRGame.open();
     }, function () { body.innerHTML = '<div class="msg">Game belum bisa dimuat. Cek koneksi, lalu buka Game lagi.</div>'; });
+  }
+  /* Wordrobe Quest daily missions (owner 25 Nov): progress lives on this device per account and resets each day;
+     a finished mission's reward waits as "bekal" (coins, a free Fabric) and is handed to the next Quest run */
+  var QUESTS = [
+    { id: 'win', text: 'Menangkan 1 ronde Quest', goal: 1, coins: 3, label: '+3 koin' },
+    { id: 'lemari', text: 'Mainkan 3 kata dari Lemari di Quest', goal: 3, coins: 5, label: '+5 koin' },
+    { id: 'drop', text: 'Drop 1 kata dari luar', goal: 1, fabrics: 1, label: 'Fabric gratis' }
+  ];
+  function dayKey() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function questKey() { return 'wr_quest_m' + (me && me.user_id ? ':' + me.user_id : ''); }
+  function questLoad() {
+    var d = null; try { d = JSON.parse(localStorage.getItem(questKey()) || 'null'); } catch (e) { d = null; }
+    if (!d || typeof d !== 'object') d = {};
+    var bonus = d.bonus && typeof d.bonus === 'object' ? d.bonus : { coins: 0, fabrics: 0 };
+    if (d.day !== dayKey()) d = { day: dayKey(), n: {}, bonus: bonus };
+    d.n = d.n || {}; d.bonus = bonus; return d;
+  }
+  function questSave(d) { try { localStorage.setItem(questKey(), JSON.stringify(d)); } catch (e) { /* storage off: missions just don't count */ } }
+  // one event; returns the text to announce when it finishes a mission, else ''
+  function questEvent(id) {
+    var q = QUESTS.filter(function (x) { return x.id === id; })[0]; if (!q) return '';
+    var d = questLoad(), n = d.n[id] || 0; if (n >= q.goal) return '';
+    d.n[id] = n + 1;
+    var done = d.n[id] >= q.goal;
+    if (done) { d.bonus.coins = (d.bonus.coins || 0) + (q.coins || 0); d.bonus.fabrics = (d.bonus.fabrics || 0) + (q.fabrics || 0); }
+    questSave(d); renderQuests();
+    return done ? 'Misi selesai: ' + q.text + ' · ' + q.label + ' untuk run berikutnya' : '';
+  }
+  function takeQuestBonus() { var d = questLoad(), b = d.bonus; d.bonus = { coins: 0, fabrics: 0 }; questSave(d); renderQuests(); return b; }
+  function renderQuests() {
+    var box = $('home-quests'); if (!box) return;
+    var d = questLoad(), b = d.bonus, h = '<div class="quests-head"><b>Misi harian</b>' + (b.coins || b.fabrics ? '<small>Bekal run berikutnya: ' + [b.coins ? '+' + b.coins + ' koin' : '', b.fabrics ? b.fabrics + ' Fabric' : ''].filter(Boolean).join(' · ') + '</small>' : '') + '</div>';
+    QUESTS.forEach(function (q) {
+      var n = Math.min(d.n[q.id] || 0, q.goal), done = n >= q.goal;
+      h += '<div class="quest' + (done ? ' done' : '') + '" data-q="' + q.id + '"><span class="qc" aria-hidden="true">' + (done ? '✓' : '') + '</span><span class="qt">' + q.text + (q.goal > 1 ? ' <small>' + n + '/' + q.goal + '</small>' : '') + '</span><span class="qr">' + q.label + '</span></div>';
+    });
+    box.innerHTML = h;
+  }
+  // the Quest card on the Beranda reads the saved run (wr_game) without loading game.js
+  function renderQuestHero() {
+    var run = null, best = 0;
+    try { run = JSON.parse(localStorage.getItem('wr_game') || 'null'); best = +localStorage.getItem('wr_game_best') || 0; } catch (e) { run = null; }
+    var live = run && run.G && run.R && run.phase && run.phase !== 'end' && run.phase !== 'intro';
+    $('qh-best').textContent = best ? 'Rekor ' + best.toLocaleString('id-ID') : '';
+    $('qh-state').textContent = live ? 'Stage ' + (run.G.stage + 1) + ' · Ronde ' + (run.G.rnd + 1) : 'Mulai run baru';
+    $('qh-sub').textContent = live ? (run.R.score || 0).toLocaleString('id-ID') + ' / ' + (run.R.target || 0).toLocaleString('id-ID') : 'Susun kata, kalahkan boss, kumpulkan Fabric.';
+    $('qh-bar').hidden = !live;
+    if (live) $('qh-fill').style.width = Math.min(100, Math.round((run.R.score || 0) / Math.max(1, run.R.target || 1) * 100)) + '%';
+    $('qh-go').textContent = live ? 'Lanjutkan run' : 'Main';
+    var nl = words.length;
+    $('qh-lemari').textContent = nl ? nl + ' kata Lemari jadi kata kekuatan: +4 Mult di Quest' : 'Kata dari Lemarimu jadi kata kekuatan di Quest';
   }
   document.addEventListener('click', function (ev) {
     var t = ev.target.closest ? ev.target.closest('[data-go]') : null;
@@ -2111,6 +2201,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('streak-pill').setAttribute('aria-label', 'Streak ' + (stats ? stats.streak : 0) + ' hari');
     var todo = words.filter(function (w) { return w.status !== 'known'; }).length;
     $('home-fit-sub').textContent = !words.length ? 'Tambah kata dulu' : todo ? todo + ' kata perlu dilatih' : 'Ulang semua kata';
+    renderQuestHero();
+    renderQuests();
     renderTrending();
     renderRackCard();
     renderEmailNudge();
@@ -2185,6 +2277,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   $('home-lemari').addEventListener('click', function () { rackFilter = ''; go('lemari'); });
   $('home-fit').addEventListener('click', function () { go('fit'); });
   $('home-stitch').addEventListener('click', function () { go('stitch'); });
+  $('home-quest').addEventListener('click', function () { go('game'); });
   $('ring-fit-btn').addEventListener('click', function () { go('fit'); });
   $('ring-speak-btn').addEventListener('click', function () { go('speak'); });
   $('ring-fix-btn').addEventListener('click', function () { go('fix'); });
@@ -4270,7 +4363,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         $('add-word').value = ''; $('add-sentence').value = ''; $('add-loc').value = '';
         go('lemari');
         $('saved-toast-title').textContent = inRack ? (s.duplicate ? 'Masuk rak ' : '+1 kata masuk rak ') + inRack.title + '!' : '+1 kata masuk lemari!';
-        $('saved-toast-text').textContent = s.duplicate ? 'Katanya udah ada di lemari, jadi cuma ditambahkan ke rak ini.' : 'Nanti kita latihan bareng ya.';
+        var qdone = s.duplicate ? '' : questEvent('drop');
+        $('saved-toast-text').textContent = s.duplicate ? 'Katanya udah ada di lemari, jadi cuma ditambahkan ke rak ini.' : qdone || 'Nanti kita latihan bareng ya.';
         $('saved-toast').hidden = !!s.duplicate && !(link && link.linked);
       }, function (e) { busy($('res-save'), false); failed(e, $('res-msg')); });
   });

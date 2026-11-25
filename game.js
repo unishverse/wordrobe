@@ -1,4 +1,4 @@
-/* Bibo's Fabric Quest. Loaded only when the Game tab is first opened (index.html adds this script on demand).
+/* Wordrobe Quest (was Bibo's Fabric Quest; renamed by the owner 25 Nov). Loaded only when the Game tab is first opened (index.html adds this script on demand).
    Part 1: pure engine (no DOM, also loaded by tests/test-game.js in Node). Part 2: UI. */
 const Engine = (function () {
   const V = {};
@@ -63,6 +63,7 @@ const Engine = (function () {
     glass: { name: 'Glass', icon: '🔮', desc: '×1,5 Mult saat dimainkan.' }, steel: { name: 'Besi', icon: '🔩', desc: '×1,25 Mult selama tetap di tangan (tidak dimainkan).' },
     dbl: { name: 'Jahitan Ganda', icon: '🔁', desc: 'Kartu ini terpicu 2× saat dimainkan (nilai huruf + bonus imbuhan dihitung dua kali).' } };
   const AFFIX_ADD = 3;
+  const LEMARI_ADD = 4;   // Wordrobe Quest (owner 25 Nov): a word from the player's own Lemari is a power word, +4 Mult
   /* Multi-letter cards (Paperback) and the wild card. Affixes in the right place (prefix first, suffix last) give x1.5 each. */
   const PRE = ['un', 're', 'dis'], SUF = ['ly', 'ing', 'ed', 'er', 'est', 'ful', 'ness', 'ous', 'able', 'ive', 'less', 'ment', 'tion'], PAIRS = ['th', 'ch', 'sh', 'qu', 'ck'];
   const MULTI = PRE.concat(SUF, PAIRS);
@@ -112,6 +113,7 @@ const Engine = (function () {
     let lenBonus = (LB[n] || 0) * CFG.lenMul;
     if (boss && boss.id === 'short' && n > 5) lenBonus = 0;
     if (lenBonus) step({ c: lenBonus, label: '+' + lenBonus + ' panjang' });
+    if (ctx.inLemari) step({ m: LEMARI_ADD, lemari: true, label: '👕 Lemari +' + LEMARI_ADD + ' Mult' });
     const lv = tiles.map(t => val(t)), affix = [];
     tiles.forEach((t, i) => { for (let rep2 = 0; rep2 < (t.up === 'dbl' ? 2 : 1); rep2++) {   // Jahitan Ganda: the card fires twice
       step(rep2 ? { c: lv[i], tile: i, label: '🔁 +' + lv[i] } : { c: lv[i], tile: i });
@@ -315,6 +317,7 @@ const Engine = (function () {
     st.pos = st.pos || {}; st.pos[res.hand.pos] = (st.pos[res.hand.pos] || 0) + 1;
     if (res.affix.length === 2) st.affixWords = (st.affixWords || 0) + 1;   // a prefix first and a suffix last
     if (w.length >= 10) st.giantWords = (st.giantWords || 0) + 1;
+    if (ctxExtra && ctxExtra.inLemari) st.lemariWords = (st.lemariWords || 0) + 1;
     let recycled = null;
     if (G.fabrics.includes('recycler') && rng() < 0.2) {
       const t = tl[Math.floor(rng() * tl.length)];
@@ -394,7 +397,7 @@ const Engine = (function () {
   function addUpgrade(G, kind, ch) { G.upgrades.push(mk(ch, kind)); }
   // after restoring a saved run: new tile ids must not collide with the restored ones
   function resumeIds(G, R) { let m = 0; const see = t => { if (t.id > m) m = t.id; }; G.upgrades.forEach(see); if (R) { R.hand.forEach(see); R.supply.forEach(see); } if (m >= UID) UID = m + 1; }
-  return { UPS, HAND_STEP, DECKS, DECK, ACH, opened, earned, runCounts, avail, val, txt, kindOf, HANDS, MULTI, PRE, SUF, PAIRS, posOf, lvOf, handInfo, spell, V, LB, CFG, FABRICS, FAB, BOSSES, setDict, isWord, rngFrom, shuffle, mk, score, blocked, candidates, tilesFor, best, newGame,
+  return { UPS, HAND_STEP, LEMARI_ADD, DECKS, DECK, ACH, opened, earned, runCounts, avail, val, txt, kindOf, HANDS, MULTI, PRE, SUF, PAIRS, posOf, lvOf, handInfo, spell, V, LB, CFG, FABRICS, FAB, BOSSES, setDict, isWord, rngFrom, shuffle, mk, score, blocked, candidates, tilesFor, best, newGame,
     roundIndex, targetFor, handSize, permItems, makeRound, draw, submit, stuck, failed, discard, canDiscard, finishRound, rewardOptions, shopItems, shopCards, shopFabrics, rerollShop, addUpgrade, resumeIds, randLetter, get ARR() { return ARR; } };
 })();
 
@@ -446,7 +449,8 @@ const UI = (function () {
 .bq-boss{background:var(--card);border-radius:16px;padding:10px 12px;font-size:13px;box-shadow:inset 0 0 0 1.5px var(--pink)}.bq-boss b{color:var(--pink)}
 .bq-slots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .bq-slot{background:var(--card);border:1.5px dashed var(--line);border-radius:12px;min-height:58px;padding:4px;text-align:center;font:inherit;font-size:10.5px;line-height:1.15;display:flex;flex-direction:column;justify-content:center;align-items:center;color:var(--muted)}
-button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)}.bq-slot .ic{font-size:20px}
+button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)}
+.bq-slot[data-a="showFab"]{touch-action:pan-y;user-select:none;-webkit-user-select:none}.bq-slot.drag{position:relative;z-index:5;cursor:grabbing;box-shadow:0 8px 20px #0007;transition:none;background:var(--card-2)}.bq-slot.drop{box-shadow:0 0 0 2px var(--yellow);background:var(--card-2)}.bq-slot .ic{font-size:20px}
 .bq-info{display:flex;gap:6px;font-size:12px;color:var(--muted);flex-wrap:wrap}.bq-info span{background:var(--card);padding:4px 10px;border-radius:999px}
 .bq-prev{background:var(--card);border-radius:20px;padding:12px;min-height:104px}
 .bq-sel{display:flex;gap:5px;min-height:46px;flex-wrap:wrap;margin-bottom:6px}.bq-sel .bq-tile{width:38px;height:44px;font-size:19px}
@@ -527,7 +531,23 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 .bq-r .bq-kb{font-size:12px}
 @media(hover:none){.bq-kb{display:none}}
 @media(max-height:740px){.bq-r{--bq-art:84px}}
-@media(max-height:680px){.bq-r{--bq-art:56px;gap:6px}.bq-r .bq-btn{min-height:40px}.bq-r .bq-slot{min-height:34px}.bq-r .bq-giveup{padding:0}.bq-r .bq-bar,.bq-r .bq-boss{font-size:11px}.bq-r .bq-boss{padding:4px 8px}.bq-r .bq-hand .bq-tile{height:42px}.bq-r .bq-prev{min-height:66px}}
+@media(max-height:680px){.bq-r{--bq-art:44px;gap:5px}.bq-r .bq-sel{min-height:34px}.bq-r .bq-sel .bq-tile{width:30px;height:34px;font-size:16px}.bq-r .bq-btn{min-height:38px}.bq-r .bq-slot{min-height:32px}.bq-r .bq-giveup{padding:0}.bq-r .bq-bar,.bq-r .bq-boss{font-size:11px}.bq-r .bq-boss{padding:4px 8px}.bq-r .bq-hand .bq-tile{height:40px}.bq-r .bq-prev{min-height:66px}}
+.bq-L,.bq-R{display:contents}
+@media(min-width:600px) and (max-width:1023.98px){.bq-r{--bq-art:150px}.bq-r .bq-hand{grid-template-columns:repeat(var(--bq-n,8),minmax(0,62px));gap:7px}.bq-r .bq-hand .bq-tile{height:64px;font-size:28px}.bq-r .bq-slot{min-height:56px;font-size:12px}.bq-r .bq-slot .ic{font-size:22px}.bq-r .bq-sel .bq-tile{width:40px;height:48px;font-size:21px}.bq-r .bq-btn{min-height:54px;font-size:16px}.bq-r .bq-prev{max-height:140px}.bq-cm b{font-size:21px}.bq-r .bq-info{font-size:13px}}
+@media(min-width:1024px) and (min-height:540px){
+.bq-r{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:20px 28px;align-items:center;align-content:center;min-height:calc(100dvh - 120px);--bq-art:min(220px,26vh)}
+.bq-r .bq-L,.bq-r .bq-R{display:flex;flex-direction:column;gap:12px;min-width:0}
+.bq-r .bq-top .t b{font-size:18px}.bq-r .bq-name{font-size:15px}.bq-r .bq-bar{font-size:14px}.bq-r .bq-boss{font-size:14px;padding:10px 14px}
+.bq-cm b{font-size:24px;min-width:64px;padding:5px 12px}
+.bq-r .bq-slot{min-height:72px;font-size:13px}.bq-r .bq-slot .ic{font-size:26px}
+.bq-r .bq-info{font-size:14px}
+.bq-r .bq-prev{min-height:130px;max-height:none;padding:12px 14px}.bq-r .bq-sel{min-height:56px}.bq-r .bq-sel .bq-tile{width:46px;height:54px;font-size:24px}.bq-r .bq-pl{font-size:16px}.bq-r .bq-chip{font-size:13px}
+.bq-r .bq-hand{grid-template-columns:repeat(var(--bq-n,8),minmax(0,70px));gap:9px}.bq-r .bq-hand .bq-tile{height:76px;font-size:34px}.bq-r .bq-hand .bq-tile small{font-size:13px}
+.bq-tile.multi.m3{font-size:20px!important}.bq-tile.multi.m4{font-size:16px!important}
+.bq-r .bq-btn{min-height:58px;font-size:18px}.bq-r .bq-kb{font-size:13px}
+.bq-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.bq-hands{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+@media(min-width:1280px) and (min-height:860px){.bq-r{--bq-art:300px;gap:24px 36px}.bq-r .bq-hand{grid-template-columns:repeat(var(--bq-n,8),minmax(0,86px));gap:10px}.bq-r .bq-hand .bq-tile{height:94px;font-size:42px}.bq-r .bq-slot{min-height:92px;font-size:14px}.bq-r .bq-slot .ic{font-size:32px}.bq-r .bq-btn{min-height:66px;font-size:20px}.bq-r .bq-prev{min-height:160px}.bq-r .bq-sel .bq-tile{width:54px;height:62px;font-size:28px}.bq-cm b{font-size:28px}}
 @media(prefers-reduced-motion:reduce){.bq-atk,.bq-ehit,.bq-dead,.bq-dmg,.bq-say,.bq-pop,.bq-shake{animation:none}}`;
 
   /* ---------- persistence ---------- */
@@ -658,6 +678,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       if (x.slot) h += `<span class="bq-chip ${x.x ? 'j' : x.m ? 'm' : 'a'}">${F(x.slot).icon}${x.src && x.src !== x.slot ? '→' + F(x.src).icon : ''} ${x.label}</span>`;
       else if (x.tile !== undefined && x.label) h += `<span class="bq-chip ${x.x ? 'j' : x.m ? 'm' : 'a'}">${x.label}</span>`;
       else if (x.held) h += `<span class="bq-chip j">🔩 ${x.label}</span>`;
+      else if (x.lemari) h += `<span class="bq-chip m">${x.label}</span>`;
       else if (x.boss) h += `<span class="bq-chip j">${x.label}</span>`;
     });
     if (s.jackpot === false) h += '<span class="bq-chip">🎰 tidak kena</span>';
@@ -742,8 +763,8 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       ${R.boss ? `<div class="bq-boss"><b>${R.boss.name}:</b> ${R.boss.desc}${R.boss.block ? ' Terkunci: <b>' + R.boss.block.toUpperCase() + '</b>' : ''}</div>` : ''}`;
     const lastHtml = last && last.res ? `<div class="bq-last bq-pop">Terakhir: <b>${last.res.word.toUpperCase()} +${fmtN(last.res.final)}</b> <button type="button" class="bq-arti" data-a="arti" data-i="${last.res.word}">📖 Arti</button> <span class="bq-mut"></span>${last.res.recycled ? ` ♻️ ${last.res.recycled.toUpperCase()}` : ''}${last.res.extraDraw ? ' 🔄 +1' : ''}<div class="bq-chips">${chipsOf(last.res)}</div></div>` : '';
     if (!sel.length && lastHtml && !anim) pv = lastHtml;
-    if (R.cleared && !anim) return head + `<div class="bq-center bq-pop"><h2>${enemyInfo().n} kalah! 🎉</h2><div class="bq-mut">+${last.fin.coins} koin${last.fin.saver ? ` (+${last.fin.saver} Saver)` : ''}</div><button type="button" class="bq-btn pri" style="width:100%;margin-top:10px" data-a="goNext">Ambil hadiah</button></div>`;
-    return head + slotsHtml() + `
+    if (R.cleared && !anim) return '<div class="bq-L">' + head + '</div><div class="bq-R">' + `<div class="bq-center bq-pop"><h2>${enemyInfo().n} kalah! 🎉</h2><div class="bq-mut">+${last.fin.coins} koin${last.fin.saver ? ` (+${last.fin.saver} Saver)` : ''}</div><button type="button" class="bq-btn pri" style="width:100%;margin-top:10px" data-a="goNext">Ambil hadiah</button></div></div>`;
+    return '<div class="bq-L">' + head + '</div><div class="bq-R">' + slotsHtml() + `
       <div class="bq-info"><span>📦 Supply ${R.supply.length}</span><span>🗑️ Buang ${R.discards}/${R.maxDiscards}</span><span>📝 ${R.words} kata</span>${R.chain > 0 && G.fabrics.includes('chain') ? `<span>⛓️ chain ${R.chain}</span>` : ''}</div>
       <div class="bq-prev"><div class="bq-sel">${(anim ? anim.tiles : sel).map((t, i, a) => { const k = E.kindOf(t.ch), af = (k === 'pre' && i === 0) || (k === 'suf' && i === a.length - 1);
         return tileHtml(t, '', anim ? '' : `data-a="unsel" data-i="${i}"`).replace('</button>', af ? '<i class="af">+3</i></button>' : '</button>'); }).join('')}</div>${pv}</div>
@@ -751,16 +772,18 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       <div class="bq-hand" style="--bq-n:${R.handSize <= 9 ? R.handSize : Math.ceil(R.handSize / 2)}">${R.hand.map(t => { const lk = E.blocked(R, t), us = selIds.has(t.id); return tileHtml(t, lk ? 'lock' : us ? 'used' : '', lk ? 'disabled' : `data-a="pick" data-i="${t.id}"`); }).join('')}</div>
       <div class="bq-btns"><button type="button" class="bq-btn" data-a="clr" ${sel.length ? '' : 'disabled'}>Hapus</button><button type="button" class="bq-btn mint" data-a="discard" ${sel.length && E.canDiscard(R) ? '' : 'disabled'}>🗑️ Buang${sel.length ? ' ' + sel.length : ''}</button><button type="button" class="bq-btn pri" data-a="send" ${sel.length >= 3 ? '' : 'disabled'}>⚔️ Serang</button></div>
       <button type="button" class="bq-giveup" data-a="giveUp">🏳️ Akhiri run</button>
-      <div class="bq-mut bq-kb">Di laptop: ketik huruf untuk memilih, Backspace menghapus, Enter menyerang.</div>`;
+      <div class="bq-mut bq-kb">Di laptop: ketik huruf untuk memilih, Backspace menghapus, Enter menyerang.</div></div>`;
   }
   function introHtml() {
     const saved = load(), resumable = saved && saved.phase !== 'end';
-    return `<div class="bq-center bq-hero"><img src="img/game/bibo-idle.webp" alt="Bibo"><h2 style="margin-top:6px;font-size:26px">Bibo's Fabric Quest</h2><div class="bq-mut">Susun kata, kalahkan musuh jahit, naik stage sejauh mungkin.</div></div>
+    return `<div class="bq-center bq-hero"><img src="img/game/bibo-idle.webp" alt="Bibo"><h2 style="margin-top:6px;font-size:26px">Wordrobe Quest</h2><div class="bq-mut">Susun kata, kalahkan musuh jahit, naik stage sejauh mungkin.</div></div>
       <div class="bq-card"><b>Cara main</b><ul class="bq-mut" style="margin:6px 0 0;padding-left:18px">
         <li>Tangan 8 huruf, supply 32. Ketuk huruf berurutan untuk menyusun kata (3 huruf sampai sebesar tanganmu), lalu Serang.</li>
         <li>Skor kata jadi serangan Bibo. Capai target ronde untuk mengalahkan musuh.</li>
         <li>Huruf jelek? Pilih lalu Buang: ambil huruf baru dari supply (3 kali per ronde).</li>
-        <li>Jenis kata = hand: Noun +15, Verb +20 ×1,5, Adjective +30 ×2, Adverb +45 ×3. Naikkan levelnya dengan Buku di shop.</li>
+        <li>Skor = Chips × Mult. Jenis kata = hand: Noun 10 × 2, Verb 15 × 3, Adjective 20 × 4, Adverb 30 × 5. Naikkan levelnya dengan Buku di shop.</li>
+        <li>Kata yang ada di Lemarimu = kata kekuatan: +4 Mult.</li>
+        <li>Fabric bekerja dari kiri ke kanan: seret untuk mengatur urutannya.</li>
         <li>Di shop ada kartu imbuhan (UN, LY, ING…), gabungan huruf (TH, QU…), dan kartu wild ?.</li>
         <li>Tiap stage: 2 ronde + 1 boss, lalu shop. Run tak berujung; target makin berat tiap stage.</li></ul></div>
       <div class="bq-btns" style="justify-content:center;align-items:center">${soundHtml()}<span class="bq-mut">Musik 🎵 dan efek suara 🔔 (ketuk untuk menyalakan/mematikan)</span></div>
@@ -985,6 +1008,18 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     const a = anim; a.timers.forEach(clearTimeout); anim = null; a.done();
   }
 
+  // daily missions live in the host page (the Beranda shows them without loading this file); the game only reports events and takes the reward
+  const quest = (...ev) => { ev.filter(Boolean).forEach(e => { try { const t = host.quest ? host.quest(e) : ''; if (t) toast(t); } catch (x) { /* missions are a bonus: never break a round */ } }); };
+  function applyBonus() {
+    let b = null; try { b = host.takeBonus ? host.takeBonus() : null; } catch (e) { b = null; }
+    if (!b || !(b.coins || b.fabrics)) return;
+    G.coins += b.coins || 0; const got = [];
+    for (let k = 0; k < (b.fabrics || 0) && G.fabrics.length < 5; k++) {
+      const pool = E.FABRICS.filter(f => E.avail(G, f) && !G.fabrics.includes(f.id) && f.kind !== 'util');
+      if (!pool.length) break; const f = pool[Math.floor(rng() * pool.length)]; G.fabrics.push(f.id); got.push(f.icon + ' ' + f.name);
+    }
+    toast('Bekal misi harian: ' + [b.coins ? '+' + b.coins + ' koin' : '', got.join(', ')].filter(Boolean).join(' · '));
+  }
   function beginRound() { R = E.makeRound(G, rng); sel = []; msg = ''; last = null; phase = R.boss ? 'bosspre' : 'round'; render(); }
   function advance() { if (isBoss()) { G.stage++; G.rnd = 0; checkAch(); shop = E.shopItems(G, rng); phase = 'shop'; render(); } else { G.rnd++; beginRound(); } }
   const A = {
@@ -1004,7 +1039,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     giveUpYes() { modal = null; endRun(); },
     sfx() { Sfx.toggle(); render(); },
     resume() { const s = load(); if (!s) { A.start(); return; } restore(s); if (phase === 'round' && R && !R.cleared && E.failed(G, R)) { endRun(); return; } render(); },
-    pickStarter(i) { G.fabrics = [starters[+i]]; beginRound(); },
+    pickStarter(i) { G.fabrics = [starters[+i]]; applyBonus(); beginRound(); },
     faceBoss() { phase = 'round'; render(); },
     pick(id) {
       const t = R.hand.find(x => x.id === +id); if (!t || sel.length >= R.handSize || sel.some(s => s.id === t.id)) return;
@@ -1029,8 +1064,9 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     send() {
       if (anim) return;
       const w = sel.map(E.txt).join(''), played = sel.map(t => Object.assign({}, t)), before = R.score;
-      const r = E.submit(G, R, sel, rng, { inLemari: inLemari(w) });
+      const inL = inLemari(w), r = E.submit(G, R, sel, rng, { inLemari: inL });
       if (!r.ok) { msg = r.msg; shake = true; Sfx.play('bad'); render(); return; }
+      quest(inL ? 'lemari' : '', r.won ? 'win' : '');
       last = { res: r.res }; sel = []; msg = '';
       const lost = !r.won && E.failed(G, R);
       if (r.won) { last.fin = E.finishRound(G, R); rewards = E.rewardOptions(G, rng); R.cleared = true; }
@@ -1069,7 +1105,40 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
     retry() { sendResult(); },
     noop() { }
   };
+  /* Drag a Fabric to reorder it (owner 25 Nov): mouse or finger, in a round or the shop, not while a score is counting.
+     A move of 8px sideways (or a 250 ms hold) starts the drag; a plain tap still opens the Fabric popup. */
+  let drag = null, dragEnded = 0;
+  function dragStart(ev) {
+    const el = ev.target.closest ? ev.target.closest('.bq-slot[data-a="showFab"]') : null;
+    if (!el || anim || modal || (phase !== 'round' && phase !== 'shop') || !G || G.fabrics.length < 2 || (ev.button !== undefined && ev.button > 0)) return;
+    drag = { el, id: el.getAttribute('data-i'), x0: ev.clientX, y0: ev.clientY, pid: ev.pointerId, on: false, t: Date.now(), to: -1,
+      slots: [...body.querySelectorAll('.bq-slot[data-a="showFab"]')] };
+    drag.hold = setTimeout(() => { if (drag && !drag.on) dragOn(); }, 250);
+  }
+  function dragOn() { drag.on = true; drag.el.classList.add('drag'); try { drag.el.setPointerCapture(drag.pid); } catch (e) { /* fine without */ } Sfx.play('tick'); }
+  function dragMove(ev) {
+    if (!drag || ev.pointerId !== drag.pid) return;
+    const dx = ev.clientX - drag.x0, dy = ev.clientY - drag.y0;
+    if (!drag.on) { if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) dragOn(); else { if (Math.abs(dy) > 10) dragEnd(); return; } }
+    ev.preventDefault();
+    drag.el.style.transform = 'translate(' + dx + 'px,' + dy * 0.2 + 'px) scale(1.06)';
+    // the slot under the pointer is where the Fabric lands
+    let to = drag.slots.length - 1;
+    for (let i = 0; i < drag.slots.length; i++) { const b = drag.slots[i].getBoundingClientRect(); if (ev.clientX < b.left + b.width / 2) { to = i; break; } }
+    const from = drag.slots.indexOf(drag.el); if (to > from && ev.clientX < drag.slots[to].getBoundingClientRect().left + drag.slots[to].getBoundingClientRect().width / 2) to--;
+    drag.to = to; drag.slots.forEach((s, i) => s.classList.toggle('drop', drag.on && i === to && s !== drag.el));
+  }
+  function dragEnd() {
+    if (!drag) return; clearTimeout(drag.hold);
+    const d = drag; drag = null;
+    if (!d.on) return;
+    dragEnded = Date.now(); d.el.style.transform = ''; d.el.classList.remove('drag'); d.slots.forEach(s => s.classList.remove('drop'));
+    const from = G.fabrics.indexOf(d.id);
+    if (from < 0 || d.to < 0 || d.to === from) { render(); return; }
+    G.fabrics.splice(from, 1); G.fabrics.splice(Math.min(d.to, G.fabrics.length), 0, d.id); Sfx.play('discard'); render();
+  }
   function onClick(ev) {
+    if (Date.now() - dragEnded < 80) { ev.stopPropagation(); return; }
     if (!root.hidden && !document.hidden) Music.start();
     if (anim) { finishScore(); return; }
     const t = ev.target.closest ? ev.target.closest('[data-a]') : null;
@@ -1093,6 +1162,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
       mounted = true;
       const st = document.createElement('style'); st.id = 'bq-css'; st.textContent = CSS; document.head.appendChild(st);
       body.addEventListener('click', onClick); document.addEventListener('keydown', onKey);
+      body.addEventListener('pointerdown', dragStart); body.addEventListener('pointermove', dragMove, { passive: false }); body.addEventListener('pointerup', dragEnd); body.addEventListener('pointercancel', dragEnd);
       document.addEventListener('visibilitychange', () => { if (document.hidden) Music.stop(); });
       if (window.MutationObserver) new MutationObserver(() => { if (root.hidden) Music.stop(); }).observe(root, { attributes: true, attributeFilter: ['hidden'] });
     }
