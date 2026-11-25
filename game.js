@@ -475,6 +475,9 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 .bq-chip.h{background:var(--blue);color:#fff;font-weight:800}
 .bq-mute.off{opacity:.35;text-decoration:line-through}.bq-toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:30;background:var(--yellow);color:var(--on-accent);border-radius:16px;padding:10px 16px;font-weight:800;font-size:14px;box-shadow:0 6px 20px #0006;max-width:92vw;animation:bq-pop .3s}
 .bq-giveup{border:0;background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:2px 0;align-self:center}
+.bq-gu{position:absolute;top:8px;left:8px;z-index:3;border:0;border-radius:999px;background:#e0475f;color:#fff;font:800 12px var(--ui);padding:6px 11px;cursor:pointer;box-shadow:0 2px 0 #0004}
+.bq-r>.bq-R>.bq-giveup{display:none}
+.bq-sv{border:1.5px solid var(--yellow)!important;font-weight:800!important}
 .bq-ach{display:flex;gap:10px;align-items:center;background:var(--card);border-radius:16px;padding:10px 12px}.bq-ach.lock{opacity:.6}.bq-ach .ic{font-size:24px}.bq-ach b{display:block}
 .bq-mute{border:0;background:var(--card-2);color:var(--text);border-radius:999px;width:36px;height:30px;font-size:15px;cursor:pointer;flex:none}
 .bq-abc{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}.bq-abc .bq-tile{width:auto;height:46px;font-size:20px}
@@ -572,6 +575,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
 .bq-mb:active{transform:translateY(2px);box-shadow:0 2px 0 #0005}
 .bq-mb.blue{background:#2f7fd1;min-width:150px}.bq-mb.green{background:#1f9d6b;min-width:150px}.bq-mbox.side .bq-mb{min-height:28px;font-size:14px;padding:0 16px}.bq-mb.orange{background:#e8901a}.bq-mb.red{background:#e0475f}
 .bq-pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+@media(hover:hover) and (pointer:fine){.bq-orient{display:none}}
 .bq-pill{border:0;background:#1c1a26e0;color:#e8e6f0;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 @media(max-width:560px){.bq-mbox.main{order:-1;width:100%}.bq-mbox.main .bq-mb{flex:1;min-width:0}.bq-mb{font-size:20px}}
 @media(prefers-reduced-motion:reduce){.bq-logo{animation:none}}
@@ -605,7 +609,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
 .bq-r .bq-pile{display:flex}.bq-r .bq-hand.fan{padding-bottom:8px}.bq-r .bq-hand.fan .bq-tile{transform:translateY(var(--fy)) rotate(var(--fr))}.bq-r .bq-hand.fan .bq-tile.used{transform:translateY(calc(var(--fy) + 10px)) rotate(var(--fr))}.bq-r .bq-hand.fan .bq-tile.hit{transform:translateY(-10px) scale(1.08)}
 .bq-r .bq-hand{grid-template-columns:repeat(var(--bq-n,8),minmax(0,68px));gap:8px}.bq-r .bq-hand .bq-tile{height:80px;font-size:34px}.bq-r .bq-hand .bq-tile small{font-size:13px}
 .bq-r .bq-btns{max-width:640px;width:100%;align-self:center}.bq-r .bq-btn{min-height:54px;font-size:17px}
-.bq-r .bq-giveup,.bq-r .bq-kb{align-self:center}
+.bq-r .bq-kb{align-self:center}.bq-r .bq-arena .bq-gu{display:none}.bq-r>.bq-R>.bq-giveup{display:inline-block;align-self:flex-end;background:#e0475f;color:#fff;border-radius:999px;padding:6px 14px;font-weight:800;box-shadow:0 2px 0 #0004}
 .bq-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.bq-hands{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(orientation:landscape) and (min-width:900px) and (min-height:540px){.bq-r{--hudw:300px;--bq-art:min(150px,18vh)}}
@@ -886,7 +890,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     const en = enemyInfo(), sc = anim ? anim.before : R.score, pct = Math.min(100, sc / R.target * 100), over = sc > R.target, f = fx; fx = null;
     const say = f && f.say ? `<div class="bq-say">${f.say}</div>` : '';
     const art = `<img src="${en.img}" alt="">`;
-    return `<div class="bq-arena"><div class="bq-bh r${G.rnd}">${R.boss ? '👑 ' : ''}${en.n}<small>${RND[G.rnd]}</small></div>${say}${f ? `<div class="bq-dmg">+${fmtN(f.dmg)}</div>` : ''}
+    return `<div class="bq-arena">${phase === 'round' && !R.cleared ? '<button type="button" class="bq-gu" data-a="giveUp">🏳️ Akhiri run</button>' : ''}<div class="bq-bh r${G.rnd}">${R.boss ? '👑 ' : ''}${en.n}<small>${RND[G.rnd]}</small></div>${say}${f ? `<div class="bq-dmg">+${fmtN(f.dmg)}</div>` : ''}
       <div class="bq-fig me"><div class="bq-img ${f ? 'bq-atk' : ''}"><img src="img/game/bibo-${pose()}.webp" alt="Bibo"></div><div class="bq-name">Bibo</div></div><div class="bq-vs">VS</div>
       <div class="bq-fig en"><div class="bq-img ${f ? 'bq-ehit' : ''} ${R.cleared && !anim ? 'bq-dead' : ''}">${art}</div><div class="bq-goal ${over ? 'over' : ''}"><i style="width:${pct}%"></i></div><div class="bq-name">${en.n}</div><div class="bq-gt">${fmtN(sc)} / ${fmtN(R.target)}${over ? ' 🔥' : ''}</div></div><div class="bq-tg">Capai <b>${fmtN(R.target)}</b><span>Hadiah 🪙 +${E.CFG.coinRound + G.stage}</span></div></div>`;
   }
@@ -915,7 +919,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
         cm = { c: s.chips, m: s.mult, t: s.final, h: s.hand };
         pv = `<div class="bq-pl"><button type="button" class="bq-arti" data-a="artiSel">📖 Arti</button><b>${w.toUpperCase()}</b> → <b>${fmtN(s.final)}</b> poin</div><div class="bq-chips">${chipsOf(Object.assign({}, s, { jackpot: undefined }))}${G.fabrics.includes('jackpot') ? '<span class="bq-chip">🎰 bisa ×2</span>' : ''}</div>`;
       } else pv = `<div class="bq-pl">${w.length < 3 ? 'Pilih minimal 3 huruf untuk kata, atau langsung Buang' : '<b>' + w.toUpperCase() + '</b> belum jadi kata valid (boleh Buang huruf ini)'}</div>`;
-    } else pv = '<div class="bq-pl">Ketuk huruf: susun kata untuk menyerang, atau buang huruf yang tidak berguna.</div>';
+    } else pv = R.noWord ? '<div class="bq-pl" style="color:var(--error)"><b>Tidak ada kata</b> dari huruf di tanganmu. Pilih huruf lalu Buang untuk mengambil huruf baru dari supply.</div>' : '<div class="bq-pl">Ketuk huruf: susun kata untuk menyerang, atau buang huruf yang tidak berguna.</div>';
     const selIds = new Set(sel.map(t => t.id));
     const hud = `<div class="bq-rs"><span>Skor<br>ronde</span><b>${fmtN(shown)}</b></div>`;
     const head = `<div class="bq-top"><div class="t"><b>${label()}</b></div><button type="button" class="bq-mute" data-a="runInfo" aria-label="Info run">ℹ️</button><button type="button" class="bq-mute" data-a="opts" aria-label="Opsi">⚙️</button><span class="bq-coin">🪙 ${G.coins}</span></div>${arenaHtml()}
@@ -927,7 +931,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
       <button type="button" class="bq-hx" data-a="supplyView"><small>Supply</small><b>${R.supply.length}</b></button><div class="bq-hx"><small>Buang</small><b>${R.discards}/${R.maxDiscards}</b></div>
       <div class="bq-hx wide coin"><b>🪙 ${G.coins}</b></div>
       <button type="button" class="bq-hb orange" data-a="opts">Opsi</button><div class="bq-hx"><small>Stage</small><b>${G.stage + 1}${G.stage + 1 > E.CFG.stages ? '' : '/' + E.CFG.stages}</b></div><div class="bq-hx"><small>Ronde</small><b>${G.rnd + 1}/3</b></div></div>`;
-    const info = `<div class="bq-info"><button type="button" class="bq-sv" data-a="supplyView">📦 Supply ${R.supply.length}</button><span>🗑️ Buang ${R.discards}/${R.maxDiscards}</span><span>📝 ${R.words} kata</span>${R.chain > 0 && G.fabrics.includes('chain') ? `<span>⛓️ chain ${R.chain}</span>` : ''}</div>`;
+    const info = `<div class="bq-info"><button type="button" class="bq-sv" data-a="supplyView" aria-label="Lihat sisa supply">📦 Supply ${R.supply.length} ›</button><span>🗑️ Buang ${R.discards}/${R.maxDiscards}</span><span>📝 ${R.words} kata</span>${R.chain > 0 && G.fabrics.includes('chain') ? `<span>⛓️ chain ${R.chain}</span>` : ''}</div>`;
     return '<div class="bq-L">' + head + info + hudg + '</div><div class="bq-R">' + slotsHtml() + `
       <div class="bq-prev"><div class="bq-sel">${(anim ? anim.tiles : sel).map((t, i, a) => { const k = E.kindOf(t.ch), af = (k === 'pre' && i === 0) || (k === 'suf' && i === a.length - 1);
         return tileHtml(t, '', anim ? '' : `data-a="unsel" data-i="${i}"`).replace('</button>', af ? '<i class="af">+3</i></button>' : '</button>'); }).join('')}</div>${pv}</div>
@@ -949,7 +953,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
         <div class="bq-mbox side"><button type="button" class="bq-mb orange" data-a="opts">OPSI</button><button type="button" class="bq-mb red" data-go="home">KELUAR</button></div>
       </div>
       ${resumable ? '<button type="button" class="bq-pill" data-a="start">Mulai run baru</button>' : ''}
-      <div class="bq-pills"><button type="button" class="bq-pill" data-a="howto">Cara main</button><button type="button" class="bq-pill" data-a="achList">🏆 Achievement ${E.ACH.filter(a => E.hasAch(achOwned, a.id)).length}/${E.ACH.length}</button></div></div>`;
+      <div class="bq-pills"><button type="button" class="bq-pill" data-a="howto">Cara main</button><button type="button" class="bq-pill bq-orient" data-a="orient">${document.fullscreenElement ? '📱 Tegak' : '↔️ Mendatar'}</button><button type="button" class="bq-pill" data-a="achList">🏆 Achievement ${E.ACH.filter(a => E.hasAch(achOwned, a.id)).length}/${E.ACH.length}</button></div></div>`;
   }
   // Koleksi: every background, Kain and Fabric, with what opens the locked ones
   function collHtml() {
@@ -1006,7 +1010,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     const POSN = { n: 'noun', v: 'verb', a: 'adjective', r: 'adverb' };
     const sendLine = sendState === 'ok' ? '<div class="bq-mut">Hasil tersimpan.</div>' : sendState === 'sending' ? '<div class="bq-mut">Menyimpan hasil…</div>' : sendState === 'fail' ? `<div class="bq-msg">Hasil belum tersimpan: ${sendErr} <button type="button" class="bq-btn sm" data-a="retry">Coba lagi</button></div>` : '';
     return `<div class="bq-top"><div class="t"><b>${label()}</b><h2>${G.won ? '🏆 Juara! Run dimenangkan' : 'Run berakhir'}</h2></div></div>${arenaHtml()}
-      <div class="bq-card bq-center"><div class="bq-mut">Skor ronde ${R.score} dari ${R.target}.</div><div style="margin-top:6px">${G.won ? 'Kamu menaklukkan ' + E.CFG.stages + ' stage' + (G.reached > E.CFG.stages ? ' + Endless sampai Stage ' + G.reached : '') + '. ' : ''}${G.reached >= best ? '🏅 Rekor baru!' : 'Rekor: Stage ' + best}</div>${sendLine}</div>
+      <div class="bq-card bq-center">${G.endReason === 'stuck' ? '<div style="font-weight:800">Tidak ada kata yang bisa disusun lagi, dan supply atau jatah Buang sudah habis.</div>' : ''}<div class="bq-mut">Skor ronde ${R.score} dari ${R.target}.</div><div style="margin-top:6px">${G.won ? 'Kamu menaklukkan ' + E.CFG.stages + ' stage' + (G.reached > E.CFG.stages ? ' + Endless sampai Stage ' + G.reached : '') + '. ' : ''}${G.reached >= best ? '🏅 Rekor baru!' : 'Rekor: Stage ' + best}</div>${sendLine}</div>
       ${achNew.length || (G.newAch || []).length ? `<div class="bq-card"><b>🏆 Achievement baru</b>${[...new Set((G.newAch || []).concat(achNew))].map(id => `<div class="bq-mut">${achText(id)}</div>`).join('')}</div>` : ''}
       <div class="bq-card"><b>Kata-katamu</b><div class="bq-mut">Ketuk kata untuk melihat artinya, lalu simpan ke Lemari.</div>
         <div class="bq-wl">${uniq.map(x => `<div class="row" data-a="meaning" data-i="${x.w}"><b>${x.w}${POSN[x.p] ? `<s>${POSN[x.p]}</s>` : ''}</b><i>${x.s} poin</i><span data-add="${x.w}"></span></div><div class="mean" data-mean="${x.w}" hidden></div>`).join('') || '<div class="bq-mut">Belum ada kata.</div>'}</div></div>
@@ -1034,6 +1038,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
       return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Opsi</h2>
         <div class="bq-orow"><span>Musik latar</span><button type="button" class="bq-mute ${Music.on ? '' : 'off'}" data-a="music" aria-label="Musik latar" aria-pressed="${Music.on}">🎵</button></div>
         <div class="bq-orow"><span>Efek suara</span><button type="button" class="bq-mute ${Sfx.on ? '' : 'off'}" data-a="sfx" aria-label="Efek suara" aria-pressed="${Sfx.on}">🔔</button></div>
+        <div class="bq-orow"><span>Tampilan layar</span><button type="button" class="bq-btn sm" data-a="orient">${document.fullscreenElement ? '📱 Kembali tegak' : '↔️ Mode mendatar'}</button></div>
         <div class="bq-orow"><span>Kecepatan hitung skor</span><button type="button" class="bq-speed" data-a="speed" aria-label="Kecepatan hitung skor">${['⚡', '1×', '2×'][speed()]}</button></div>
         <div class="bq-orow" style="flex-direction:column;align-items:stretch"><span>Latar</span><div class="bq-bgpick">${E.BGS.map(b => { const ok = o.bgs.includes(b.id); return `<button type="button" class="bq-btn sm ${bg === b.id ? 'pri' : ''}" data-a="setBg" data-i="${b.id}" ${ok ? '' : 'disabled'}>${ok ? b.icon : '🔒'} ${b.name}</button>`; }).join('')}<button type="button" class="bq-btn sm ${bg === 'off' ? 'pri' : ''}" data-a="setBg" data-i="off">Mati</button></div>
           <span class="bq-mut">Anyaman dan Benang terbuka lewat achievement.</span></div>
@@ -1258,12 +1263,18 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     howto() { modal = { t: 'howto' }; render(); },
     supplyView() { if (!anim && R) { modal = { t: 'supply' }; render(); } },
     setBg(v) { Bg.set(v); render(); },
+    async orient() {
+      if (document.fullscreenElement) { try { screen.orientation.unlock(); } catch (e) { /* not locked */ } try { await document.exitFullscreen(); } catch (e) { /* already out */ } render(); return; }
+      try { await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); await Promise.race([screen.orientation.lock('landscape'), new Promise((ok, no) => setTimeout(() => no(new Error('lock')), 1500))]); }
+      catch (e) { try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (x) { /* ignore */ } toast('HP ini belum bisa diputar dari app. Nyalakan "Rotasi otomatis" di HP, lalu miringkan HP.'); }
+      render();
+    },
     giveUp() { modal = { t: 'giveup' }; render(); },
     giveUpYes() { modal = null; endRun(); },
     endless() { G.endless = true; toShop(); },
     finishWin() { endRun(); },
     sfx() { Sfx.toggle(); render(); },
-    resume() { const s = load(); if (!s) { A.start(); return; } restore(s); if (phase === 'round' && R && !R.cleared && E.failed(G, R)) { endRun(); return; } render(); },
+    resume() { const s = load(); if (!s) { A.start(); return; } restore(s); if (phase === 'round' && R && !R.cleared && E.failed(G, R)) { G.endReason = 'stuck'; endRun(); return; } if (phase === 'round' && R && !R.cleared) R.noWord = E.stuck(R); render(); },
     pickStarter(i) { G.fabrics = [starters[+i]]; applyBonus(); beginRound(); },
     faceBoss() { phase = 'round'; render(); },
     pick(id) {
@@ -1293,7 +1304,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
       if (!r.ok) { msg = r.msg; shake = true; Sfx.play('bad'); render(); return; }
       quest(inL ? 'lemari' : '', r.won ? 'win' : '');
       last = { res: r.res }; sel = []; msg = '';
-      const lost = !r.won && E.failed(G, R);
+      const lost = !r.won && E.failed(G, R); R.noWord = !r.won && !lost && E.stuck(R); if (lost) G.endReason = 'stuck';
       if (r.won) { last.fin = E.finishRound(G, R); rewards = E.rewardOptions(G, rng); R.cleared = true; }
       playScore(played, r.res, before, () => {
         const f = r.res.final;
@@ -1306,7 +1317,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     },
     moveFab(d) { const i = G.fabrics.indexOf(modal && modal.id), j = i + (+d); if (i < 0 || j < 0 || j >= G.fabrics.length) return; const f = G.fabrics; [f[i], f[j]] = [f[j], f[i]]; render(); },
     speed() { store.set(SPEEDKEY, String((speed() + 1) % 3)); render(); },
-    discard() { sel.forEach(t => delete t.as); if (!E.discard(G, R, sel.slice())) return; Sfx.play('discard'); const n = sel.length; sel = []; msg = 'Buang ' + n + ' huruf, ambil dari supply.'; if (E.failed(G, R)) { endRun(); return; } render(); },
+    discard() { sel.forEach(t => delete t.as); if (!E.discard(G, R, sel.slice())) return; Sfx.play('discard'); const n = sel.length; sel = []; msg = 'Buang ' + n + ' huruf, ambil dari supply.'; if (E.failed(G, R)) { G.endReason = 'stuck'; endRun(); return; } R.noWord = E.stuck(R); render(); },
     goNext() { phase = 'reward'; Sfx.play('coin'); render(); },
     takeReward(i) { if (rewards[+i] && rewards[+i].type === 'coin') Sfx.play('coin'); gain(rewards[+i], advance); },
     showFab(id) { modal = { t: 'fab', id: id }; render(); },
@@ -1389,7 +1400,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
       body.addEventListener('click', onClick); document.addEventListener('keydown', onKey);
       body.addEventListener('pointerdown', dragStart); body.addEventListener('pointermove', dragMove, { passive: false }); body.addEventListener('pointerup', dragEnd); body.addEventListener('pointercancel', dragEnd);
       document.addEventListener('visibilitychange', () => { if (document.hidden) Music.stop(); else Bg.wake(); });
-      if (window.MutationObserver) new MutationObserver(() => { if (root.hidden) Music.stop(); }).observe(root, { attributes: true, attributeFilter: ['hidden'] });
+      if (window.MutationObserver) new MutationObserver(() => { if (root.hidden) { Music.stop(); if (document.fullscreenElement) { try { screen.orientation.unlock(); } catch (e) { /* ok */ } document.exitFullscreen().catch(() => {}); } } }).observe(root, { attributes: true, attributeFilter: ['hidden'] });
     }
     best = +store.get(BEST) || 0;
   }
