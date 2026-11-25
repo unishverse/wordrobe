@@ -4432,11 +4432,12 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
   var UA = navigator.userAgent || '', IS_IOS = /iphone|ipad|ipod/i.test(UA), IS_ANDROID = /android/i.test(UA);
   var IN_APP = /Instagram|FBAN|FBAV|FB_IAB|WhatsApp|TikTok|musical_ly|BytedanceWebview|Line\//i.test(UA);
   function installState() { try { return JSON.parse(localStorage.getItem(INSTALL_KEY) || 'null') || { n: 0, until: 0 }; } catch (e) { return { n: 0, until: 0 }; } }
-  function canInstall() { return !standalone && !installState().done && (!!installEvt || IS_IOS || IS_ANDROID); }
+  function canInstall() { return !standalone && (!!installEvt || ((IS_IOS || IS_ANDROID) && !installState().done)); }
+  function canInstallMenu() { return !standalone && (!!installEvt || IS_IOS || IS_ANDROID); }   // the Akun menu always offers it outside the app (after an uninstall too)
   function installNudgeDue() { var st = installState(); return canInstall() && (IS_IOS || IS_ANDROID) && (st.n || 0) < 3 && Date.now() >= (st.until || 0); }
   function renderInstall() {
     var ok = canInstall();
-    $('menu-install').hidden = !ok;
+    $('menu-install').hidden = !canInstallMenu();
     $('install-nudge').hidden = !(me && installNudgeDue());
     Array.prototype.forEach.call(document.querySelectorAll('.install-link'), function (b) { b.hidden = !ok; });
   }
@@ -4461,7 +4462,11 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     $('install-steps').textContent = installSteps();
     $('menu-sheet').hidden = true; $('install-sheet').hidden = false;
   }
-  if (!standalone) window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; renderInstall(); });
+  if (!standalone) window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault(); installEvt = e;
+    var st = installState(); if (st.done) { st.done = false; try { localStorage.setItem(INSTALL_KEY, JSON.stringify(st)); } catch (x) { /* ignore */ } }   // the browser says it is not installed (any more)
+    renderInstall();
+  });
   window.addEventListener('appinstalled', installDone);
   $('menu-install').addEventListener('click', doInstall);
   $('install-go').addEventListener('click', doInstall);
