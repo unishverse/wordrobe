@@ -953,7 +953,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
         <div class="bq-mbox side"><button type="button" class="bq-mb orange" data-a="opts">OPSI</button><button type="button" class="bq-mb red" data-go="home">KELUAR</button></div>
       </div>
       ${resumable ? '<button type="button" class="bq-pill" data-a="start">Mulai run baru</button>' : ''}
-      <div class="bq-pills"><button type="button" class="bq-pill" data-a="howto">Cara main</button><button type="button" class="bq-pill bq-orient" data-a="orient">${document.fullscreenElement ? '📱 Tegak' : '↔️ Mendatar'}</button><button type="button" class="bq-pill" data-a="achList">🏆 Achievement ${E.ACH.filter(a => E.hasAch(achOwned, a.id)).length}/${E.ACH.length}</button></div></div>`;
+      <div class="bq-pills"><button type="button" class="bq-pill" data-a="howto">Cara main</button><button type="button" class="bq-pill bq-orient" data-a="orient">${matchMedia('(orientation: landscape)').matches ? '📱 Tegak' : '↔️ Mendatar'}</button><button type="button" class="bq-pill" data-a="achList">🏆 Achievement ${E.ACH.filter(a => E.hasAch(achOwned, a.id)).length}/${E.ACH.length}</button></div></div>`;
   }
   // Koleksi: every background, Kain and Fabric, with what opens the locked ones
   function collHtml() {
@@ -1038,7 +1038,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
       return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Opsi</h2>
         <div class="bq-orow"><span>Musik latar</span><button type="button" class="bq-mute ${Music.on ? '' : 'off'}" data-a="music" aria-label="Musik latar" aria-pressed="${Music.on}">🎵</button></div>
         <div class="bq-orow"><span>Efek suara</span><button type="button" class="bq-mute ${Sfx.on ? '' : 'off'}" data-a="sfx" aria-label="Efek suara" aria-pressed="${Sfx.on}">🔔</button></div>
-        <div class="bq-orow"><span>Tampilan layar</span><button type="button" class="bq-btn sm" data-a="orient">${document.fullscreenElement ? '📱 Kembali tegak' : '↔️ Mode mendatar'}</button></div>
+        <div class="bq-orow"><span>Tampilan layar</span><button type="button" class="bq-btn sm" data-a="orient">${matchMedia('(orientation: landscape)').matches ? '📱 Kembali tegak' : '↔️ Mode mendatar'}</button></div>
         <div class="bq-orow"><span>Kecepatan hitung skor</span><button type="button" class="bq-speed" data-a="speed" aria-label="Kecepatan hitung skor">${['⚡', '1×', '2×'][speed()]}</button></div>
         <div class="bq-orow" style="flex-direction:column;align-items:stretch"><span>Latar</span><div class="bq-bgpick">${E.BGS.map(b => { const ok = o.bgs.includes(b.id); return `<button type="button" class="bq-btn sm ${bg === b.id ? 'pri' : ''}" data-a="setBg" data-i="${b.id}" ${ok ? '' : 'disabled'}>${ok ? b.icon : '🔒'} ${b.name}</button>`; }).join('')}<button type="button" class="bq-btn sm ${bg === 'off' ? 'pri' : ''}" data-a="setBg" data-i="off">Mati</button></div>
           <span class="bq-mut">Anyaman dan Benang terbuka lewat achievement.</span></div>
@@ -1263,11 +1263,22 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     howto() { modal = { t: 'howto' }; render(); },
     supplyView() { if (!anim && R) { modal = { t: 'supply' }; render(); } },
     setBg(v) { Bg.set(v); render(); },
+    // landscape on demand (owner 25 Nov). An installed app may lock the screen itself; a browser tab needs fullscreen first.
     async orient() {
-      if (document.fullscreenElement) { try { screen.orientation.unlock(); } catch (e) { /* not locked */ } try { await document.exitFullscreen(); } catch (e) { /* already out */ } render(); return; }
-      try { await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); await Promise.race([screen.orientation.lock('landscape'), new Promise((ok, no) => setTimeout(() => no(new Error('lock')), 1500))]); }
-      catch (e) { try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (x) { /* ignore */ } toast('HP ini belum bisa diputar dari app. Nyalakan "Rotasi otomatis" di HP, lalu miringkan HP.'); }
-      render();
+      const land = matchMedia('(orientation: landscape)').matches, want = land ? 'portrait' : 'landscape';
+      const lock = () => Promise.race([screen.orientation.lock(want), new Promise((ok, no) => setTimeout(() => no(new Error('lock')), 1500))]);
+      const app = matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
+      try { if (!app) throw new Error('tab'); await lock(); }   // a browser tab cannot lock without fullscreen: go straight to it
+      catch (e) {
+        try {
+          if (land && document.fullscreenElement) { await document.exitFullscreen(); }
+          else { await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); await lock(); }
+        } catch (e2) {
+          try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (x) { /* ignore */ }
+          toast('Layar belum bisa diputar dari app. Pastikan Rotasi otomatis menyala, tutup Wordrobe sepenuhnya lalu buka lagi, lalu miringkan HP.');
+        }
+      }
+      setTimeout(render, 350);
     },
     giveUp() { modal = { t: 'giveup' }; render(); },
     giveUpYes() { modal = null; endRun(); },

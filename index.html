@@ -1663,6 +1663,8 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     var nav = ['home', 'lemari', 'add', 'result', 'fit', 'speak', 'fix', 'slay', 'stitch'].indexOf(id) !== -1;
     if (id !== 'speak') stopListening();
     $('nav').hidden = !nav;
+    // the installed app may turn sideways only inside Wordrobe Quest; every other screen stays upright (manifest orientation is "any")
+    try { if (screen.orientation && matchMedia('(display-mode: standalone)').matches) { if (id === 'gameplay') screen.orientation.unlock(); else screen.orientation.lock('portrait').catch(function () { /* not allowed here */ }); } } catch (e) { /* no orientation API */ }
     $('app').classList.toggle('with-nav', nav);
     $('nav-home').setAttribute('aria-current', id === 'home' ? 'page' : 'false');
     $('nav-lemari').setAttribute('aria-current', id === 'lemari' ? 'page' : 'false');
@@ -1723,7 +1725,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       fqLoad = new Promise(function (ok, no) {
         var sc = document.createElement('script');
         // raise v when game.js changes: a new URL skips any old copy the phone or the CDN still holds
-        sc.src = 'game.js?v=22'; sc.onload = ok; sc.onerror = function () { sc.remove(); no(new Error('game')); };
+        sc.src = 'game.js?v=23'; sc.onload = ok; sc.onerror = function () { sc.remove(); no(new Error('game')); };
         document.head.appendChild(sc);
       });
       fqLoad.catch(function () { fqLoad = null; });
