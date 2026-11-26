@@ -14,30 +14,94 @@ const Engine = (function () {
     coinRound: 3, price: { fabric: 6, gold: 4, ruby: 5, glass: 7, steel: 6, dbl: 7, supply: 3, letter: 4, reroll: 2, book: 5, multi: 5, wild: 8 }, supplyPack: 3, handMaxBuys: 4
   };
   /* Fabrics fire LEFT TO RIGHT in slot order (Balatro jokers): 'chips' = +Chips (blue), 'add' = +Mult (red), 'x' = xMult. */
+  // r = rarity (1 Umum, 2 Langka, 3 Epik, 4 Legendaris; owner 26 Nov, after Balatro's Common/Uncommon/Rare/Legendary); t = terms shown on the card
   const FABRICS = [
-    { id: 'long', name: 'Long Stitch', icon: '🧵', desc: '+6 Mult untuk kata 6+ huruf.', kind: 'add' },
-    { id: 'double', name: 'Double Stitch', icon: '🪡', desc: '+45 Chips untuk kata dengan huruf kembar.', kind: 'chips' },
-    { id: 'short', name: 'Short & Sweet', icon: '🍬', desc: '+4 Mult untuk kata 3 huruf.', kind: 'add' },
-    { id: 'chain', name: 'Word Chain', icon: '⛓️', desc: 'Kata 5+ huruf: +2 Mult untuk tiap kata 5+ huruf berturut-turut (termasuk kata ini). Putus kalau kata < 5 huruf.', kind: 'add' },
-    { id: 'velvet', name: 'Vowel Velvet', icon: '🟣', desc: '+1 Mult untuk tiap huruf vokal.', kind: 'add' },
-    { id: 'rare', name: 'Rare Thread', icon: '💎', desc: '+60 Chips untuk kata berisi J, Q, X, atau Z.', kind: 'chips' },
-    { id: 'club', name: 'Consonant Club', icon: '🎩', desc: '+6 Chips untuk tiap konsonan.', kind: 'chips' },
-    { id: 'golden', name: 'Golden Weave', icon: '🌟', desc: '×1,5 Mult untuk kata berisi huruf E.', kind: 'x' },
-    { id: 'first', name: 'First Impression', icon: '👋', desc: '×2 Mult untuk kata valid pertama tiap ronde.', kind: 'x' },
-    { id: 'jackpot', name: 'Jackpot', icon: '🎰', desc: '20% peluang ×2 Mult.', kind: 'x' },
-    { id: 'refill', name: 'Refill Master', icon: '🔄', desc: 'Sekali per ronde: kata 5+ huruf menarik 1 huruf ekstra (tangan sementara +1).', kind: 'util' },
-    { id: 'saver', name: 'Saver', icon: '🐷', desc: '+1 koin tiap 3 huruf sisa saat ronde selesai.', kind: 'util' },
-    { id: 'recycler', name: 'Recycler', icon: '♻️', desc: '20% peluang 1 huruf terpakai kembali ke supply.', kind: 'util' },
-    { id: 'thread7', name: 'Thread Count', icon: '7️⃣', desc: '+7 Mult untuk kata 7 huruf.', kind: 'add' },
-    { id: 'patch', name: 'Patchwork', icon: '🧩', desc: '×2 Mult untuk kata dengan 3+ vokal berbeda.', kind: 'x' },
-    { id: 'measure', name: 'Measuring Tape', icon: '📏', desc: '+30 Chips untuk kata 5+ huruf.', kind: 'chips', locked: true },
-    { id: 'steady', name: 'Steady Hand', icon: '🤲', desc: '+2 koin tiap ronde yang dimenangkan tanpa Buang.', kind: 'util', locked: true },
-    { id: 'lemariku', name: 'Lemariku', icon: '🚪', desc: '×2 Mult untuk kata yang sudah ada di Lemarimu.', kind: 'x', locked: true },
-    // Tahap B (owner 25 Nov): retrigger + copy, Balatro's Mime / Blueprint / Brainstorm
-    { id: 'twin', name: 'Jarum Kembar', icon: '🪢', desc: 'Kartu di tangan terpicu 2×: tiap kartu Besi memberi ×1,25 dua kali.', kind: 'rt' },
-    { id: 'pola', name: 'Pola Salin', icon: '📐', desc: 'Menyalin efek Fabric tepat di KANANNYA (geser urutan di popup Fabric).', kind: 'copy' },
-    { id: 'cermin', name: 'Cermin', icon: '🪞', desc: 'Menyalin efek Fabric PALING KIRI.', kind: 'copy' }
+    { id: 'long', r: 1, name: 'Long Stitch', icon: '🧵', desc: '+6 Mult untuk kata 6+ huruf.', kind: 'add' },
+    { id: 'double', r: 1, name: 'Double Stitch', icon: '🪡', desc: '+45 Chips untuk kata dengan huruf kembar.', kind: 'chips' },
+    { id: 'short', r: 1, name: 'Short & Sweet', icon: '🍬', desc: '+4 Mult untuk kata 3 huruf.', kind: 'add' },
+    { id: 'velvet', r: 1, name: 'Vowel Velvet', icon: '🟣', desc: '+1 Mult untuk tiap huruf vokal.', kind: 'add' },
+    { id: 'rare', r: 1, name: 'Rare Thread', icon: '💎', desc: '+60 Chips untuk kata berisi J, Q, X, atau Z.', kind: 'chips', t: ['Berisi'] },
+    { id: 'club', r: 1, name: 'Consonant Club', icon: '🎩', desc: '+6 Chips untuk tiap konsonan.', kind: 'chips' },
+    { id: 'thread7', r: 1, name: 'Thread Count', icon: '7️⃣', desc: '+7 Mult untuk kata 7 huruf.', kind: 'add' },
+    { id: 'measure', r: 1, name: 'Measuring Tape', icon: '📏', desc: '+30 Chips untuk kata 5+ huruf.', kind: 'chips', locked: true },
+    { id: 'refill', r: 1, name: 'Refill Master', icon: '🔄', desc: 'Sekali per ronde: kata 5+ huruf menarik 1 huruf ekstra (tangan sementara +1).', kind: 'util' },
+    { id: 'saver', r: 1, name: 'Saver', icon: '🐷', desc: '+1 koin tiap 3 huruf sisa saat ronde selesai.', kind: 'eco' },
+    { id: 'steady', r: 1, name: 'Steady Hand', icon: '🤲', desc: '+2 koin tiap ronde yang dimenangkan tanpa Buang.', kind: 'eco', locked: true },
+    { id: 'sisa', r: 1, name: 'Sisa Benang', icon: '🧶', desc: '+30 Chips untuk tiap sisa jatah Buang.', kind: 'chips' },
+    { id: 'kusut', r: 1, name: 'Benang Kusut', icon: '🌀', desc: '+0 sampai +23 Mult, acak tiap kata.', kind: 'add' },
+    { id: 'mungil', r: 1, name: 'Kata Mungil', icon: '🐭', desc: '+15 Mult untuk kata 4 huruf atau kurang.', kind: 'add' },
+    { id: 'gulung', r: 1, name: 'Gulungan Penuh', icon: '🧻', desc: '+2 Chips untuk tiap huruf yang tersisa di supply.', kind: 'chips', t: ['Di supply'] },
+    { id: 'kainbaru', r: 1, name: 'Kain Baru', icon: '🆕', desc: '+100 Chips, berkurang 5 tiap kata. Hancur saat habis.', kind: 'chips', t: ['Hancurkan'] },
+    { id: 'celengan', r: 1, name: 'Celengan Bibo', icon: '🪙', desc: '+3 koin di akhir tiap ronde.', kind: 'eco' },
+    { id: 'vokal', r: 1, name: 'Vokal Merdu', icon: '🎵', desc: 'Tiap vokal yang dimainkan: +3 Mult.', kind: 'add', t: ['Saat dimainkan'] },
+    { id: 'kokoh', r: 1, name: 'Konsonan Kokoh', icon: '🧱', desc: 'Tiap konsonan yang dimainkan: +12 Chips.', kind: 'chips', t: ['Saat dimainkan'] },
+    { id: 'mahal', r: 1, name: 'Huruf Mahal', icon: '💰', desc: 'Tiap kartu berisi J, Q, X, atau Z yang dimainkan: +30 Chips.', kind: 'chips', t: ['Saat dimainkan'] },
+    { id: 'pitan', r: 1, name: 'Pita Noun', icon: '📦', desc: '+10 Mult bila kata adalah Noun.', kind: 'add', t: ['Adalah'] },
+    { id: 'pitav', r: 1, name: 'Pita Verb', icon: '🏃', desc: '+10 Mult bila kata adalah Verb.', kind: 'add', t: ['Adalah'] },
+    { id: 'pitaa', r: 1, name: 'Pita Adjective', icon: '🎨', desc: '+10 Mult bila kata adalah Adjective.', kind: 'add', t: ['Adalah'] },
+    { id: 'pitar', r: 1, name: 'Pita Adverb', icon: '⚡', desc: '+10 Mult bila kata adalah Adverb.', kind: 'add', t: ['Adalah'] },
+    { id: 'chain', r: 2, name: 'Word Chain', icon: '⛓️', desc: 'Kata 5+ huruf: +2 Mult untuk tiap kata 5+ huruf berturut-turut (termasuk kata ini). Putus kalau kata < 5 huruf.', kind: 'add' },
+    { id: 'golden', r: 2, name: 'Golden Weave', icon: '🌟', desc: '×1,5 Mult untuk kata berisi huruf E.', kind: 'x', t: ['Berisi'] },
+    { id: 'first', r: 2, name: 'First Impression', icon: '👋', desc: '×2 Mult untuk kata valid pertama tiap ronde.', kind: 'x' },
+    { id: 'jackpot', r: 2, name: 'Jackpot', icon: '🎰', desc: '20% peluang ×2 Mult.', kind: 'x' },
+    { id: 'patch', r: 2, name: 'Patchwork', icon: '🧩', desc: '×2 Mult untuk kata dengan 3+ vokal berbeda.', kind: 'x' },
+    { id: 'recycler', r: 2, name: 'Recycler', icon: '♻️', desc: '20% peluang 1 huruf terpakai kembali ke supply.', kind: 'util' },
+    { id: 'twin', r: 2, name: 'Jarum Kembar', icon: '🪢', desc: 'Kartu di tangan terpicu 2×: tiap kartu Besi memberi ×1,25 dua kali.', kind: 'rt', t: ['Ulang'] },
+    { id: 'kosong', r: 2, name: 'Lemari Kosong', icon: '🫙', desc: '+15 Mult saat jatah Buang tinggal 0.', kind: 'add' },
+    { id: 'rapi', r: 2, name: 'Jahitan Rapi', icon: '📎', desc: '+1 Mult tiap kata berturut-turut tanpa Buang. Buang mengembalikannya ke 0.', kind: 'add', t: ['Bertumbuh'] },
+    { id: 'pitaukur', r: 2, name: 'Pita Ukur Panjang', icon: '📐', desc: '+10 Chips permanen tiap kata 6+ huruf.', kind: 'chips', t: ['Bertumbuh'] },
+    { id: 'tumbuh', r: 2, name: 'Benang Tumbuh', icon: '🌱', desc: '+2 Chips permanen untuk tiap kartu yang dimainkan.', kind: 'chips', t: ['Bertumbuh'] },
+    { id: 'bintang', r: 2, name: 'Huruf Bintang', icon: '⭐', desc: 'Kartu pertama berisi J, Q, X, Z, atau K: ×2 Mult.', kind: 'x', t: ['Saat dimainkan'] },
+    { id: 'kancing', r: 2, name: 'Kancing Emas', icon: '🟡', desc: 'Tiap kartu Gold yang dimainkan: +1 koin.', kind: 'eco', t: ['Saat dimainkan'] },
+    { id: 'imbuhan', r: 2, name: 'Imbuhan Emas', icon: '🔖', desc: 'Kartu imbuhan di posisi benar memberi +8 Mult (biasanya +3).', kind: 'add' },
+    { id: 'bersarang', r: 2, name: 'Kata Bersarang', icon: '🪆', desc: '+8 Mult bila kata berisi kata lain 3+ huruf (CARTOON berisi CAR).', kind: 'add', t: ['Berisi'] },
+    { id: 'kantong', r: 2, name: 'Kantong Emas', icon: '👛', desc: '×0,2 Mult untuk tiap kartu Gold di semua kartu run.', kind: 'x', t: ['Di semua kartu'] },
+    { id: 'penenun', r: 2, name: 'Penenun', icon: '🧑‍🔧', desc: 'Awal tiap ronde: 1 kartu huruf acak masuk supply permanen.', kind: 'util', t: ['Tambah'] },
+    { id: 'rakbuku', r: 2, name: 'Rak Buku', icon: '📚', desc: 'Tiap kata Adverb: 1 dari 3 peluang level Adverb naik.', kind: 'util', t: ['Buat'] },
+    { id: 'pola', r: 3, name: 'Pola Salin', icon: '📐', desc: 'Menyalin efek Fabric tepat di KANANNYA (geser urutan di popup Fabric).', kind: 'copy', t: ['Salin'] },
+    { id: 'cermin', r: 3, name: 'Cermin', icon: '🪞', desc: 'Menyalin efek Fabric PALING KIRI.', kind: 'copy', t: ['Salin'] },
+    { id: 'lemariku', r: 3, name: 'Lemariku', icon: '🚪', desc: '×2 Mult untuk kata yang sudah ada di Lemarimu.', kind: 'x', locked: true },
+    { id: 'polaulang', r: 3, name: 'Pola Ulang', icon: '🔂', desc: '×3 Mult bila jenis kata yang sama sudah dimainkan di ronde ini.', kind: 'x' },
+    { id: 'brankas', r: 3, name: 'Brankas Emas', icon: '🏦', desc: 'Tiap kartu Gold yang tetap di tangan: ×1,5 Mult.', kind: 'x' },
+    { id: 'penutup', r: 3, name: 'Jahitan Penutup', icon: '🪡', desc: 'Saat supply tinggal 5 atau kurang, semua kartu yang dimainkan terpicu 2×.', kind: 'rt', t: ['Ulang'] },
+    { id: 'abadi', r: 3, name: 'Kain Abadi', icon: '♾️', desc: '+×0,1 Mult permanen tiap boss dikalahkan.', kind: 'x', t: ['Bertumbuh'] },
+    { id: 'cetakan', r: 3, name: 'Cetakan', icon: '🖨️', desc: 'Kata pertama ronde 3 huruf: 1 kartunya disalin permanen ke supply.', kind: 'util', t: ['Tambah'] },
+    { id: 'gunting', r: 3, name: 'Gunting Tajam', icon: '✂️', desc: 'Awal ronde: hancurkan Fabric di kanannya, +2× harga jualnya ke Mult permanen.', kind: 'add', t: ['Hancurkan', 'Bertumbuh'] },
+    { id: 'mahkotan', r: 3, name: 'Mahkota Noun', icon: '👑', desc: '×2 Mult bila kata adalah Noun.', kind: 'x', t: ['Adalah'], locked: true },
+    { id: 'mahkotav', r: 3, name: 'Mahkota Verb', icon: '👑', desc: '×2 Mult bila kata adalah Verb.', kind: 'x', t: ['Adalah'], locked: true },
+    { id: 'mahkotaa', r: 3, name: 'Mahkota Adjective', icon: '👑', desc: '×2 Mult bila kata adalah Adjective.', kind: 'x', t: ['Adalah'], locked: true },
+    { id: 'mahkotar', r: 3, name: 'Mahkota Adverb', icon: '👑', desc: '×2 Mult bila kata adalah Adverb.', kind: 'x', t: ['Adalah'], locked: true },
+    { id: 'mesin', r: 4, name: 'Mesin Jahit Bibo', icon: '🧵', desc: 'Semua kartu yang dimainkan terpicu 2×.', kind: 'rt', t: ['Ulang'], locked: true },
+    { id: 'lemariajaib', r: 4, name: 'Lemari Ajaib', icon: '🪄', desc: '×3 Mult untuk kata yang ada di Lemarimu.', kind: 'x', locked: true },
+    { id: 'guntingemas', r: 4, name: 'Gunting Emas', icon: '✂️', desc: 'Mematikan semua aturan boss.', kind: 'util', locked: true }
   ];
+  // rarity: shop chance (weight), price; Legendaris never in the shop (achievement + boss reward)
+  const RAR = [null, { n: 'Umum', w: 70, p: 5 }, { n: 'Langka', w: 25, p: 7 }, { n: 'Epik', w: 5, p: 9 }, { n: 'Legendaris', w: 0, p: 10 }];
+  // editions (Balatro Foil/Holographic/Polychrome/Negative), higher odds than Balatro because runs are short
+  const ED = { foil: { n: 'Sulam Emas', icon: '✨', d: '+50 Chips', p: 2, odds: 0.04 }, holo: { n: 'Bordir', icon: '🌸', d: '+10 Mult', p: 3, odds: 0.03 },
+    poly: { n: 'Pelangi', icon: '🌈', d: '×1,5 Mult', p: 5, odds: 0.01 }, neg: { n: 'Tembus', icon: '👻', d: 'Tidak memakan slot (+1 slot)', p: 5, odds: 0.01 } };
+  const TERMS = { 'Saat dimainkan': 'Bekerja untuk tiap kartu yang dimainkan, dan ikut terulang bila kartu terpicu lagi.', 'Berisi': 'Kata mengandung huruf atau kata tertentu.',
+    'Adalah': 'Jenis kata utama (Noun, Verb, Adjective, Adverb).', 'Di supply': 'Hanya kartu yang belum ditarik.', 'Di semua kartu': 'Semua kartu run: supply, tangan, dan upgrade.',
+    'Tambah': 'Kartu baru masuk supply permanen.', 'Hancurkan': 'Fabric atau kartu hilang tanpa uang jual.', 'Buat': 'Memberi sesuatu gratis, mis. naik level jenis kata.',
+    'Bertumbuh': 'Efeknya bertambah permanen selama run.', 'Ulang': 'Kartu dihitung lagi, termasuk semua efek "Saat dimainkan".', 'Salin': 'Meniru efek Fabric lain (tanpa edisinya).' };
+  // Label (owner 26 Nov: Balatro's Vouchers, one level each for casual players): 1 per shop, permanent for the run
+  const LABELS = [
+    { id: 'rak', name: 'Rak Tambahan', icon: '🗄️', desc: '+1 kartu di shop.' },
+    { id: 'diskon', name: 'Diskon', icon: '🏷️', desc: 'Semua harga di shop −25%.' },
+    { id: 'jarum', name: 'Jarum Halus', icon: '🪡', desc: 'Edisi Fabric 3× lebih sering muncul.' },
+    { id: 'reroll', name: 'Reroll Hemat', icon: '🔁', desc: 'Reroll −1 koin.' },
+    { id: 'guntingc', name: 'Gunting Cadangan', icon: '✂️', desc: '+1 Buang tiap ronde.' },
+    { id: 'tas', name: 'Tas Lebar', icon: '👜', desc: '+1 kartu di tangan.' },
+    { id: 'celengan', name: 'Celengan', icon: '🐖', desc: 'Akhir tiap ronde: +1 koin per 5 koin yang kamu punya (maks +5).' },
+    { id: 'gantungan', name: 'Gantungan Ekstra', icon: '🧷', desc: '+1 slot Fabric.', price: 15 },
+    { id: 'rakgantung', name: 'Rak Gantung', icon: '🪝', desc: 'Fabric Langka dan Epik lebih sering muncul.' },
+    { id: 'bukularis', name: 'Buku Laris', icon: '📖', desc: 'Tiap Buku menaikkan level jenis kata 2 sekaligus.' },
+    { id: 'gantilawan', name: 'Ganti Lawan', icon: '🔀', desc: 'Sekali per stage, boss boleh diganti dengan boss lain.' },
+    { id: 'mundur', name: 'Mundur Sejahit', icon: '⏪', desc: 'Target skor turun setara 1 stage, tapi Buang −1 tiap ronde.' },
+    { id: 'ajaib', name: 'Kartu Ajaib', icon: '🃏', desc: 'Kartu ber-upgrade dan kartu imbuhan lebih sering di shop.' }
+  ];
+  const LABEL = {}; LABELS.forEach(l => LABEL[l.id] = l);
+  const hasLabel = (G, id) => !!(G && G.labels && G.labels.includes(id));
   // a locked Fabric shows up in starters, rewards and the shop only after its achievement (G.unlocked)
   const avail = (G, f) => !f.locked || (G.unlocked || []).includes(f.id);
   const FAB = {}; FABRICS.forEach(f => FAB[f.id] = f);
@@ -46,7 +110,8 @@ const Engine = (function () {
     { id: 'silent', name: 'The Silent One', desc: 'Satu huruf terkunci dan tidak bisa dipakai.', pick: 'dlnrst' },
     { id: 'repeater', name: 'The Repeater', desc: 'Kata tanpa huruf kembar hanya dapat 50% skor.' },
     { id: 'short', name: 'The Short Cutter', desc: 'Kata lebih dari 5 huruf tidak dapat bonus panjang.' },
-    { id: 'vthief', name: 'The Vowel Thief', desc: 'Satu huruf vokal terkunci dan tidak bisa dipakai.', pick: 'aeiou' }
+    { id: 'vthief', name: 'The Vowel Thief', desc: 'Satu huruf vokal terkunci dan tidak bisa dipakai.', pick: 'aeiou' },
+    { id: 'cutter', name: 'Si Pemotong Benang', desc: 'Satu Fabric acak dilemahkan (tidak bekerja) selama ronde ini.' }
   ];
 
   /* Hands (Balatro's poker hands): the part of speech of the word. Level-ups are sold in the shop ("Buku Tata Bahasa"). */
@@ -104,34 +169,61 @@ const Engine = (function () {
   /* Score (Balatro): Chips x Mult, built in 4 phases, each step in order, so the ORDER of cards and Fabrics matters.
      1 hand (part of speech) + length bonus; 2 played cards left to right (chips, Gold +30 Chips, Rubi +4 Mult, Glass x1.5, affix in place +3 Mult);
      3 cards held in the hand (Besi x1.25); 4 Fabrics left to right; boss rules (x0.5) last. steps[] is what the scoring animation plays. */
+  // tile retrigger total: Jahitan Ganda card +1, Mesin Jahit Bibo +1 each, Jahitan Penutup +1 when the supply is low
   function score(tiles, fab, ctx, boss, rng) {
-    const w = tiles.map(txt).join(''), n = w.length, has = id => fab.includes(id);
-    const vow = [...w].filter(c => VOW.includes(c)), con = n - vow.length, rep = new Set(w).size < n;
-    const steps = []; let chips = 0, mult = 0;
+    if (boss && boss.off) boss = null;   // Gunting Emas switches the boss rules off
+    const w = tiles.map(txt).join(''), n = w.length, fx = ctx.fx || {}, fv = id => (fx[id] && fx[id].v) || 0;
+    const vow = [...w].filter(c => VOW.includes(c)), con = n - vow.length, rep = new Set(w).size < n, pos = posOf(w);
+    const steps = []; let chips = 0, mult = 0, coins = 0;
     const step = o => { if (o.c) chips += o.c; if (o.m) mult += o.m; if (o.x) mult *= o.x; steps.push(o); };
-    const hand = handInfo(posOf(w), ctx.lv ? ctx.lv[posOf(w)] : 1);
+    const fmt = o => o.c ? '+' + o.c : o.m ? '+' + o.m + ' Mult' : '×' + String(Math.round(o.x * 100) / 100).replace('.', ',');
+    // which Fabric each slot acts as (a copy resolves to its target; a weakened Fabric acts as nothing)
+    const rid = (at, depth) => {
+      const id = fab[at];
+      if (depth > 3 || id == null || id === ctx.debuff) return null;
+      if (id === 'pola') return rid(at + 1, depth + 1);
+      if (id === 'cermin') return at === 0 ? null : rid(0, depth + 1);
+      return id;
+    };
+    const act = fab.map((id, at) => rid(at, 0)), cnt = id => act.filter(x => x === id).length;
+    const hand = handInfo(pos, ctx.lv ? ctx.lv[pos] : 1);
     step({ c: hand.chips, m: hand.mult, label: hand.icon + ' ' + hand.name, hand: true });
     let lenBonus = (LB[n] || 0) * CFG.lenMul;
     if (boss && boss.id === 'short' && n > 5) lenBonus = 0;
     if (lenBonus) step({ c: lenBonus, label: '+' + lenBonus + ' panjang' });
     if (ctx.inLemari) step({ m: LEMARI_ADD, lemari: true, label: '👕 Lemari +' + LEMARI_ADD + ' Mult' });
-    const lv = tiles.map(t => val(t)), affix = [];
-    tiles.forEach((t, i) => { for (let rep2 = 0; rep2 < (t.up === 'dbl' ? 2 : 1); rep2++) {   // Jahitan Ganda: the card fires twice
-      step(rep2 ? { c: lv[i], tile: i, label: '🔁 +' + lv[i] } : { c: lv[i], tile: i });
-      if (t.up === 'gold') step({ c: 30, tile: i, label: '+30' });
-      if (t.up === 'ruby') step({ m: 4, tile: i, label: '+4 Mult' });
-      if (t.up === 'glass') step({ x: 1.5, tile: i, label: '×1,5' });
-      const k = kindOf(t.ch);
-      if ((k === 'pre' && i === 0) || (k === 'suf' && i === tiles.length - 1)) { affix.push(t.ch); step({ m: AFFIX_ADD, tile: i, label: '+' + AFFIX_ADD + ' Mult' }); }
-    } });
-    const heldTimes = has('twin') ? 2 : 1;   // Jarum Kembar retriggers the held cards
+    const lv = tiles.map(t => val(t)), affix = [], affixAdd = cnt('imbuhan') ? 8 : AFFIX_ADD;
+    const lowSup = (ctx.supplyLeft != null ? ctx.supplyLeft : 99) <= 5;
+    const extraRt = cnt('mesin') + (lowSup ? cnt('penutup') : 0);
+    const starAt = tiles.findIndex(t => /[jqxzk]/.test(txt(t)));
+    tiles.forEach((t, i) => {
+      const times = 1 + (t.up === 'dbl' ? 1 : 0) + extraRt, tx = txt(t);
+      for (let rep2 = 0; rep2 < times; rep2++) {   // a retriggered card fires again with every on-card effect
+        step(rep2 ? { c: lv[i], tile: i, label: '🔁 +' + lv[i] } : { c: lv[i], tile: i });
+        if (t.up === 'gold') step({ c: 30, tile: i, label: '+30' });
+        if (t.up === 'ruby') step({ m: 4, tile: i, label: '+4 Mult' });
+        if (t.up === 'glass') step({ x: 1.5, tile: i, label: '×1,5' });
+        const k = kindOf(t.ch);
+        if ((k === 'pre' && i === 0) || (k === 'suf' && i === tiles.length - 1)) { if (!rep2) affix.push(t.ch); step({ m: affixAdd, tile: i, label: '+' + affixAdd + ' Mult' }); }
+        // "Saat dimainkan" Fabrics, in slot order
+        act.forEach((id, at) => {
+          let o = null;
+          const nv = [...tx].filter(c => VOW.includes(c)).length, nc = tx.length - nv;
+          if (id === 'vokal' && nv) o = { m: 3 * nv };
+          else if (id === 'kokoh' && nc) o = { c: 12 * nc };
+          else if (id === 'mahal' && /[jqxz]/.test(tx)) o = { c: 30 };
+          else if (id === 'bintang' && i === starAt) o = { x: 2 };
+          else if (id === 'kancing' && t.up === 'gold') { coins++; o = { coin: 1, label: '+1 🪙' }; }
+          if (o) step(Object.assign(o, { tile: i, slot: fab[at], src: id, label: o.label || fmt(o) }));
+        });
+      }
+    });
+    const heldTimes = 1 + cnt('twin');   // Jarum Kembar retriggers the held cards
     (ctx.held || []).forEach(t => { if (t.up === 'steel') for (let k = 0; k < heldTimes; k++) step({ x: 1.25, held: t.id, label: k ? '🔁 ×1,25' : '×1,25' }); });
     const k5 = (ctx.chain || 0) + 1;
-    // one Fabric's scoring effect (null = nothing); Pola Salin / Cermin copy another Fabric's effect (depth guard against copy loops)
-    const eff = (id, at, depth) => {
-      if (depth > 3 || id == null) return null;
-      if (id === 'pola') return eff(fab[at + 1], at + 1, depth + 1);
-      if (id === 'cermin') return at === 0 ? null : eff(fab[0], 0, depth + 1);
+    const heldGold = (ctx.held || []).filter(t => t.up === 'gold').length;
+    // one Fabric's scoring effect (null = nothing)
+    const eff = id => {
       let o = null;
       if (id === 'long' && n >= 6) o = { m: 6 };
       else if (id === 'double' && rep) o = { c: 45 };
@@ -147,21 +239,59 @@ const Engine = (function () {
       else if (id === 'patch' && new Set(vow).size >= 3) o = { x: 2 };
       else if (id === 'measure' && n >= 5) o = { c: 30 };
       else if (id === 'lemariku' && ctx.inLemari) o = { x: 2 };
+      else if (id === 'lemariajaib' && ctx.inLemari) o = { x: 3 };
+      else if (id === 'sisa' && ctx.discLeft > 0) o = { c: 30 * ctx.discLeft };
+      else if (id === 'kusut') { const m = Math.floor(rng() * 24); if (m) o = { m }; }
+      else if (id === 'mungil' && n <= 4) o = { m: 15 };
+      else if (id === 'gulung' && ctx.supplyLeft > 0) o = { c: 2 * ctx.supplyLeft };
+      else if (id === 'kainbaru' && fv(id) > 0) o = { c: fv(id) };
+      else if (/^pita[nvar]$/.test(id) && pos === id[4]) o = { m: 10 };
+      else if (/^mahkota[nvar]$/.test(id) && pos === id[7]) o = { x: 2 };
+      else if (id === 'kosong' && ctx.discLeft === 0) o = { m: 15 };
+      else if ((id === 'rapi' || id === 'gunting') && fv(id) > 0) o = { m: fv(id) };
+      else if ((id === 'pitaukur' || id === 'tumbuh') && fv(id) > 0) o = { c: fv(id) };
+      else if (id === 'bersarang' && nested(w)) o = { m: 8 };
+      else if (id === 'kantong' && ctx.goldAll > 0) o = { x: Math.round((1 + 0.2 * ctx.goldAll) * 100) / 100 };
+      else if (id === 'polaulang' && ctx.posSeen && ctx.posSeen.includes(pos)) o = { x: 3 };
+      else if (id === 'brankas' && heldGold) o = { x: Math.round(Math.pow(1.5, heldGold) * 1000) / 1000 };
+      else if (id === 'abadi' && ctx.bosses > 0) o = { x: Math.round((1 + 0.1 * ctx.bosses) * 100) / 100 };
       return o ? Object.assign(o, { src: id }) : null;
     };
     fab.forEach((id, at) => {
-      const o = eff(id, at, 0);
-      if (o) step(Object.assign(o, { slot: id, label: o.c ? '+' + o.c : o.m ? '+' + o.m + ' Mult' : '×' + String(o.x).replace('.', ',') }));
+      if (id === ctx.debuff) { steps.push({ slot: id, weak: true, label: '✂️ Dilemahkan' }); return; }
+      const ed = fx[id] && fx[id].ed;   // edition: Sulam Emas / Bordir before the effect, Pelangi after (copies do not copy editions)
+      if (ed === 'foil') step({ c: 50, slot: id, ed: ed, label: '+50' });
+      if (ed === 'holo') step({ m: 10, slot: id, ed: ed, label: '+10 Mult' });
+      const o = act[at] && eff(act[at]);
+      if (o) step(Object.assign(o, { slot: id, label: fmt(o) }));
+      if (ed === 'poly') step({ x: 1.5, slot: id, ed: ed, label: '×1,5' });
     });
     const bossHalf = !!(boss && ((boss.id === 'repeater' && !rep) || (boss.id === 'minimal' && n < 5)));
     if (bossHalf) step({ x: 0.5, label: 'Boss ×0,5', boss: true });
-    const jackpot = has('jackpot') ? steps.some(x => x.src === 'jackpot') : null;
+    const jackpot = act.includes('jackpot') ? steps.some(x => x.src === 'jackpot') : null;
     const letters = lv.reduce((a, b) => a + b, 0);
-    return { word: w, lv, letters, lenBonus, hand, affix, bossHalf, jackpot, steps, chips, mult, subtotal: chips, final: Math.round(chips * mult) };
+    return { word: w, lv, letters, lenBonus, hand, affix, bossHalf, jackpot, coins, steps, chips, mult, subtotal: chips, final: Math.round(chips * mult) };
+  }
+  // Kata Bersarang: the word holds another dictionary word of 3+ letters (CARTOON holds CAR)
+  function nested(w) {
+    for (let L = 3; L < w.length; L++) for (let i = 0; i + L <= w.length; i++) if (isWord(w.slice(i, i + L))) return true;
+    return false;
+  }
+  // growing Fabrics count this word before it scores (Balatro's Ride the Bus / Square Joker); a copy, so the preview can use it too
+  function grownFx(G, R, tl) {
+    const fx = JSON.parse(JSON.stringify(G.fx || {})), n = tl.map(txt).join('').length;
+    const grow = (id, d) => { if (fx[id] && G.fabrics.includes(id) && !(R.boss && !R.boss.off && R.boss.fab === id)) fx[id].v = (fx[id].v || 0) + d; };
+    grow('rapi', 1); if (n >= 6) grow('pitaukur', 10); grow('tumbuh', 2 * tl.length);
+    return fx;
+  }
+  // the score context of a round: what the Fabrics need to know besides the word
+  function ctxFor(G, R, held, extra) {
+    return Object.assign({ first: !R.firstDone, chain: R.chain, lv: G.handLv, held: held, fx: G.fx || {}, debuff: R.boss && !R.boss.off ? R.boss.fab || null : null,
+      discLeft: R.discards, supplyLeft: R.supply.length, goldAll: G.upgrades.filter(t => t.up === 'gold').length, bosses: (G.stats && G.stats.bosses) || 0, posSeen: R.posSeen || [] }, extra || {});
   }
 
   // a card is locked when the boss locks a letter it contains; a wild card is never locked but may not play as that letter
-  const blocked = (R, t) => !!(R.boss && R.boss.block && t.ch !== '?' && t.ch.includes(R.boss.block));
+  const blocked = (R, t) => !!(R.boss && !R.boss.off && R.boss.block && t.ch !== '?' && t.ch.includes(R.boss.block));
   function bossOK(R, w) { return true; }   // every boss rule now changes the score instead of refusing a word (Minimalist: owner 23 Nov)
   const usableOf = R => R.hand.filter(t => !blocked(R, t));
   // spell w with the usable cards: exact cards first (upgraded first), wild cards last. Returns [{t, as}] or null.
@@ -237,9 +367,16 @@ const Engine = (function () {
     { id: 'giant5', name: 'Kata Raksasa', desc: 'Mainkan 5 kata 10 huruf atau lebih (total).', total: 'giant_words', need: 5, open: ['deck', 'long'] },
     { id: 'minimal5', name: 'Penakluk Minimalist', desc: 'Kalahkan The Minimalist 5 kali (total).', total: 'minimals', need: 5, open: ['deck', 'vowel'] },
     { id: 'calm', name: 'Tangan Tenang', desc: 'Selesaikan satu stage penuh (Ronde Kecil, Ronde Besar, Boss) tanpa Buang sama sekali.', run: true, open: ['fabric', 'steady'] },
-    { id: 'champ', name: 'Juara', desc: 'Menangkan satu run: kalahkan boss Stage 8.', run: true, open: ['deck', 'gold'] },
+    { id: 'champ', name: 'Juara', desc: 'Menangkan satu run: kalahkan boss Stage 8.', run: true, open: ['deck', 'gold'], also: ['fabric', 'mesin'] },
     { id: 'power50', name: 'Kata Kekuatan', desc: 'Mainkan 50 kata dari Lemarimu di Quest (total semua run).', total: 'lemari_words', need: 50, open: ['bg', 'thread'] },
-    { id: 'lemari50', name: 'Pengumpul', desc: 'Simpan 50 kata dari game ke Lemari (total).', total: 'lemari', need: 50, open: ['fabric', 'lemariku'] }
+    { id: 'lemari50', name: 'Pengumpul', desc: 'Simpan 50 kata dari game ke Lemari (total).', total: 'lemari', need: 50, open: ['fabric', 'lemariku'] },
+    // owner 26 Nov: Mahkota achievements (win without playing a part of speech) and Legendaris Fabrics
+    { id: 'crownn', name: 'Tanpa Benda', desc: 'Menangkan run tanpa memainkan satu Noun pun.', run: true, open: ['fabric', 'mahkotan'] },
+    { id: 'crownv', name: 'Tanpa Gerak', desc: 'Menangkan run tanpa memainkan satu Verb pun.', run: true, open: ['fabric', 'mahkotav'] },
+    { id: 'crowna', name: 'Tanpa Warna', desc: 'Menangkan run tanpa memainkan satu Adjective pun.', run: true, open: ['fabric', 'mahkotaa'] },
+    { id: 'crownr', name: 'Tanpa Cara', desc: 'Menangkan run tanpa memainkan satu Adverb pun.', run: true, open: ['fabric', 'mahkotar'] },
+    { id: 'power200', name: 'Lemari Bertuah', desc: 'Mainkan 200 kata dari Lemarimu di Quest (total semua run).', total: 'lemari_words', need: 200, open: ['fabric', 'lemariajaib'] },
+    { id: 'boss30', name: 'Pemburu Boss', desc: 'Kalahkan 30 boss (total semua run).', total: 'bosses', need: 30, open: ['fabric', 'guntingemas'] }
   ];
   // moving backgrounds of the Quest screens: Gelombang is open from the start, the others come from achievements
   const BGS = [{ id: 'wave', name: 'Gelombang kain', icon: '🌊' }, { id: 'weave', name: 'Anyaman', icon: '🧶' }, { id: 'thread', name: 'Benang', icon: '🪡' }];
@@ -255,7 +392,8 @@ const Engine = (function () {
   function earned(G) {
     const out = [];
     if (G.stats.calm) out.push('calm');
-    if (G.won) out.push('champ');
+    if (G.won) { out.push('champ'); const pc = G.winPos || G.stats.pos || {};   // counted at the win, so endless words do not undo a Mahkota
+      'nvar'.split('').forEach(p => { if (!pc[p]) out.push('crown' + p); }); }
     return out;
   }
   // this run's counts, sent with the result; the server adds them up for the "total" achievements
@@ -266,7 +404,7 @@ const Engine = (function () {
 
   function newGame(starterId, deckId, unlocked) {
     const G = { stage: 0, rnd: 0, fabrics: starterId ? [starterId] : [], upgrades: [], coins: 0, extra: 0, letterAdds: [], handBonus: 0, discardBonus: 0, bosses: [],
-      handLv: { o: 1, n: 1, v: 1, a: 1, r: 1 }, deck: DECK[deckId] ? deckId : 'base', unlocked: (unlocked || []).slice(),
+      handLv: { o: 1, n: 1, v: 1, a: 1, r: 1 }, deck: DECK[deckId] ? deckId : 'base', unlocked: (unlocked || []).slice(), fx: {}, labels: [],
       stats: { words: 0, longest: '', best: { w: '', s: 0 }, total: 0, list: [], pos: { o: 0, n: 0, v: 0, a: 0, r: 0 }, bosses: 0 } };
     const d = DECK[G.deck];
     (d.cards || []).forEach(c => G.letterAdds.push(c));
@@ -274,10 +412,54 @@ const Engine = (function () {
     if (d.hand) G.handBonus = d.hand;
     if (d.extra) G.extra = d.extra;
     (d.gold || []).forEach(c => G.upgrades.push(mk(c, 'gold')));
+    if (starterId) addFabric(G, starterId, null, 0);
     return G;
   }
+  // per-Fabric state: ed = edition, paid = price paid (sell value is half), v = growing value
+  function addFabric(G, id, ed, paid) {
+    G.fx = G.fx || {};
+    if (!G.fabrics.includes(id)) G.fabrics.push(id);
+    G.fx[id] = { ed: ed || null, paid: paid || 0, v: id === 'kainbaru' ? 100 : 0 };
+  }
+  // Fabric slots: 5, +1 Gantungan Ekstra, +1 for each Tembus Fabric (it takes no slot)
+  const slotsOf = G => CFG.slots + (hasLabel(G, 'gantungan') ? 1 : 0) + G.fabrics.filter(id => G.fx && G.fx[id] && G.fx[id].ed === 'neg').length;
+  const edOf = (G, id) => (G.fx && G.fx[id] && G.fx[id].ed) || null;
+  function sellValue(G, id) {
+    const f = FAB[id], x = (G.fx && G.fx[id]) || {}, base = x.paid || (RAR[f.r || 1].p + (x.ed ? ED[x.ed].p : 0));
+    return Math.max(1, Math.floor(base / 2));
+  }
+  function sellFabric(G, id) {
+    const i = G.fabrics.indexOf(id); if (i === -1) return 0;
+    // a Tembus Fabric gives back its own slot; selling it with every slot full would leave one Fabric without a slot
+    if (edOf(G, id) === 'neg' && G.fabrics.length > slotsOf(G) - 1) return 0;
+    const v = sellValue(G, id); G.fabrics.splice(i, 1); if (G.fx) delete G.fx[id]; G.coins += v; return v;
+  }
+  function destroyFabric(G, id) { const i = G.fabrics.indexOf(id); if (i !== -1) G.fabrics.splice(i, 1); if (G.fx) delete G.fx[id]; }
+  function rollEd(G, rng, legend) {
+    const k = hasLabel(G, 'jarum') ? 3 : 1, u = rng();
+    let acc = 0;
+    for (const e of legend ? ['foil', 'holo'] : ['poly', 'neg', 'holo', 'foil']) { acc += ED[e].odds * k; if (u < acc) return e; }
+    return null;
+  }
+  const disc = (G, p) => hasLabel(G, 'diskon') ? Math.max(1, Math.round(p * 0.75)) : p;
+  const fabPrice = (G, id, ed) => disc(G, RAR[FAB[id].r || 1].p + (ed ? ED[ed].p : 0));
+  // the Fabric offer: rarity first (70/25/5, Rak Gantung 50/38/12), then a Fabric of that rarity, then an edition
+  function pickFabric(G, rng, exclude) {
+    const pool = FABRICS.filter(f => !G.fabrics.includes(f.id) && avail(G, f) && (f.r || 1) < 4 && !exclude.includes(f.id));
+    if (!pool.length) return null;
+    const w = hasLabel(G, 'rakgantung') ? [0, 50, 38, 12] : [0, RAR[1].w, RAR[2].w, RAR[3].w], u = rng() * 100;
+    const want = u < w[1] ? 1 : u < w[1] + w[2] ? 2 : 3;
+    const of = pool.filter(f => (f.r || 1) === want), from = of.length ? of : pool;
+    return from[Math.floor(rng() * from.length)];
+  }
   const roundIndex = G => G.stage * 3 + G.rnd;
-  function targetFor(stage, rnd) { const b = CFG.base * Math.pow(CFG.growth, stage) * (1 + CFG.ramp * stage) * CFG.roundMul[rnd]; return Math.round(b / 10) * 10 || 10; }
+  // endless (owner 26 Nov): after stage 8 the target climbs faster each stage, k = stages past the 8th
+  function targetFor(stage, rnd, G) {
+    const s = hasLabel(G, 'mundur') ? stage - 1 : stage, k = Math.max(0, stage - CFG.stages + 1);
+    let b = CFG.base * Math.pow(CFG.growth, s) * (1 + CFG.ramp * Math.max(0, s)) * CFG.roundMul[rnd];
+    if (k) b *= Math.pow(1.4, k) * Math.pow(1.1, k * (k - 1) / 2);
+    return Math.round(b / 10) * 10 || 10;
+  }
   function pickBoss(G, rng) {
     let left = BOSSES.filter(b => !G.bosses.includes(b.id));
     if (!left.length) { G.bosses = []; left = BOSSES.slice(); }
@@ -285,10 +467,26 @@ const Engine = (function () {
     G.bosses.push(b.id);
     const o = { id: b.id, name: b.name, desc: b.desc };
     if (b.pick) o.block = b.pick[Math.floor(rng() * b.pick.length)];
+    if (b.id === 'cutter' && G.fabrics.length) o.fab = G.fabrics[Math.floor(rng() * G.fabrics.length)];
+    if (G.fabrics.includes('guntingemas')) { o.off = true; delete o.block; delete o.fab; }
     return o;
   }
-  const handSize = G => CFG.hand + G.handBonus;
+  // Ganti Lawan: once per stage the boss may be swapped for another one
+  function swapBoss(G, R, rng) {
+    if (!R.boss || !hasLabel(G, 'gantilawan') || G.swapped === G.stage || R.words || R.discards < R.maxDiscards) return false;
+    const old = R.boss.id; let b = pickBoss(G, rng), guard = 0;
+    while (b.id === old && guard++ < 10) b = pickBoss(G, rng);
+    R.boss = b; G.swapped = G.stage; return true;
+  }
+  const handSize = G => CFG.hand + G.handBonus + (hasLabel(G, 'tas') ? 1 : 0);
+  const discardsOf = G => Math.max(0, CFG.discards + G.discardBonus + (hasLabel(G, 'guntingc') ? 1 : 0) - (hasLabel(G, 'mundur') ? 1 : 0));
   function makeRound(G, rng) {
+    G.fx = G.fx || {}; G.labels = G.labels || [];
+    // round-start Fabrics: Penenun adds a letter; Gunting Tajam cuts the Fabric on its right and keeps 2x its sell value as Mult
+    let woven = null, cut = null;
+    if (G.fabrics.includes('penenun')) { woven = randLetter(rng); G.letterAdds.push(woven); }
+    const gi = G.fabrics.indexOf('gunting'), right = gi !== -1 ? G.fabrics[gi + 1] : null;
+    if (right) { const v = 2 * sellValue(G, right); destroyFabric(G, right); G.fx.gunting.v = (G.fx.gunting.v || 0) + v; cut = { id: right, v }; }
     const hs = handSize(G);
     const total = hs + CFG.supply + G.extra + G.letterAdds.length;
     const bag = []; for (const c in BAG) for (let i = 0; i < BAG[c]; i++) bag.push(c);
@@ -298,8 +496,9 @@ const Engine = (function () {
     G.upgrades.forEach(u => tiles.push(u));
     shuffle(tiles, rng);
     const isBoss = G.rnd === 2;
-    return { target: targetFor(G.stage, G.rnd), score: 0, handSize: hs, hand: tiles.slice(0, hs), supply: tiles.slice(hs),
-      words: 0, firstDone: false, chain: 0, refillUsed: false, discards: CFG.discards + G.discardBonus, maxDiscards: CFG.discards + G.discardBonus, boss: isBoss ? pickBoss(G, rng) : null };
+    const nd = discardsOf(G);
+    return { target: targetFor(G.stage, G.rnd, G), score: 0, handSize: hs, hand: tiles.slice(0, hs), supply: tiles.slice(hs), posSeen: [], woven, cut,
+      words: 0, firstDone: false, chain: 0, refillUsed: false, discards: nd, maxDiscards: nd, boss: isBoss ? pickBoss(G, rng) : null };
   }
   function draw(R, upTo) { while (R.hand.length < upTo && R.supply.length) R.hand.push(R.supply.shift()); }
 
@@ -311,8 +510,16 @@ const Engine = (function () {
     if (w.length < 3) return { ok: false, msg: 'Minimal 3 huruf.' };
     if (!isWord(w)) return { ok: false, msg: '“' + w.toUpperCase() + '” belum ada di kamus.' };
     const used = new Set(tl.map(t => t.id)), held = R.hand.filter(t => !used.has(t.id));
-    const res = score(tl, G.fabrics, Object.assign({ first: !R.firstDone, chain: R.chain, lv: G.handLv, held }, ctxExtra || {}), R.boss, rng);
+    const on = id => G.fabrics.includes(id) && !(R.boss && !R.boss.off && R.boss.fab === id);
+    G.fx = grownFx(G, R, tl);
+    const wasFirst = !R.firstDone;
+    const res = score(tl, G.fabrics, ctxFor(G, R, held, ctxExtra), R.boss, rng);
     R.score += res.final; R.words++; R.firstDone = true;
+    if (res.coins) G.coins += res.coins;
+    R.posSeen = (R.posSeen || []).concat(res.hand.pos);
+    if (on('kainbaru') && G.fx.kainbaru) { G.fx.kainbaru.v -= 5; if (G.fx.kainbaru.v <= 0) { destroyFabric(G, 'kainbaru'); res.destroyed = 'kainbaru'; } }
+    if (on('rakbuku') && res.hand.pos === 'r' && rng() < 1 / 3) { G.handLv.r = lvOf(G, 'r') + 1; res.book = 'r'; }
+    if (on('cetakan') && wasFirst && tl.length === 3) { const t = tl[Math.floor(rng() * tl.length)]; if (t.up) G.upgrades.push(mk(t.ch, t.up)); else G.letterAdds.push(t.ch); res.copied = t.ch; }
     R.chain = w.length >= 5 ? R.chain + 1 : 0;
     const ids = new Set(tl.map(t => t.id));
     R.hand = R.hand.filter(t => !ids.has(t.id));
@@ -325,13 +532,13 @@ const Engine = (function () {
     if (w.length >= 10) st.giantWords = (st.giantWords || 0) + 1;
     if (ctxExtra && ctxExtra.inLemari) st.lemariWords = (st.lemariWords || 0) + 1;
     let recycled = null;
-    if (G.fabrics.includes('recycler') && rng() < 0.2) {
+    if (on('recycler') && rng() < 0.2) {
       const t = tl[Math.floor(rng() * tl.length)];
       R.supply.splice(Math.floor(rng() * (R.supply.length + 1)), 0, mk(t.ch)); recycled = t.ch;
     }
     draw(R, R.handSize);
     let extra = false;
-    if (G.fabrics.includes('refill') && !R.refillUsed && w.length >= 5 && R.supply.length) {
+    if (on('refill') && !R.refillUsed && w.length >= 5 && R.supply.length) {
       R.hand.push(R.supply.shift()); R.refillUsed = true; extra = true;
     }
     res.recycled = recycled; res.extraDraw = extra;
@@ -346,27 +553,30 @@ const Engine = (function () {
     if (!canDiscard(R) || !tl.length) return false;
     const ids = new Set(tl.map(t => t.id));
     R.hand = R.hand.filter(t => !ids.has(t.id)); R.discards--;
+    if (G.fx && G.fx.rapi) G.fx.rapi.v = 0;
     draw(R, R.handSize); return true;
   }
   function finishRound(G, R) {
+    const on = id => G.fabrics.includes(id) && !(R.boss && !R.boss.off && R.boss.fab === id);
     let coins = CFG.coinRound + G.stage, saver = 0, steady = 0;
-    if (G.fabrics.includes('saver')) saver = Math.floor((R.hand.length + R.supply.length) / 3);
+    const piggy = on('celengan') ? 3 : 0, interest = hasLabel(G, 'celengan') ? Math.min(5, Math.floor(G.coins / 5)) : 0;
+    if (on('saver')) saver = Math.floor((R.hand.length + R.supply.length) / 3);
     const st = G.stats, noDisc = R.discards === R.maxDiscards;
-    if (noDisc) { if (G.fabrics.includes('steady')) steady = 2; } else st.stageDisc = true;
+    if (noDisc) { if (on('steady')) steady = 2; } else st.stageDisc = true;
     if (R.boss) {
       st.bosses = (st.bosses || 0) + 1; if (R.boss.id === 'minimal') st.minimals = (st.minimals || 0) + 1;
       if (!st.stageDisc) st.calm = true;   // a whole stage (2 rounds + boss) won without a discard
       st.stageDisc = false;
     }
-    G.coins += coins + saver + steady; return { coins, saver, steady };
+    G.coins += coins + saver + steady + piggy + interest; return { coins, saver, steady, piggy, interest };
   }
-  function rewardOptions(G, rng) {
-    const owned = new Set(G.fabrics), pool = FABRICS.filter(f => !owned.has(f.id) && avail(G, f));
+  // after a boss: a Legendaris Fabric that an achievement opened may be offered (15%)
+  function rewardOptions(G, rng, afterBoss) {
     const opts = [];
     const kinds = shuffle(['fabric', 'fabric', 'up', 'coin', 'book', 'multi'], rng);
     for (const k of kinds) {
       if (opts.length >= 3) break;
-      if (k === 'fabric') { const f = pool.filter(f => !opts.some(o => o.id === f.id))[Math.floor(rng() * pool.length)]; if (f) opts.push({ type: 'fabric', id: f.id }); }
+      if (k === 'fabric') { const f = pickFabric(G, rng, opts.map(o => o.id)); if (f) opts.push({ type: 'fabric', id: f.id, ed: rollEd(G, rng) }); }
       else if (k === 'up') opts.push(upItem(rng));
       else if (k === 'book') opts.push(bookItem(rng));
       else if (k === 'multi') opts.push(multiItem(rng));
@@ -374,43 +584,59 @@ const Engine = (function () {
     }
     while (opts.length < 3) opts.push(rng() < 0.6 ? upItem(rng) : { type: 'coin', n: 6 + G.stage });
     if (!opts.some(o => ['up', 'multi', 'wild', 'book', 'letter'].includes(o.type))) opts[2] = rng() < 0.5 ? upItem(rng) : multiItem(rng);   // a card upgrade is always on offer
+    if (afterBoss) {
+      const leg = FABRICS.filter(f => f.r === 4 && avail(G, f) && !G.fabrics.includes(f.id));
+      if (leg.length && rng() < 0.15) { const f = leg[Math.floor(rng() * leg.length)]; opts[0] = { type: 'fabric', id: f.id, ed: rollEd(G, rng, true) }; }
+    }
     return opts;
   }
   const upItem = rng => ({ type: 'up', kind: ['gold', 'ruby', 'glass', 'steel', 'dbl'][Math.floor(rng() * 5)], ch: randLetter(rng) });
-  const priced = o => Object.assign(o, { price: CFG.price[o.type === 'up' ? o.kind : o.type] });
-  // card section: 2 Gold/Glass letters, 1 letter, 2 multi-letter (or wild) cards, 1 grammar book
+  const priced = (G, o) => Object.assign(o, { price: disc(G, CFG.price[o.type === 'up' ? o.kind : o.type]) });
+  // card section: 2 upgraded letters, 1 letter, 2 multi-letter (or wild) cards, 1 grammar book; Rak Tambahan +1 card, Kartu Ajaib more upgrades and affixes
   function shopCards(G, rng) {
-    return [upItem(rng), upItem(rng), { type: 'letter', ch: randLetter(rng) }, multiItem(rng), multiItem(rng), bookItem(rng)].map(o => Object.assign(priced(o), { sec: 'card' }));
+    const aj = hasLabel(G, 'ajaib');
+    const affix = () => ({ type: 'multi', ch: PRE.concat(SUF)[Math.floor(rng() * (PRE.length + SUF.length))] });
+    const list = [upItem(rng), upItem(rng), aj ? upItem(rng) : { type: 'letter', ch: randLetter(rng) }, aj ? affix() : multiItem(rng), multiItem(rng), bookItem(rng)];
+    if (hasLabel(G, 'rak')) list.splice(2, 0, aj ? upItem(rng) : rng() < 0.5 ? upItem(rng) : multiItem(rng));
+    return list.map(o => Object.assign(priced(G, o), { sec: 'card' }));
   }
   function shopFabrics(G, rng) {
-    const owned = new Set(G.fabrics);
-    return shuffle(FABRICS.filter(f => !owned.has(f.id) && avail(G, f)), rng).slice(0, 3).map(f => ({ type: 'fabric', id: f.id, price: CFG.price.fabric, sec: 'fabric' }));
+    const out = [];
+    for (let k = 0; k < 3; k++) { const f = pickFabric(G, rng, out.map(o => o.id)); if (!f) break; const ed = rollEd(G, rng); out.push({ type: 'fabric', id: f.id, ed, price: fabPrice(G, f.id, ed), sec: 'fabric' }); }
+    return out;
   }
-  function shopItems(G, rng) { return shopCards(G, rng).concat(shopFabrics(G, rng)); }
-  // reroll one section only; the other section keeps its offers (and what was already bought)
+  // one Label per shop (Balatro's Voucher), bought once per run
+  function shopLabel(G, rng) {
+    const left = LABELS.filter(l => !(G.labels || []).includes(l.id));
+    if (!left.length) return [];
+    const l = left[Math.floor(rng() * left.length)];
+    return [{ type: 'label', id: l.id, price: disc(G, l.price || 10), sec: 'label' }];
+  }
+  function shopItems(G, rng) { return shopCards(G, rng).concat(shopFabrics(G, rng), shopLabel(G, rng)); }
+  const rerollPrice = G => Math.max(1, CFG.price.reroll - (hasLabel(G, 'reroll') ? 1 : 0));
+  // reroll one section only; the other sections keep their offers (and what was already bought)
   function rerollShop(G, shop, sec, rng) { return shop.filter(o => (o.sec || (o.type === 'fabric' ? 'fabric' : 'card')) !== sec).concat(sec === 'fabric' ? shopFabrics(G, rng) : shopCards(G, rng)); }
   const bookItem = rng => ({ type: 'book', pos: 'nvar'[Math.floor(rng() * 4)] });
   // a multi-letter card, or (1 in 5) a wild card; both join the supply of every later round
   const multiItem = rng => rng() < 0.2 ? { type: 'wild', ch: '?' } : { type: 'multi', ch: MULTI[Math.floor(rng() * MULTI.length)] };
-  // always-available permanent upgrades; price rises with each purchase
+  // always-available permanent upgrade (owner 26 Nov: +1 Buang and +1 tangan moved to the Labels Gunting Cadangan and Tas Lebar)
   function permItems(G) {
-    const out = [];
-    out.push({ type: 'supply', n: CFG.supplyPack, price: CFG.price.supply + Math.floor(Math.max(0, G.extra) / CFG.supplyPack) });
-    out.push({ type: 'discard', price: 6 + 3 * G.discardBonus });
-    out.push({ type: 'hand', price: 8 + 4 * G.handBonus, maxed: G.handBonus >= CFG.handMaxBuys });
-    return out;
+    return [{ type: 'supply', n: CFG.supplyPack, price: disc(G, CFG.price.supply + Math.floor(Math.max(0, G.extra) / CFG.supplyPack)) }];
   }
+  const bookStep = G => hasLabel(G, 'bukularis') ? 2 : 1;
   function addUpgrade(G, kind, ch) { G.upgrades.push(mk(ch, kind)); }
   // after restoring a saved run: new tile ids must not collide with the restored ones
   function resumeIds(G, R) { let m = 0; const see = t => { if (t.id > m) m = t.id; }; G.upgrades.forEach(see); if (R) { R.hand.forEach(see); R.supply.forEach(see); } if (m >= UID) UID = m + 1; }
-  return { UPS, HAND_STEP, LEMARI_ADD, BGS, hasAch, DECKS, DECK, ACH, opened, earned, runCounts, avail, val, txt, kindOf, HANDS, MULTI, PRE, SUF, PAIRS, posOf, lvOf, handInfo, spell, V, LB, CFG, FABRICS, FAB, BOSSES, setDict, isWord, rngFrom, shuffle, mk, score, blocked, candidates, tilesFor, best, newGame,
+  return { RAR, ED, TERMS, LABELS, LABEL, hasLabel, addFabric, slotsOf, edOf, sellValue, sellFabric, destroyFabric, rollEd, fabPrice, pickFabric, swapBoss, discardsOf, ctxFor, grownFx, nested, shopLabel, rerollPrice, bookStep,
+    UPS, HAND_STEP, LEMARI_ADD, BGS, hasAch, DECKS, DECK, ACH, opened, earned, runCounts, avail, val, txt, kindOf, HANDS, MULTI, PRE, SUF, PAIRS, posOf, lvOf, handInfo, spell, V, LB, CFG, FABRICS, FAB, BOSSES, setDict, isWord, rngFrom, shuffle, mk, score, blocked, candidates, tilesFor, best, newGame,
     roundIndex, targetFor, handSize, permItems, makeRound, draw, submit, stuck, failed, discard, canDiscard, finishRound, rewardOptions, shopItems, shopCards, shopFabrics, rerollShop, addUpgrade, resumeIds, randLetter, get ARR() { return ARR; } };
 })();
 
 /* ---------- UI (only runs in the browser, after the host page calls WRGame.init) ---------- */
 const UI = (function () {
   const E = Engine, F = id => E.FAB[id];
-  const KEY = 'wr_game', BEST = 'wr_game_best';
+  const KEY = 'wr_game', BEST = 'wr_game_best', ENDKEY = 'wr_game_endless';
+  const endlessBest = () => +store.get(ENDKEY) || 0;
   const REG = [['yarn', 'Si Kusut'], ['button', 'Kancing Nakal'], ['needle', 'Jarum Jahil'], ['pin', 'Peniti Pelit'], ['iron', 'Setrika Sinis'], ['hanger', 'Hanger Galak']];
   let host = null, root = null, body = null, ready = null, mounted = false;
   let best = 0, G = null, R = null, phase = 'intro', sel = [], msg = '', last = null, starters = [], rewards = [], shop = [], modal = null, fx = null, shake = false;
@@ -424,6 +650,14 @@ const UI = (function () {
   };
 
   const CSS = `
+.bq-hole{position:fixed;pointer-events:none;border-radius:14px;box-shadow:0 0 0 4px #ffd23f,0 0 0 9999px rgba(0,0,0,.55);z-index:80;transition:left .25s,top .25s,width .25s,height .25s}
+.bq-hole.none{box-shadow:0 0 0 0 transparent,0 0 0 9999px rgba(0,0,0,.45);width:0;height:0;left:50%;top:50%}
+.bq-tut{position:fixed;left:10px;right:10px;z-index:81;pointer-events:none;display:flex;gap:10px;align-items:flex-end;max-width:560px;margin:0 auto}.bq-tut.top{top:10px;align-items:flex-start}.bq-tut.bot{bottom:calc(10px + env(safe-area-inset-bottom))}
+.bq-tut img{width:72px;height:auto;flex:none;filter:drop-shadow(0 4px 8px #0006)}
+.bq-bub{flex:1;pointer-events:auto;background:var(--card);color:var(--text);border:2px solid var(--yellow);border-radius:16px;padding:10px 12px;box-shadow:0 8px 24px #0008;font-size:14px;line-height:1.4}
+.bq-bub p{margin:4px 0 8px}.bq-bub .bq-btns{margin:0}.bq-bub small{color:var(--muted)}
+.bq-win3{flex-wrap:wrap}.bq-win3 .bq-btn{flex:1 1 30%;min-width:120px}
+.bq-fab{position:relative;overflow:hidden;background-color:color-mix(in srgb,var(--rc) 30%,var(--card));background-image:var(--knit);background-size:12px 9px;border-color:var(--rc)!important}.bq-fab>*{position:relative}.bq-fab.rr1{--rc:#888780;--knit:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='9'%3E%3Cg fill='none' stroke='%23B4B2A9' stroke-width='1.6' stroke-opacity='.45'%3E%3Cellipse cx='3.4' cy='5' rx='2.3' ry='4.6' transform='rotate(-28 3.4 5)'/%3E%3Cellipse cx='8.6' cy='5' rx='2.3' ry='4.6' transform='rotate(28 8.6 5)'/%3E%3C/g%3E%3C/svg%3E")}.bq-fab.rr2{--rc:#3fae5a;--knit:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='9'%3E%3Cg fill='none' stroke='%237fd492' stroke-width='1.6' stroke-opacity='.45'%3E%3Cellipse cx='3.4' cy='5' rx='2.3' ry='4.6' transform='rotate(-28 3.4 5)'/%3E%3Cellipse cx='8.6' cy='5' rx='2.3' ry='4.6' transform='rotate(28 8.6 5)'/%3E%3C/g%3E%3C/svg%3E")}.bq-fab.rr3{--rc:#D4537E;--knit:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='9'%3E%3Cg fill='none' stroke='%23ED93B1' stroke-width='1.6' stroke-opacity='.45'%3E%3Cellipse cx='3.4' cy='5' rx='2.3' ry='4.6' transform='rotate(-28 3.4 5)'/%3E%3Cellipse cx='8.6' cy='5' rx='2.3' ry='4.6' transform='rotate(28 8.6 5)'/%3E%3C/g%3E%3C/svg%3E")}.bq-fab.rr4{--rc:#e3b23c;--knit:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='9'%3E%3Cg fill='none' stroke='%23f5d27a' stroke-width='1.6' stroke-opacity='.45'%3E%3Cellipse cx='3.4' cy='5' rx='2.3' ry='4.6' transform='rotate(-28 3.4 5)'/%3E%3Cellipse cx='8.6' cy='5' rx='2.3' ry='4.6' transform='rotate(28 8.6 5)'/%3E%3C/g%3E%3C/svg%3E")}button.bq-slot.bq-fab{border-style:solid;border-width:1.5px}.bq-fab.ed-foil::after,.bq-fab.ed-holo::after,.bq-fab.ed-poly::after{content:'';position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;opacity:.55;border-radius:inherit}.bq-fab.ed-foil::after{background:linear-gradient(115deg,transparent 30%,#fff6c8 45%,transparent 60%);background-size:250% 100%;animation:bq-gl 3s linear infinite}.bq-fab.ed-holo::after{background:repeating-radial-gradient(circle at 30% 40%,#ff9ad560 0 4px,transparent 4px 10px)}.bq-fab.ed-poly::after{background:linear-gradient(90deg,#ff5e5e,#ffd35e,#5eff8a,#5ec8ff,#c45eff);opacity:.35;animation:bq-hue 4s linear infinite}.bq-fab.ed-neg{filter:invert(.88) hue-rotate(180deg)}@keyframes bq-gl{from{background-position:150% 0}to{background-position:-100% 0}}@keyframes bq-hue{to{filter:hue-rotate(360deg)}}@media(prefers-reduced-motion:reduce){.bq-fab::after{animation:none!important}}.bq-rar{font-size:10px;font-weight:800;border-radius:6px;padding:1px 5px;color:#fff;background:var(--rc,#888780);vertical-align:middle;margin-left:3px}.bq-edt{font-size:10px;font-weight:800;border-radius:6px;padding:1px 5px;background:#fff3;border:1px solid currentColor;vertical-align:middle;margin-left:3px}.bq-terms{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.bq-terms span{font-size:11.5px;border-radius:8px;padding:3px 7px;background:var(--card-2)}.bq-terms b{font-size:11.5px!important}.bq-slot .weak{position:absolute;top:2px;right:3px;font-size:13px}.bq-slot.weak{opacity:.55;filter:grayscale(.8)}.bq-slot .edb{position:absolute;top:2px;left:3px;font-size:11px}.bq-labels{display:flex;flex-wrap:wrap;gap:4px}.bq-labels span{font-size:12px;border-radius:8px;padding:2px 7px;background:var(--card-2)}.bq-gi.lab{border-color:#c59bff}.bq-cgrid .bq-ci.bq-fab .d{color:var(--text)}
 .bq{display:flex;flex-direction:column;gap:12px;padding-bottom:24px}
 .bq h2{font-family:var(--display);margin:0;font-size:22px;line-height:1.15}
 .bq .bq-mut{color:var(--muted);font-size:13px}
@@ -453,7 +687,7 @@ const UI = (function () {
 .bq-say{position:absolute;left:12px;top:8px;background:#fff;color:#111;font:800 12px var(--ui);padding:3px 9px;border-radius:10px;animation:bq-dmg 1.6s both}
 .bq-bar{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}.bq-bar b{color:var(--text)}
 .bq-boss{background:var(--card);border-radius:16px;padding:10px 12px;font-size:13px;box-shadow:inset 0 0 0 1.5px var(--pink)}.bq-boss b{color:var(--pink)}
-.bq-slots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.bq-slots{display:grid;grid-template-columns:repeat(var(--ns,5),minmax(0,1fr));gap:6px}
 .bq-slot{background:var(--card);border:1.5px dashed var(--line);border-radius:12px;min-height:58px;padding:4px;text-align:center;font:inherit;font-size:10.5px;line-height:1.15;display:flex;flex-direction:column;justify-content:center;align-items:center;color:var(--muted)}
 button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)}
 .bq-slot[data-a="showFab"]{touch-action:pan-y;user-select:none;-webkit-user-select:none}.bq-slot.drag{position:relative;z-index:5;cursor:grabbing;box-shadow:0 8px 20px #0007;transition:none;background:var(--card-2)}.bq-slot.drop{box-shadow:0 0 0 2px var(--yellow);background:var(--card-2)}.bq-slot .ic{font-size:20px}
@@ -634,7 +868,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
 
   /* ---------- persistence ---------- */
   function save() {
-    if (!G || modal) return;
+    if (!G || modal || G.tut) return;   // the tutorial run is never stored, so it cannot overwrite a saved run
     store.set(KEY, JSON.stringify({ v: 1, G: G, R: R, phase: phase, starters: starters, rewards: rewards, shop: shop, last: last && last.fin ? { fin: last.fin } : null }));
   }
   function load() {
@@ -647,7 +881,8 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
   function restore(s) {
     G = s.G; R = s.R; phase = s.phase; starters = s.starters || []; rewards = s.rewards || []; shop = s.shop || []; last = s.last || null;
     sel = []; msg = ''; modal = null; fx = null; E.resumeIds(G, R);
-    G.handLv = G.handLv || { o: 1, n: 1, v: 1, a: 1, r: 1 }; G.unlocked = G.unlocked || []; G.newAch = G.newAch || []; G.deck = G.deck || 'base';
+    G.handLv = G.handLv || { o: 1, n: 1, v: 1, a: 1, r: 1 }; G.unlocked = G.unlocked || []; G.labels = G.labels || [];
+    if (!G.fx) { G.fx = {}; G.fabrics.forEach(id => { G.fx[id] = { ed: null, paid: 0, v: 0 }; }); } G.newAch = G.newAch || []; G.deck = G.deck || 'base';
     if (R) [].concat(R.hand, R.supply).forEach(t => { delete t.as; });
   }
 
@@ -852,14 +1087,20 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     return `<button type="button" class="bq-tile ${t.up || ''} ${k === 'wild' ? 'wild' : k !== 'letter' ? 'multi m' + Math.min(t.ch.length, 4) : ''} ${cls || ''}" ${attrs || ''}>${k === 'wild' && t.as ? '<i>?</i>' : ''}${face}<small>${k === 'wild' && !t.as ? '½' : E.val(t)}</small></button>`; };
   const fmt = n => String(n).replace('.', ',');
   const handChip = h => `<span class="bq-chip h">${h.icon} ${h.name} Lv${h.lv} · ${h.chips} × ${h.mult}</span>`;
-  const KINDTAG = { chips: '<span class="bq-k c">+Chips</span>', add: '<span class="bq-k m">+Mult</span>', x: '<span class="bq-k x">×Mult</span>', util: '<span class="bq-k">Utilitas</span>', rt: '<span class="bq-k u">Ulang</span>', copy: '<span class="bq-k u">Salin</span>' };
-  const fabricCard = (id, tag) => { const f = F(id); return `<span class="ic">${f.icon}</span><b>${f.name}</b> ${KINDTAG[f.kind] || ''}${tag || ''}<span class="d">${f.desc}</span>`; };
+  const KINDTAG = { chips: '<span class="bq-k c">+Chips</span>', add: '<span class="bq-k m">+Mult</span>', x: '<span class="bq-k x">×Mult</span>', util: '<span class="bq-k">Utilitas</span>', eco: '<span class="bq-k">Koin</span>', rt: '<span class="bq-k u">Ulang</span>', copy: '<span class="bq-k u">Salin</span>' };
+  // rarity (knit colour) and edition on any Fabric card (owner 26 Nov)
+  const fabCls = (id, ed) => 'bq-fab rr' + (F(id).r || 1) + (ed ? ' ed-' + ed : '');
+  const rarTag = id => `<span class="bq-rar">${E.RAR[F(id).r || 1].n}</span>`;
+  const edTag = ed => ed ? `<span class="bq-edt">${E.ED[ed].icon} ${E.ED[ed].n} · ${E.ED[ed].d}</span>` : '';
+  const fabVal = id => { const v = G && G.fx && G.fx[id] ? G.fx[id].v : 0; return v && ['rapi', 'gunting', 'pitaukur', 'tumbuh', 'kainbaru'].includes(id) ? ` <b style="display:inline">Sekarang: ${['pitaukur', 'tumbuh', 'kainbaru'].includes(id) ? '+' + v + ' Chips' : '+' + v + ' Mult'}</b>` : ''; };
+  const fabricCard = (id, tag, ed) => { const f = F(id); return `<span class="ic">${f.icon}</span><b>${f.name}</b> ${KINDTAG[f.kind] || ''}${rarTag(id)}${tag || ''}${edTag(ed)}<span class="d">${f.desc}${fabVal(id)}</span>`; };
   function optHtml(o) {
     const U = o.ch ? o.ch.toUpperCase() : '';
-    if (o.type === 'fabric') return fabricCard(o.id);
+    if (o.type === 'fabric') return fabricCard(o.id, '', o.ed);
+    if (o.type === 'label') { const l = E.LABEL[o.id]; return `<span class="ic">${l.icon}</span><b>Label ${l.name}</b><span class="d">${l.desc} Permanen sampai run selesai.</span>`; }
     if (o.type === 'up') { const u = E.UPS[o.kind]; return `<span class="ic">${u.icon}</span><b>${u.name} · huruf ${U}</b><span class="d">${u.desc} Permanen: masuk supply tiap ronde sampai run selesai.</span>`; }
     if (o.type === 'letter') return `<span class="ic">🔤</span><b>Huruf ${U}</b><span class="d">Satu huruf ${U} ditambahkan ke supply di semua ronde berikutnya.</span>`;
-    if (o.type === 'book') { const h = E.HANDS[o.pos], now = E.handInfo(o.pos, E.lvOf(G, o.pos)), nx = E.handInfo(o.pos, now.lv + 1);
+    if (o.type === 'book') { const h = E.HANDS[o.pos], now = E.handInfo(o.pos, E.lvOf(G, o.pos)), nx = E.handInfo(o.pos, now.lv + E.bookStep(G));
       return `<span class="ic">📖</span><b>Buku ${h.name} · Lv${nx.lv}</b><span class="d">Hand ${h.name} naik: ${now.chips} Chips × ${now.mult} Mult → ${nx.chips} × ${nx.mult}.</span>`; }
     if (o.type === 'multi') { const k = E.kindOf(o.ch);
       return `<span class="ic">🧩</span><b>Kartu ${U}</b><span class="d">${k === 'pre' ? 'Prefiks: di awal kata ×1,5.' : k === 'suf' ? 'Sufiks: di akhir kata ×1,5.' : 'Gabungan huruf, bebas di posisi mana pun.'} 1 kartu = ${o.ch.length} huruf. Masuk supply semua ronde berikutnya.</span>`; }
@@ -870,12 +1111,16 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     return `<span class="ic">🪙</span><b>+${o.n} koin</b><span class="d">Buat belanja di shop.</span>`;
   }
   function slotsHtml() {
-    let h = '<div class="bq-slots">';
-    for (let i = 0; i < E.CFG.slots; i++) { const id = G.fabrics[i]; h += id ? `<button type="button" class="bq-slot k-${F(id).kind}" data-a="showFab" data-i="${id}"><span class="ic">${F(id).icon}</span>${F(id).name}</button>` : '<div class="bq-slot">kosong</div>'; }
+    const n = Math.max(E.slotsOf(G), G.fabrics.length), weak = R && R.boss && !R.boss.off && !R.cleared && (phase === 'round' || phase === 'bosspre') ? R.boss.fab : null;
+    let h = `<div class="bq-slots" style="--ns:${n}">`;
+    for (let i = 0; i < n; i++) { const id = G.fabrics[i], ed = id && E.edOf(G, id);
+      h += id ? `<button type="button" class="bq-slot k-${F(id).kind} ${fabCls(id, ed)}${id === weak ? ' weak' : ''}" data-a="showFab" data-i="${id}">${ed ? `<span class="edb">${E.ED[ed].icon}</span>` : ''}${id === weak ? '<span class="weak">✂️</span>' : ''}<span class="ic">${F(id).icon}</span>${F(id).name}</button>` : '<div class="bq-slot">kosong</div>'; }
     return h + '</div>';
   }
+  // Si Pemotong Benang has no art yet: it borrows The Short Cutter's picture until the owner adds boss-cutter.webp
+  const bossImg = id => 'img/game/boss-' + (id === 'cutter' ? 'short' : id) + '.webp';
   function enemyInfo() {
-    if (R.boss) return { img: 'img/game/boss-' + R.boss.id + '.webp', n: R.boss.name };
+    if (R.boss) return { img: bossImg(R.boss.id), n: R.boss.name };
     const e = REG[(G.stage * 2 + G.rnd) % REG.length];
     return { img: 'img/game/enemy-' + e[0] + '.webp', n: e[1] };
   }
@@ -915,18 +1160,18 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     } else if (sel.length) {
       const w = sel.map(E.txt).join('');
       if (w.length >= 3 && E.isWord(w)) {
-        const ids = new Set(sel.map(t => t.id)), s = E.score(sel, G.fabrics, { first: !R.firstDone, chain: R.chain, lv: G.handLv, inLemari: inLemari(w), held: R.hand.filter(t => !ids.has(t.id)) }, R.boss, () => 1);
+        const ids = new Set(sel.map(t => t.id)), s = E.score(sel, G.fabrics, E.ctxFor(G, R, R.hand.filter(t => !ids.has(t.id)), { inLemari: inLemari(w), fx: E.grownFx(G, R, sel) }), R.boss, () => 0.5);
         cm = { c: s.chips, m: s.mult, t: s.final, h: s.hand };
-        pv = `<div class="bq-pl"><button type="button" class="bq-arti" data-a="artiSel">📖 Arti</button><b>${w.toUpperCase()}</b> → <b>${fmtN(s.final)}</b> poin</div><div class="bq-chips">${chipsOf(Object.assign({}, s, { jackpot: undefined }))}${G.fabrics.includes('jackpot') ? '<span class="bq-chip">🎰 bisa ×2</span>' : ''}</div>`;
+        pv = `<div class="bq-pl"><button type="button" class="bq-arti" data-a="artiSel">📖 Arti</button><b>${w.toUpperCase()}</b> → <b>${fmtN(s.final)}</b> poin</div><div class="bq-chips">${chipsOf(Object.assign({}, s, { jackpot: undefined }))}${G.fabrics.includes('jackpot') ? '<span class="bq-chip">🎰 bisa ×2</span>' : ''}${G.fabrics.includes('kusut') ? '<span class="bq-chip">🌀 Mult acak</span>' : ''}</div>`;
       } else pv = `<div class="bq-pl">${w.length < 3 ? 'Pilih minimal 3 huruf untuk kata, atau langsung Buang' : '<b>' + w.toUpperCase() + '</b> belum jadi kata valid (boleh Buang huruf ini)'}</div>`;
     } else pv = R.noWord ? '<div class="bq-pl" style="color:var(--error)"><b>Tidak ada kata</b> dari huruf di tanganmu. Pilih huruf lalu Buang untuk mengambil huruf baru dari supply.</div>' : '<div class="bq-pl">Ketuk huruf: susun kata untuk menyerang, atau buang huruf yang tidak berguna.</div>';
     const selIds = new Set(sel.map(t => t.id));
     const hud = `<div class="bq-rs"><span>Skor<br>ronde</span><b>${fmtN(shown)}</b></div>`;
     const head = `<div class="bq-top"><div class="t"><b>${label()}</b></div><button type="button" class="bq-mute" data-a="runInfo" aria-label="Info run">ℹ️</button><button type="button" class="bq-mute" data-a="opts" aria-label="Opsi">⚙️</button><span class="bq-coin">🪙 ${G.coins}</span></div>${arenaHtml()}
-      ${R.boss ? `<div class="bq-boss"><b>${R.boss.name}:</b> ${R.boss.desc}${R.boss.block ? ' Terkunci: <b>' + R.boss.block.toUpperCase() + '</b>' : ''}</div>` : ''}${hud}<div class="bq-hn">${cm && cm.h ? `${cm.h.icon} <b>${cm.h.name}</b> Lv${cm.h.lv}` : '<span class="bq-mut">Susun kata…</span>'}</div>${cmHtml(cm, shown)}`;
-    const lastHtml = last && last.res ? `<div class="bq-last bq-pop">Terakhir: <b>${last.res.word.toUpperCase()} +${fmtN(last.res.final)}</b> <button type="button" class="bq-arti" data-a="arti" data-i="${last.res.word}">📖 Arti</button> <span class="bq-mut"></span>${last.res.recycled ? ` ♻️ ${last.res.recycled.toUpperCase()}` : ''}${last.res.extraDraw ? ' 🔄 +1' : ''}<div class="bq-chips">${chipsOf(last.res)}</div></div>` : '';
+      ${R.boss ? `<div class="bq-boss"><b>${R.boss.name}:</b> ${R.boss.off ? 'aturan dimatikan Gunting Emas ✂️' : R.boss.desc}${R.boss.block ? ' Terkunci: <b>' + R.boss.block.toUpperCase() + '</b>' : ''}${R.boss.fab ? ' Lemah: <b>' + F(R.boss.fab).name + '</b>' : ''}</div>` : ''}${hud}<div class="bq-hn">${cm && cm.h ? `${cm.h.icon} <b>${cm.h.name}</b> Lv${cm.h.lv}` : '<span class="bq-mut">Susun kata…</span>'}</div>${cmHtml(cm, shown)}`;
+    const lastHtml = last && last.res ? `<div class="bq-last bq-pop">Terakhir: <b>${last.res.word.toUpperCase()} +${fmtN(last.res.final)}</b> <button type="button" class="bq-arti" data-a="arti" data-i="${last.res.word}">📖 Arti</button> <span class="bq-mut"></span>${last.res.recycled ? ` ♻️ ${last.res.recycled.toUpperCase()}` : ''}${last.res.extraDraw ? ' 🔄 +1' : ''}${last.res.coins ? ` 🟡 +${last.res.coins} koin` : ''}${last.res.book ? ' 📚 Adverb naik level' : ''}${last.res.copied ? ` 🖨️ ${last.res.copied.toUpperCase()} disalin` : ''}${last.res.destroyed ? ` 🆕 ${F(last.res.destroyed).name} habis` : ''}<div class="bq-chips">${chipsOf(last.res)}</div></div>` : '';
     if (!sel.length && lastHtml && !anim) pv = lastHtml;
-    if (R.cleared && !anim) return '<div class="bq-L">' + head + '</div><div class="bq-R">' + `<div class="bq-center bq-pop"><h2>${enemyInfo().n} kalah! 🎉</h2><div class="bq-mut">+${last.fin.coins} koin${last.fin.saver ? ` (+${last.fin.saver} Saver)` : ''}</div><button type="button" class="bq-btn pri" style="width:100%;margin-top:10px" data-a="goNext">Ambil hadiah</button></div></div>`;
+    if (R.cleared && !anim) return '<div class="bq-L">' + head + '</div><div class="bq-R">' + `<div class="bq-center bq-pop"><h2>${enemyInfo().n} kalah! 🎉</h2><div class="bq-mut">+${last.fin.coins} koin${last.fin.saver ? ` (+${last.fin.saver} Saver)` : ''}${last.fin.steady ? ` (+${last.fin.steady} Steady)` : ''}${last.fin.piggy ? ` (+${last.fin.piggy} Celengan Bibo)` : ''}${last.fin.interest ? ` (+${last.fin.interest} bunga)` : ''}</div><button type="button" class="bq-btn pri" style="width:100%;margin-top:10px" data-a="goNext">Ambil hadiah</button></div></div>`;
     const hudg = `<div class="bq-hudg"><button type="button" class="bq-hb red" data-a="runInfo">Info<br>run</button>
       <button type="button" class="bq-hx" data-a="supplyView"><small>Supply</small><b>${R.supply.length}</b></button><div class="bq-hx"><small>Buang</small><b>${R.discards}/${R.maxDiscards}</b></div>
       <div class="bq-hx wide coin"><b>🪙 ${G.coins}</b></div>
@@ -948,12 +1193,12 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     return `<div class="bq-intro">
       <div class="bq-title bq-hero"><img class="bq-logo" src="img/game/quest-logo.webp" width="900" height="481" alt="Wordrobe Quest"><span class="bq-sr">Wordrobe QUEST</span></div>
       <div class="bq-menu">
-        <div class="bq-mbox rec"><small>Rekor</small><b>${best ? 'Stage ' + best : '-'}</b>${wins ? `<small>Menang ${wins}×</small>` : ''}</div>
+        <div class="bq-mbox rec"><small>Rekor</small><b>${best ? 'Stage ' + Math.min(best, E.CFG.stages) : '-'}</b>${wins ? `<small>Menang ${wins}×</small>` : ''}${endlessBest() ? `<small>Endless: Stage ${endlessBest()}</small>` : ''}</div>
         <div class="bq-mbox main">${resumable ? '<button type="button" class="bq-mb blue" data-a="resume">LANJUTKAN</button>' : '<button type="button" class="bq-mb blue" data-a="start">MAIN</button>'}<button type="button" class="bq-mb green" data-a="coll">KOLEKSI</button></div>
         <div class="bq-mbox side"><button type="button" class="bq-mb orange" data-a="opts">OPSI</button><button type="button" class="bq-mb red" data-go="home">KELUAR</button></div>
       </div>
       ${resumable ? '<button type="button" class="bq-pill" data-a="start">Mulai run baru</button>' : ''}
-      <div class="bq-pills"><button type="button" class="bq-pill" data-a="howto">Cara main</button><button type="button" class="bq-pill bq-orient" data-a="orient">${matchMedia('(orientation: landscape)').matches ? '📱 Tegak' : '↔️ Mendatar'}</button><button type="button" class="bq-pill" data-a="achList">🏆 Achievement ${E.ACH.filter(a => E.hasAch(achOwned, a.id)).length}/${E.ACH.length}</button></div></div>`;
+      <div class="bq-pills"><button type="button" class="bq-pill" data-a="tutorial">🎓 Tutorial</button><button type="button" class="bq-pill bq-orient" data-a="orient">${matchMedia('(orientation: landscape)').matches ? '📱 Tegak' : '↔️ Mendatar'}</button><button type="button" class="bq-pill" data-a="achList">🏆 Achievement ${E.ACH.filter(a => E.hasAch(achOwned, a.id)).length}/${E.ACH.length}</button></div></div>`;
   }
   // Koleksi: every background, Kain and Fabric, with what opens the locked ones
   function collHtml() {
@@ -961,11 +1206,16 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     const bgs = E.BGS.map(b => { const ok = o.bgs.includes(b.id), on = bg === b.id || (bg !== 'off' && !o.bgs.includes(bg) && b.id === 'wave');
       return `<div class="bq-ci ${ok ? '' : 'lock'}"><span class="ic">${ok ? b.icon : '🔒'}</span><b>${b.name}</b><span class="d">${ok ? (on ? 'Sedang dipakai' : 'Terbuka') : by(['bg', b.id])}</span>${ok && !on ? `<button type="button" class="bq-btn sm" data-a="setBg" data-i="${b.id}">Pakai</button>` : ''}</div>`; }).join('');
     const decks = E.DECKS.map(d => { const ok = o.decks.includes(d.id); return `<div class="bq-ci ${ok ? '' : 'lock'}"><span class="ic">${ok ? d.icon : '🔒'}</span><b>${d.name}</b><span class="d">${ok ? d.desc : by(['deck', d.id])}</span></div>`; }).join('');
-    const fabs = E.FABRICS.map(f => { const ok = !f.locked || o.fabrics.includes(f.id); return `<div class="bq-ci ${ok ? '' : 'lock'}"><span class="ic">${ok ? f.icon : '🔒'}</span><b>${f.name} ${KINDTAG[f.kind] || ''}</b><span class="d">${ok ? f.desc : by(['fabric', f.id])}</span></div>`; }).join('');
+    const fabs = E.FABRICS.slice().sort((a, b) => (a.r || 1) - (b.r || 1)).map(f => { const ok = !f.locked || o.fabrics.includes(f.id); return `<div class="bq-ci ${ok ? fabCls(f.id) : 'lock'}"><span class="ic">${ok ? f.icon : '🔒'}</span><b>${f.name} ${KINDTAG[f.kind] || ''}${rarTag(f.id)}</b><span class="d">${ok ? f.desc : by(['fabric', f.id])}</span></div>`; }).join('');
+    const seenEd = edSeen(), eds = Object.keys(E.ED).map(k => { const e = E.ED[k], ok = seenEd.includes(k);
+      return `<div class="bq-ci ${ok ? 'bq-fab rr1 ed-' + k : 'lock'}"><span class="ic">${ok ? e.icon : '❔'}</span><b>${ok ? e.n : '???'}</b><span class="d">${ok ? e.d + '. Muncul acak pada Fabric di shop dan hadiah.' : 'Belum ditemukan. Cari Fabric berkilau di shop.'}</span></div>`; }).join('');
+    const labs = E.LABELS.map(l => `<div class="bq-ci"><span class="ic">${l.icon}</span><b>${l.name}</b><span class="d">${l.desc}</span></div>`).join('');
     return `<div class="bq-top"><h2 style="flex:1">Koleksi</h2><button type="button" class="bq-btn sm" data-a="achBack">Kembali</button></div>
       <div class="bq-sec"><b>Latar</b><button type="button" class="bq-btn sm" data-a="setBg" data-i="off" ${bg === 'off' ? 'disabled' : ''}>${bg === 'off' ? 'Latar mati' : 'Matikan latar'}</button></div><div class="bq-cgrid">${bgs}</div>
       <div class="bq-sec"><b>Kain</b></div><div class="bq-cgrid">${decks}</div>
-      <div class="bq-sec"><b>Fabric</b></div><div class="bq-cgrid">${fabs}</div>
+      <div class="bq-sec"><b>Fabric</b><span class="bq-mut">Umum · Langka · Epik · Legendaris</span></div><div class="bq-cgrid">${fabs}</div>
+      <div class="bq-sec"><b>Edisi</b></div><div class="bq-cgrid">${eds}</div>
+      <div class="bq-sec"><b>Label</b><span class="bq-mut">dijual 1 per shop</span></div><div class="bq-cgrid">${labs}</div>
       <button type="button" class="bq-btn" data-a="achList">🏆 Achievement (${E.ACH.filter(a => E.hasAch(achOwned, a.id)).length}/${E.ACH.length})</button>`;
   }
   function achHtml() {
@@ -983,19 +1233,22 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
   }
   // new achievements of this run: shown at once, opened Fabrics join the pool at once, saved to the account with the run
   function checkAch() {
-    if (!G) return;
+    if (!G || G.tut) return;
     G.newAch = G.newAch || [];
     const fresh = E.earned(G).filter(id => !E.hasAch(achOwned, id) && !G.newAch.includes(id));
     fresh.forEach(id => {
       const a = E.ACH.find(x => x.id === id); G.newAch.push(id);
-      if (a.open[0] === 'fabric' && !G.unlocked.includes(a.open[1])) G.unlocked.push(a.open[1]);
-      toast('🏆 ' + achText(id));
+      [a.open].concat(a.also ? [a.also] : []).forEach(w => { if (w[0] === 'fabric' && !G.unlocked.includes(w[1])) G.unlocked.push(w[1]); });
     });
+    if (fresh.length) toast('🏆 ' + fresh.map(achText).join(' · '));
     if (fresh.length) {
       Sfx.play('unlock');
       if (host.claim) host.claim(fresh).then(r => { if (r && r.achievements) setAch(r.achievements, r.totals); }, () => { /* kept in G.newAch: sent again with the run */ });
     }
   }
+  const EDKEY = 'wr_game_eds';
+  const edSeen = () => { try { return JSON.parse(store.get(EDKEY) || '[]'); } catch (e) { return []; } };
+  const edFound = ed => { if (ed && !edSeen().includes(ed)) store.set(EDKEY, JSON.stringify(edSeen().concat(ed))); };
   const inLemari = w => { try { return !!(host.lemariHas && host.lemariHas(w)); } catch (e) { return false; } };
   function setAch(list, totals) {
     achOwned = (list || []).slice(); if (totals) achTotals = totals;
@@ -1030,13 +1283,14 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
       const perm = modal.key[0] === 'p', o = perm ? E.permItems(G)[+modal.key.slice(1)] : shop[+modal.key.slice(1)];
       if (!o) return '';
       const can = !o.sold && !o.maxed && G.coins >= o.price;
-      return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><div class="bq-opt" style="cursor:default">${optHtml(o)}</div>
+      return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><div class="bq-opt ${o.type === 'fabric' ? fabCls(o.id, o.ed) : ''}" style="cursor:default">${optHtml(o)}</div>${o.type === 'fabric' && F(o.id).t ? `<div class="bq-terms">${F(o.id).t.map(t => `<span><b>${t}</b>: ${E.TERMS[t] || ''}</span>`).join('')}</div>` : ''}
         <div class="bq-mut" style="margin:8px 0">Koinmu: 🪙 ${G.coins}${o.maxed ? ' · sudah maksimal' : !can ? ' · koin belum cukup' : ''}</div>
         <div class="bq-btns"><button type="button" class="bq-btn" data-a="closeModal">Batal</button><button type="button" class="bq-btn pri" data-a="confirmBuy" ${can ? '' : 'disabled'}>${o.maxed ? 'Maksimal' : 'Beli 🪙 ' + o.price}</button></div></div></div>`;
     }
     if (modal.t === 'opts') { const o = E.opened(achOwned), bg = Bg.choice;
       return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Opsi</h2>
         <div class="bq-orow"><span>Musik latar</span><button type="button" class="bq-mute ${Music.on ? '' : 'off'}" data-a="music" aria-label="Musik latar" aria-pressed="${Music.on}">🎵</button></div>
+        <div class="bq-orow"><span>Tutorial bersama Bibo</span><button type="button" class="bq-btn sm" data-a="tutorial">🎓 Mulai</button></div>
         <div class="bq-orow"><span>Efek suara</span><button type="button" class="bq-mute ${Sfx.on ? '' : 'off'}" data-a="sfx" aria-label="Efek suara" aria-pressed="${Sfx.on}">🔔</button></div>
         <div class="bq-orow"><span>Tampilan layar</span><button type="button" class="bq-btn sm" data-a="orient">${matchMedia('(orientation: landscape)').matches ? '📱 Kembali tegak' : '↔️ Mode mendatar'}</button></div>
         <div class="bq-orow"><span>Kecepatan hitung skor</span><button type="button" class="bq-speed" data-a="speed" aria-label="Kecepatan hitung skor">${['⚡', '1×', '2×'][speed()]}</button></div>
@@ -1047,7 +1301,8 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
         <div class="bq-stages">${Array.from({ length: Math.max(E.CFG.stages, G.stage + 1) }, (x, k) => `<span class="${k < G.stage ? 'done' : k === G.stage ? 'now' : ''}">${k + 1}</span>`).join('')}</div>
         <div class="bq-mut" style="margin:6px 0">${label()} · Kain ${E.DECK[G.deck || 'base'].icon} ${E.DECK[G.deck || 'base'].name}</div>
         <div class="bq-sec"><b>Hand (jenis kata)</b></div><div class="bq-hands">${Object.keys(E.HANDS).map(k => { const h = E.handInfo(k, E.lvOf(G, k)); return `<span>${h.icon} ${h.name} Lv${h.lv} · ${h.chips} × ${h.mult}</span>`; }).join('')}</div>
-        <div class="bq-sec"><b>Fabric (kiri ke kanan)</b></div><div class="bq-chips">${G.fabrics.map(id => `<span class="bq-chip">${F(id).icon} ${F(id).name}</span>`).join('') || '-'}</div>
+        <div class="bq-sec"><b>Fabric (kiri ke kanan)</b></div><div class="bq-chips">${G.fabrics.map(id => `<span class="bq-chip">${F(id).icon} ${F(id).name}${E.edOf(G, id) ? ' ' + E.ED[E.edOf(G, id)].icon : ''}</span>`).join('') || '-'}</div>
+        <div class="bq-sec"><b>Label</b></div><div class="bq-labels">${(G.labels || []).map(id => `<span>${E.LABEL[id].icon} ${E.LABEL[id].name}: ${E.LABEL[id].desc}</span>`).join('') || '<span>Belum ada. Beli di shop.</span>'}</div>
         <button type="button" class="bq-btn" style="width:100%;margin-top:12px" data-a="closeModal">Tutup</button></div></div>`;
     if (modal.t === 'supply') {
       const rest = R.supply, plain = {}, special = {};
@@ -1072,33 +1327,41 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     if (modal.t === 'wild') return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><h2>Kartu ? jadi huruf apa?</h2><div class="bq-mut">Nilainya setengah dari huruf aslinya.${R.boss && R.boss.block ? ' Huruf ' + R.boss.block.toUpperCase() + ' sedang dikunci.' : ''}</div>
       <div class="bq-abc">${'abcdefghijklmnopqrstuvwxyz'.split('').map(c => `<button type="button" class="bq-tile" data-a="wildAs" data-i="${c}" ${R.boss && R.boss.block === c ? 'disabled' : ''}>${c}<small>${Math.ceil(E.V[c] * E.CFG.letterMul / 2)}</small></button>`).join('')}</div>
       <button type="button" class="bq-btn" style="width:100%;margin-top:10px" data-a="closeModal">Batal</button></div></div>`;
-    if (modal.t === 'fab') { const i = G.fabrics.indexOf(modal.id), mv = (phase === 'round' || phase === 'shop') && i !== -1 && G.fabrics.length > 1;
-      return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><div class="bq-opt" style="cursor:default">${fabricCard(modal.id)}</div>
+    if (modal.t === 'fab') { const i = G.fabrics.indexOf(modal.id), mv = (phase === 'round' || phase === 'shop') && i !== -1 && G.fabrics.length > 1, ed = E.edOf(G, modal.id);
+      const terms = (F(modal.id).t || []).map(t => `<span><b>${t}</b>: ${E.TERMS[t] || ''}</span>`).join('');
+      const canSell = i !== -1 && (phase === 'shop' || (phase === 'round' && !anim && R && !R.cleared)), sv = E.sellValue(G, modal.id);
+      const weak = R && R.boss && !R.boss.off && R.boss.fab === modal.id && phase === 'round' ? '<div class="bq-mut" style="color:var(--error);margin-top:6px">✂️ Dilemahkan oleh Si Pemotong Benang selama ronde ini.</div>' : '';
+      return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><div class="bq-opt ${fabCls(modal.id, ed)}" style="cursor:default">${fabricCard(modal.id, '', ed)}</div>${terms ? `<div class="bq-terms">${terms}</div>` : ''}${weak}
         ${mv ? `<div class="bq-mut" style="margin-top:8px">Fabric dihitung dari kiri ke kanan. Taruh +Chips/+Mult di kiri dan ×Mult di kanan supaya skornya terbesar.</div>
         <div class="bq-btns" style="margin-top:8px"><button type="button" class="bq-btn" data-a="moveFab" data-i="-1" ${i === 0 ? 'disabled' : ''}>◀ Geser kiri</button><button type="button" class="bq-btn" data-a="moveFab" data-i="1" ${i === G.fabrics.length - 1 ? 'disabled' : ''}>Geser kanan ▶</button></div>` : ''}
+        ${canSell ? `<button type="button" class="bq-btn" style="width:100%;margin-top:10px" data-a="sellFab">💰 Jual 🪙 ${sv}</button>` : ''}
         <button type="button" class="bq-btn" style="width:100%;margin-top:10px" data-a="closeModal">Tutup</button></div></div>`; }
-    return `<div class="bq-modal"><div class="bq-card"><h2>Slot penuh</h2><div class="bq-mut" style="margin:4px 0 8px">Ganti salah satu Fabric dengan:</div><div class="bq-opt" style="margin-bottom:8px;cursor:default">${fabricCard(modal.id)}</div><div class="bq-mut">Ketuk Fabric yang diganti, atau lewati.</div><div class="bq-opts" style="margin-top:6px">${G.fabrics.map((id, i) => `<button type="button" class="bq-opt" data-a="doReplace" data-i="${i}"><span class="ic">${F(id).icon}</span><b>${F(id).name}</b></button>`).join('')}</div><button type="button" class="bq-btn" style="width:100%;margin-top:8px" data-a="skipReplace">Lewati Fabric baru</button></div></div>`;
+    return `<div class="bq-modal"><div class="bq-card"><h2>Slot penuh</h2><div class="bq-mut" style="margin:4px 0 8px">Ganti salah satu Fabric dengan:</div><div class="bq-opt ${fabCls(modal.id, modal.ed)}" style="margin-bottom:8px;cursor:default">${fabricCard(modal.id, '', modal.ed)}</div><div class="bq-mut">Ketuk Fabric yang diganti (yang lama dijual), atau lewati.</div><div class="bq-opts" style="margin-top:6px">${G.fabrics.map((id, i) => `<button type="button" class="bq-opt ${fabCls(id, E.edOf(G, id))}" data-a="doReplace" data-i="${i}" ${E.edOf(G, id) === 'neg' ? 'disabled' : ''}><span class="ic">${F(id).icon}</span><b>${F(id).name}</b> <span class="bq-mut">jual 🪙 ${E.sellValue(G, id)}</span></button>`).join('')}</div><button type="button" class="bq-btn" style="width:100%;margin-top:8px" data-a="skipReplace">Lewati Fabric baru</button></div></div>`;
   }
   function render() {
     let h = '';
     if (phase === 'intro') h = introHtml();
     else if (phase === 'coll') h = collHtml();
-    else if (phase === 'win') h = `<div class="bq-center bq-pop bq-win"><img src="img/game/bibo-victory.webp" alt="Bibo menang"><h2 style="font-size:30px">Juara! 🏆</h2><div>Kamu menaklukkan ${E.CFG.stages} stage dan ${E.CFG.stages * 3} ronde.</div><div class="bq-mut">Selesai di sini, atau lanjut ke Endless: target terus naik sampai kamu kalah.</div></div>
-      <div class="bq-btns"><button type="button" class="bq-btn pri" data-a="finishWin">Selesai & lihat hasil</button><button type="button" class="bq-btn" data-a="endless">Lanjut Endless ♾️</button></div>`;
+    else if (phase === 'win') h = `<div class="bq-center bq-pop bq-win"><img src="img/game/bibo-victory.webp" alt="Bibo menang"><h2 style="font-size:30px">Juara! 🏆</h2><div>Kamu menaklukkan ${E.CFG.stages} stage dan ${E.CFG.stages * 3} ronde.</div><div class="bq-mut">Mulai run baru, lihat hasil run ini, atau lanjut ke Endless: target naik makin curam tiap stage sampai kamu kalah.</div>${endlessBest() ? `<div class="bq-mut">Rekor Endless: Stage ${endlessBest()}</div>` : ''}</div>
+      <div class="bq-btns bq-win3"><button type="button" class="bq-btn" data-a="newRun">🔄 Run baru</button><button type="button" class="bq-btn" data-a="finishWin">📋 Lihat hasil</button><button type="button" class="bq-btn pri" data-a="endless">♾️ Lanjut Endless</button></div>`;
     else if (phase === 'deck') h = `<h2>Pilih Kain</h2><div class="bq-mut">Kain menentukan isi supply-mu. Kain baru terbuka lewat achievement.</div><div class="bq-opts">${deckOpts.map(id => { const d = E.DECK[id]; return `<button type="button" class="bq-opt" data-a="pickDeck" data-i="${id}"><span class="ic">${d.icon}</span><b>${d.name}</b><span class="d">${d.desc}</span></button>`; }).join('')}</div>`;
     else if (phase === 'ach') h = achHtml();
-    else if (phase === 'starter') h = `<h2>Pilih Fabric awal</h2><div class="bq-mut">Kamu mulai dengan 1 Fabric dari 3 pilihan.</div><div class="bq-opts">${starters.map((id, i) => `<button type="button" class="bq-opt" data-a="pickStarter" data-i="${i}">${fabricCard(id)}</button>`).join('')}</div>`;
-    else if (phase === 'bosspre') h = `<div class="bq-card bq-center"><img src="img/game/boss-${R.boss.id}.webp" alt="" style="height:150px;width:auto"><h2>${R.boss.name}</h2><p>${R.boss.desc}${R.boss.block ? `<br><b style="color:var(--error);font-size:22px">Huruf terkunci: ${R.boss.block.toUpperCase()}</b>` : ''}</p><div class="bq-mut">Capai skor <b>${fmtN(R.target)}</b> untuk mengalahkannya.</div></div><button type="button" class="bq-btn pri" data-a="faceBoss">Hadapi boss</button>`;
+    else if (phase === 'starter') h = `<h2>Pilih Fabric awal</h2><div class="bq-mut">Kamu mulai dengan 1 Fabric dari 3 pilihan.</div><div class="bq-opts">${starters.map((id, i) => `<button type="button" class="bq-opt ${fabCls(id)}" data-a="pickStarter" data-i="${i}">${fabricCard(id)}</button>`).join('')}</div>`;
+    else if (phase === 'bosspre') h = `<div class="bq-card bq-center"><img src="${bossImg(R.boss.id)}" alt="" style="height:150px;width:auto"><h2>${R.boss.name}</h2><p>${R.boss.off ? '<b>✂️ Gunting Emas mematikan aturan boss ini.</b>' : R.boss.desc}${R.boss.block ? `<br><b style="color:var(--error);font-size:22px">Huruf terkunci: ${R.boss.block.toUpperCase()}</b>` : ''}${R.boss.fab ? `<br><b style="color:var(--error)">Fabric dilemahkan: ${F(R.boss.fab).icon} ${F(R.boss.fab).name}</b>` : ''}</p><div class="bq-mut">Capai skor <b>${fmtN(R.target)}</b> untuk mengalahkannya.</div></div>
+      ${E.hasLabel(G, 'gantilawan') && G.swapped !== G.stage ? '<button type="button" class="bq-btn" data-a="swapBoss">🔀 Ganti lawan (sekali per stage)</button>' : ''}<button type="button" class="bq-btn pri" data-a="faceBoss">Hadapi boss</button>`;
     else if (phase === 'round') h = roundHtml();
-    else if (phase === 'reward') h = `<h2>Ronde selesai! 🎉</h2><div class="bq-mut">Pilih 1 hadiah.</div><div class="bq-opts">${rewards.map((o, i) => `<button type="button" class="bq-opt" data-a="takeReward" data-i="${i}">${optHtml(o)}</button>`).join('')}</div>`;
+    else if (phase === 'reward') { rewards.forEach(o => edFound(o.ed)); h = `<h2>Ronde selesai! 🎉</h2><div class="bq-mut">Pilih 1 hadiah.</div><div class="bq-opts">${rewards.map((o, i) => `<button type="button" class="bq-opt ${o.type === 'fabric' ? fabCls(o.id, o.ed) : ''}" data-a="takeReward" data-i="${i}">${optHtml(o)}</button>`).join('')}</div>`; }
     else if (phase === 'shop') {
+      shop.forEach(o => edFound(o.ed));
       const perm = E.permItems(G), secOf = o => o.sec || (o.type === 'fabric' ? 'fabric' : 'card');
-      const box = (o, key, priceTxt, off) => `<button type="button" class="bq-gi ${o.sold ? 'sold' : off ? 'poor' : ''}" data-a="item" data-i="${key}" ${o.sold ? 'disabled' : ''}>${optHtml(o)}<span class="pr">${o.sold ? 'Terjual' : priceTxt}</span></button>`;
+      const box = (o, key, priceTxt, off) => `<button type="button" class="bq-gi ${o.type === 'fabric' ? fabCls(o.id, o.ed) : o.type === 'label' ? 'lab' : ''} ${o.sold ? 'sold' : off ? 'poor' : ''}" data-a="item" data-i="${key}" ${o.sold ? 'disabled' : ''}>${optHtml(o)}<span class="pr">${o.sold ? 'Terjual' : priceTxt}</span></button>`;
+      const rp = E.rerollPrice(G), labs = (G.labels || []).map(id => `<span>${E.LABEL[id].icon} ${E.LABEL[id].name}</span>`).join('');
       const sec = name => shop.map((o, i) => secOf(o) === name ? box(o, 's' + i, '🪙 ' + o.price, G.coins < o.price) : '').join('');
-      const rr = name => `<button type="button" class="bq-btn sm" ${G.coins < E.CFG.price.reroll ? 'disabled' : ''} data-a="reroll" data-i="${name}">🔁 Reroll (🪙 ${E.CFG.price.reroll})</button>`;
+      const rr = name => `<button type="button" class="bq-btn sm" ${G.coins < rp ? 'disabled' : ''} data-a="reroll" data-i="${name}">🔁 Reroll (🪙 ${rp})</button>`;
       h = `<div class="bq-top"><h2 style="flex:1">🛍️ Shop</h2><span class="bq-coin">🪙 ${G.coins}</span></div><div class="bq-mut">Ketuk barang untuk melihat detail dan membeli. Boleh keluar tanpa beli.</div>
         <div class="bq-sec"><b>🧩 Kartu</b>${rr('card')}</div><div class="bq-grid">${sec('card')}</div>
         <div class="bq-sec"><b>🧵 Fabric</b>${rr('fabric')}</div><div class="bq-grid">${sec('fabric') || '<div class="bq-mut">Semua Fabric sudah kamu punya.</div>'}</div>
+        <div class="bq-sec"><b>🏷️ Label</b><span class="bq-mut">permanen, 1 per kunjungan</span></div><div class="bq-grid">${sec('label') || '<div class="bq-mut">Semua Label sudah kamu punya.</div>'}</div>${labs ? `<div class="bq-labels">${labs}</div>` : ''}
         <div class="bq-sec"><b>🎒 Perlengkapan</b><span class="bq-mut">harga naik tiap beli</span></div><div class="bq-grid">${perm.map((o, i) => box(o, 'p' + i, o.maxed ? 'MAKS' : '🪙 ' + o.price, o.maxed || G.coins < o.price)).join('')}</div>
         <div><div class="bq-mut">Fabric kamu</div>${slotsHtml()}</div>
         <div><div class="bq-mut">Hand kamu</div><div class="bq-hands">${'nvar'.split('').map(p => { const h = E.handInfo(p, E.lvOf(G, p)); return `<span>${h.icon} <b>${h.name}</b> Lv${h.lv} · ${h.chips} × ${h.mult}</span>`; }).join('')}</div></div>
@@ -1111,8 +1374,74 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     shake = false;
     body.querySelectorAll('[data-add]').forEach(el => { try { const w = el.getAttribute('data-add'), m = means[w]; const b = host.addButton(w, m && m.r ? m.r.translation : ''); if (b) { b.addEventListener('click', ev => ev.stopPropagation()); el.replaceWith(b); } } catch (e) { /* host without Lemari: no add button */ } });
     Object.keys(means).forEach(showMeaning);
-    save();
+    save(); tutDraw();
   }
+
+  /* ---------- tutorial (owner 26 Nov): a scripted run where Bibo points at each part of the screen; never saved or sent ---------- */
+  const TUTKEY = 'wr_game_tut';
+  let tut = null;
+  const TUT = [
+    { t: 'Halo, aku Bibo! Ayo belajar Wordrobe Quest sebentar. Kamu bisa lewati kapan saja.' },
+    { at: '.bq-fig.en', t: 'Ini lawanmu. Capai <b>skor target</b> di bawahnya sebelum huruf dan jatah Buang habis untuk mengalahkannya.' },
+    { at: '.bq-hand', wait: 'word', t: 'Ini tanganmu. Ketuk huruf untuk menyusun kata bahasa Inggris. Coba <b>J A C K E T</b>.' },
+    { at: '.bq-bar.cm', t: 'Skor dihitung <b>Chips × Mult</b>. Chips (biru) dari nilai huruf dan panjang kata, Mult (merah) dari jenis kata dan Fabric.' },
+    { at: '.bq-hn', t: 'Jenis kata (Noun, Verb, Adjective, Adverb) adalah <b>hand</b>-mu. Adverb paling kuat, dan Buku di shop menaikkan levelnya.' },
+    { at: '[data-a="send"]', wait: 'send', t: 'Tekan <b>Serang</b> untuk memainkan kata. Lihat tiap kartu dan Fabric menambah skor satu per satu.' },
+    { at: '[data-a="discard"]', t: 'Huruf tidak berguna? Pilih lalu <b>Buang</b> untuk menukarnya dengan huruf dari supply. Jatah Buang terbatas tiap ronde.' },
+    { at: '.bq-pile, .bq-sv', t: 'Ini <b>supply</b>: sisa huruf ronde ini. Ketuk untuk melihat huruf apa saja yang masih ada.' },
+    { at: '.bq-slots', t: '<b>Fabric</b> = kekuatan pasif. Dihitung dari kiri ke kanan, jadi taruh +Mult di kiri dan ×Mult di kanan. Seret untuk mengubah urutan, ketuk untuk detail atau menjual.' },
+    { t: 'Kata yang sudah ada di <b>Lemari</b>-mu adalah kata kekuatan: +4 Mult. Simpan kata baru dari layar hasil supaya makin kuat.' },
+    { t: 'Menang ronde? Pilih <b>1 hadiah</b>: Fabric, kartu ber-upgrade, Buku, atau koin.' },
+    { t: 'Di <b>shop</b>, Fabric punya kelangkaan: Umum (abu), Langka (hijau), Epik (magenta), Legendaris (emas). Yang berkilau punya <b>edisi</b> bonus. Ada juga 1 <b>Label</b> permanen tiap kunjungan, dan Fabric bisa dijual setengah harga.' },
+    { t: 'Tiap stage punya Ronde Kecil, Ronde Besar, lalu <b>Boss</b> dengan aturan khusus. Baca aturannya sebelum bertarung.' },
+    { t: 'Kalahkan boss <b>Stage 8</b> untuk jadi Juara, lalu lanjut ke Endless kalau berani. Siap?', last: true }
+  ];
+  function tutStart() {
+    G = E.newGame(null, 'base'); E.addFabric(G, 'long'); E.addFabric(G, 'golden'); G.tut = true; G.runId = 'tutorial'; G.newAch = [];
+    R = E.makeRound(G, E.rngFrom(7)); R.hand = 'jacketso'.split('').map(c => E.mk(c)); R.target = 99999;
+    tut = { i: 0 }; phase = 'round'; sel = []; msg = ''; last = null; modal = null; sendState = ''; render();
+  }
+  function tutEnd(go) {
+    store.set(TUTKEY, '1'); tut = null; G = null; R = null; sel = []; anim = null; modal = null; phase = 'intro'; tutDraw();
+    if (go) A.start(); else render();
+  }
+  const visible = q => [...body.querySelectorAll(q)].find(el => el.offsetParent !== null && el.getClientRects().length);
+  function tutDone(st) {
+    if (st.wait === 'word') { const w = sel.map(E.txt).join(''); return w.length >= 3 && E.isWord(w); }
+    if (st.wait === 'send') return !!(R && R.words && !anim);
+    return true;
+  }
+  // the dim with a hole over the element Bibo talks about, and Bibo's speech bubble on the other half of the screen
+  function tutDraw() {
+    let hole = document.getElementById('bq-hole'), box = document.getElementById('bq-tutbox');
+    if (!tut || phase !== 'round' || modal) { if (hole) hole.remove(); if (box) box.remove(); return; }
+    const st = TUT[tut.i];
+    if (st.wait === 'send' && tutDone(st)) { tut.i++; tutDraw(); return; }
+    if (!hole) { hole = document.createElement('div'); hole.id = 'bq-hole'; hole.className = 'bq-hole'; document.body.appendChild(hole); }
+    if (!box) { box = document.createElement('div'); box.id = 'bq-tutbox'; document.body.appendChild(box); box.addEventListener('click', ev => { const b = ev.target.closest('[data-t]'); if (b) tutAct(b.getAttribute('data-t')); }); }
+    const el = st.at ? visible(st.at) : null;
+    let top = false;
+    if (el) {
+      const rc = el.getBoundingClientRect();
+      if (rc.top < 0 || rc.bottom > innerHeight) { el.scrollIntoView({ block: 'center', behavior: 'instant' }); }
+      const r2 = el.getBoundingClientRect(), pad = 6;
+      hole.className = 'bq-hole'; Object.assign(hole.style, { left: r2.left - pad + 'px', top: r2.top - pad + 'px', width: r2.width + 2 * pad + 'px', height: r2.height + 2 * pad + 'px' });
+      top = r2.top > innerHeight - r2.bottom;   // the bubble goes where there is more room
+    } else { hole.className = 'bq-hole none'; hole.removeAttribute('style'); }
+    const ok = tutDone(st);
+    box.className = 'bq-tut ' + (top ? 'top' : 'bot');
+    box.innerHTML = `<img src="img/game/bibo-${st.last ? 'victory' : st.wait ? 'thinking' : 'idle'}.webp" alt="Bibo"><div class="bq-bub" role="dialog" aria-label="Tutorial"><b>Bibo</b> <small>${tut.i + 1}/${TUT.length}</small><p>${st.t}</p>
+      <div class="bq-btns"><button type="button" class="bq-btn" data-t="skip">Lewati tutorial</button>${st.last ? '<button type="button" class="bq-btn pri" data-t="go">Mulai run!</button>' : st.wait === 'send' ? '' : `<button type="button" class="bq-btn pri" data-t="next" ${ok ? '' : 'disabled'}>Lanjut</button>`}</div></div>`;
+  }
+  function tutAct(a) {
+    if (!tut) return;
+    if (a === 'skip') tutEnd(false);
+    else if (a === 'go') tutEnd(true);
+    else if (a === 'next' && tutDone(TUT[tut.i])) { tut.i = Math.min(TUT.length - 1, tut.i + 1); tutDraw(); }
+  }
+  let tutRaf = 0;
+  const tutLater = () => { if (tut && !tutRaf) tutRaf = requestAnimationFrame(() => { tutRaf = 0; tutDraw(); }); };
+  if (typeof window !== 'undefined') { window.addEventListener('resize', tutLater); window.addEventListener('scroll', tutLater, true); }
 
   /* ---------- actions ---------- */
   // the run may already be replaced by a new one when the answer arrives: update whichever copy is stored
@@ -1126,7 +1455,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     if (!g || g.submitted || sendState === 'sending') return;
     const s = g.stats;
     sendState = 'sending'; sendErr = '';
-    host.submit({ run_id: g.runId, stage: g.reached, round: g.rnd + 1, words: s.words, longest: s.longest, best_word: s.best.w, best_score: s.best.s, total_score: s.total, fabrics: g.fabrics.slice(), deck: g.deck || 'base', won: !!g.won, achievements: (g.newAch || []).slice(), counts: E.runCounts(g) })
+    host.submit({ run_id: g.runId, stage: g.reached, round: g.rnd + 1, words: s.words, longest: s.longest, best_word: s.best.w, best_score: s.best.s, total_score: s.total, fabrics: g.fabrics.slice(), deck: g.deck || 'base', won: !!g.won, win_pos: g.winPos ? { nouns: g.winPos.n || 0, verbs: g.winPos.v || 0, adjs: g.winPos.a || 0, advs: g.winPos.r || 0 } : undefined, achievements: (g.newAch || []).slice(), counts: E.runCounts(g) })
       .then(function (r) {
         markSent(g); sendState = 'ok';
         if (r && r.achievements) {
@@ -1138,9 +1467,11 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     if (phase === 'end') render();
   }
   function endRun() {
+    if (G && G.tut) { tutEnd(false); return; }
     checkAch(); Sfx.play('over');
     phase = 'end'; G.reached = G.stage + 1;
     if (G.reached > best) { best = G.reached; store.set(BEST, String(best)); }
+    if (G.won && G.reached > E.CFG.stages && G.reached > endlessBest()) store.set(ENDKEY, String(G.reached));   // separate Endless record (owner 26 Nov)
     achNew = []; sendState = ''; sendResult();
   }
   function gain(o, after) {
@@ -1148,8 +1479,9 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     else if (o.type === 'up') { E.addUpgrade(G, o.kind, o.ch); after(); }
     else if (o.type === 'supply') { G.extra += o.n; after(); }
     else if (o.type === 'letter' || o.type === 'multi' || o.type === 'wild') { G.letterAdds.push(o.ch); after(); }
-    else if (o.type === 'book') { G.handLv = G.handLv || { o: 1, n: 1, v: 1, a: 1, r: 1 }; G.handLv[o.pos] = E.lvOf(G, o.pos) + 1; after(); }
-    else if (o.type === 'fabric') { if (G.fabrics.length < E.CFG.slots) { G.fabrics.push(o.id); after(); } else { modal = { t: 'replace', id: o.id, after: after }; render(); } }
+    else if (o.type === 'book') { G.handLv = G.handLv || { o: 1, n: 1, v: 1, a: 1, r: 1 }; G.handLv[o.pos] = E.lvOf(G, o.pos) + E.bookStep(G); after(); }
+    else if (o.type === 'label') { G.labels = (G.labels || []).concat(o.id); after(); }
+    else if (o.type === 'fabric') { if (G.fabrics.length < E.slotsOf(G) || o.ed === 'neg') { E.addFabric(G, o.id, o.ed, o.price || 0); after(); } else { modal = { t: 'replace', id: o.id, ed: o.ed, paid: o.price || 0, after: after }; render(); } }
   }
   /* Balatro-style scoring: each card adds its chips, then the length bonus, the hand and every Fabric fire one by one,
      then Chips × Mult becomes the attack. The numbers come from the engine's result, so the total always equals res.final.
@@ -1202,6 +1534,8 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
         if (s0.tile !== undefined) {
           const te = body.querySelectorAll('.bq-sel .bq-tile')[s0.tile];
           if (te) { te.classList.add('hit'); pop(te, s0.label, !!(s0.m || s0.x)); }
+          const fe = s0.slot && body.querySelector('.bq-slot[data-i="' + s0.slot + '"]');   // an on-card Fabric fires with the card
+          if (fe) { fe.classList.remove('hit'); void fe.offsetWidth; fe.classList.add('hit'); }
           Sfx.play('tick', k++);
         } else {
           const se = s0.slot ? body.querySelector('.bq-slot[data-i="' + s0.slot + '"]') : s0.held ? body.querySelector('.bq-hand [data-i="' + s0.held + '"]') : null;
@@ -1230,29 +1564,31 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     let b = null; try { b = host.takeBonus ? host.takeBonus() : null; } catch (e) { b = null; }
     if (!b || !(b.coins || b.fabrics)) return;
     G.coins += b.coins || 0; const got = [];
-    for (let k = 0; k < (b.fabrics || 0) && G.fabrics.length < 5; k++) {
-      const pool = E.FABRICS.filter(f => E.avail(G, f) && !G.fabrics.includes(f.id) && f.kind !== 'util');
-      if (!pool.length) break; const f = pool[Math.floor(rng() * pool.length)]; G.fabrics.push(f.id); got.push(f.icon + ' ' + f.name);
+    for (let k = 0; k < (b.fabrics || 0) && G.fabrics.length < E.slotsOf(G); k++) {
+      const pool = E.FABRICS.filter(f => E.avail(G, f) && !G.fabrics.includes(f.id) && (f.r || 1) <= 2 && ['chips', 'add', 'x'].includes(f.kind));
+      if (!pool.length) break; const f = pool[Math.floor(rng() * pool.length)]; E.addFabric(G, f.id); got.push(f.icon + ' ' + f.name);
     }
     toast('Bekal misi harian: ' + [b.coins ? '+' + b.coins + ' koin' : '', got.join(', ')].filter(Boolean).join(' · '));
   }
-  function beginRound() { R = E.makeRound(G, rng); sel = []; msg = ''; last = null; phase = R.boss ? 'bosspre' : 'round'; render(); }
+  function beginRound() { R = E.makeRound(G, rng); sel = []; last = null;
+    msg = [R.woven ? '🧑‍🔧 Penenun menambah huruf ' + R.woven.toUpperCase() + '.' : '', R.cut ? '✂️ Gunting Tajam memotong ' + F(R.cut.id).name + ': +' + R.cut.v + ' Mult.' : ''].filter(Boolean).join(' '); phase = R.boss ? 'bosspre' : 'round'; render(); }
   function toShop() { G.stage++; G.rnd = 0; checkAch(); shop = E.shopItems(G, rng); phase = 'shop'; render(); }
   // beating the stage-8 boss wins the run (owner 25 Nov); the player may stop there or go on endless
   function advance() {
     if (!isBoss()) { G.rnd++; beginRound(); return; }
-    if (!G.won && G.stage + 1 >= E.CFG.stages) { G.won = true; checkAch(); Sfx.play('win'); phase = 'win'; render(); return; }
+    if (!G.won && G.stage + 1 >= E.CFG.stages) { G.won = true; G.winPos = Object.assign({}, G.stats.pos || {}); checkAch(); Sfx.play('win'); phase = 'win'; render(); return; }
     toShop();
   }
   const A = {
     start() {
+      if (!store.get(TUTKEY) && !(achTotals.runs > 0) && !best && !load()) { tutStart(); return; }   // first play ever: Bibo's tutorial
       deckOpts = E.opened(achOwned).decks;
       if (deckOpts.length > 1) { G = null; phase = 'deck'; modal = null; render(); return; }
       A.pickDeck('base');
     },
     pickDeck(id) {
       means = {}; G = E.newGame(null, id, E.opened(achOwned).fabrics); G.runId = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); G.submitted = false; G.newAch = [];
-      const ids = E.FABRICS.filter(f => E.avail(G, f)).map(f => f.id).filter(x => ['refill', 'saver', 'recycler'].indexOf(x) === -1);
+      const ids = E.FABRICS.filter(f => E.avail(G, f) && (f.r || 1) <= 2 && ['chips', 'add', 'x'].includes(f.kind) && f.id !== 'kainbaru').map(f => f.id);
       starters = E.shuffle(ids.slice(), rng).slice(0, 3); phase = 'starter'; last = null; sel = []; modal = null; sendState = ''; render();
     },
     achList() { phase = 'ach'; render(); },
@@ -1281,12 +1617,14 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
       setTimeout(render, 350);
     },
     giveUp() { modal = { t: 'giveup' }; render(); },
-    giveUpYes() { modal = null; endRun(); },
+    giveUpYes() { modal = null; if (G && G.tut) { tutEnd(false); return; } endRun(); },
+    tutorial() { tutStart(); },
     endless() { G.endless = true; toShop(); },
     finishWin() { endRun(); },
+    newRun() { endRun(); A.start(); },   // the won run is still saved (endRun sends it), then a new one starts
     sfx() { Sfx.toggle(); render(); },
     resume() { const s = load(); if (!s) { A.start(); return; } restore(s); if (phase === 'round' && R && !R.cleared && E.failed(G, R)) { G.endReason = 'stuck'; endRun(); return; } if (phase === 'round' && R && !R.cleared) R.noWord = E.stuck(R); render(); },
-    pickStarter(i) { G.fabrics = [starters[+i]]; applyBonus(); beginRound(); },
+    pickStarter(i) { G.fabrics = []; G.fx = {}; E.addFabric(G, starters[+i]); applyBonus(); beginRound(); },
     faceBoss() { phase = 'round'; render(); },
     pick(id) {
       const t = R.hand.find(x => x.id === +id); if (!t || sel.length >= R.handSize || sel.some(s => s.id === t.id)) return;
@@ -1313,10 +1651,10 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
       const w = sel.map(E.txt).join(''), played = sel.map(t => Object.assign({}, t)), before = R.score;
       const inL = inLemari(w), r = E.submit(G, R, sel, rng, { inLemari: inL });
       if (!r.ok) { msg = r.msg; shake = true; Sfx.play('bad'); render(); return; }
-      quest(inL ? 'lemari' : '', r.won ? 'win' : '');
+      if (!G.tut) quest(inL ? 'lemari' : '', r.won ? 'win' : '');
       last = { res: r.res }; sel = []; msg = '';
       const lost = !r.won && E.failed(G, R); R.noWord = !r.won && !lost && E.stuck(R); if (lost) G.endReason = 'stuck';
-      if (r.won) { last.fin = E.finishRound(G, R); rewards = E.rewardOptions(G, rng); R.cleared = true; }
+      if (r.won) { last.fin = E.finishRound(G, R); rewards = E.rewardOptions(G, rng, !!R.boss); R.cleared = true; }
       playScore(played, r.res, before, () => {
         const f = r.res.final;
         Sfx.play('attack');
@@ -1333,19 +1671,25 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     takeReward(i) { if (rewards[+i] && rewards[+i].type === 'coin') Sfx.play('coin'); gain(rewards[+i], advance); },
     showFab(id) { modal = { t: 'fab', id: id }; render(); },
     closeModal() { modal = null; render(); },
-    doReplace(i) { const m = modal; G.fabrics[+i] = m.id; modal = null; m.after(); },
+    doReplace(i) { const m = modal, old = G.fabrics[+i]; if (!old || E.edOf(G, old) === 'neg') return; modal = null;
+      const v = E.sellValue(G, old); G.coins += v; delete G.fx[old]; G.fabrics[+i] = m.id; G.fx[m.id] = { ed: m.ed || null, paid: m.paid || 0, v: m.id === 'kainbaru' ? 100 : 0 }; m.after(); },
+    // sell a Fabric (owner 26 Nov, Balatro): half of what was paid, at least 1 coin; in the shop or between words
+    sellFab() { const id = modal && modal.id; if (!id || anim) return; const v = E.sellFabric(G, id);
+      if (!v) { msg = 'Fabric Tembus ini tidak bisa dijual selama semua slot terisi.'; modal = null; render(); return; }
+      Sfx.play('coin'); modal = null; toast('💰 ' + F(id).name + ' terjual: +' + v + ' koin'); render(); },
+    swapBoss() { if (E.swapBoss(G, R, rng)) { Sfx.play('discard'); render(); } },
     skipReplace() { const m = modal; modal = null; m.after(); },
     buy(i) {
       const o = shop[+i]; if (!o || o.sold || G.coins < o.price) return;
-      if (o.type === 'fabric' && G.fabrics.length >= E.CFG.slots) { modal = { t: 'replace', id: o.id, after: () => { if (G.fabrics.includes(o.id)) { G.coins -= o.price; o.sold = true; Sfx.play('coin'); } render(); } }; render(); return; }
+      if (o.type === 'fabric' && G.fabrics.length >= E.slotsOf(G) && o.ed !== 'neg') { modal = { t: 'replace', id: o.id, ed: o.ed, paid: o.price, after: () => { if (G.fabrics.includes(o.id)) { G.coins -= o.price; o.sold = true; Sfx.play('coin'); } render(); } }; render(); return; }
       G.coins -= o.price; o.sold = true; Sfx.play('coin'); gain(o, render);
     },
     buyPerm(i) {
       const o = E.permItems(G)[+i]; if (!o || o.maxed || G.coins < o.price) return; G.coins -= o.price; Sfx.play('coin');
-      if (o.type === 'supply') G.extra += o.n; else if (o.type === 'discard') G.discardBonus++; else if (o.type === 'hand') G.handBonus++;
+      if (o.type === 'supply') G.extra += o.n;
       render();
     },
-    reroll(sec) { if (G.coins < E.CFG.price.reroll) return; G.coins -= E.CFG.price.reroll; Sfx.play('coin'); shop = E.rerollShop(G, shop, sec === 'fabric' ? 'fabric' : 'card', rng); render(); },
+    reroll(sec) { const p = E.rerollPrice(G); if (G.coins < p) return; G.coins -= p; Sfx.play('coin'); shop = E.rerollShop(G, shop, sec === 'fabric' ? 'fabric' : 'card', rng); render(); },
     item(key) { modal = { t: 'item', key: key }; render(); },
     confirmBuy() { const k = modal && modal.key; modal = null; if (!k) return; if (k[0] === 'p') A.buyPerm(k.slice(1)); else A.buy(k.slice(1)); },
     leaveShop() { beginRound(); },
