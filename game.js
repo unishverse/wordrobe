@@ -6,6 +6,7 @@ const Engine = (function () {
     .forEach(([s, v]) => { for (const c of s) V[c] = v; });
   const LB = { 3: 0, 4: 2, 5: 5, 6: 10, 7: 15, 8: 22, 9: 30, 10: 40, 11: 50, 12: 60 };
   const VOW = 'aeiou';
+  const BASE_DECK = 'abcdefghijklmnopqrstuvwxyz' + 'eeeaaiioounrts';   // 40 cards = hand 8 + supply 32
   const BAG = { e: 12, a: 9, i: 9, o: 8, n: 6, r: 6, t: 6, l: 4, s: 4, u: 4, d: 4, g: 3, b: 2, c: 2, m: 2, p: 2, f: 2, h: 2, v: 2, w: 2, y: 2, k: 1, j: 1, x: 1, q: 1, z: 1 };
   const CFG = {
     hand: 8, supply: 32, slots: 5, maxWord: 12, discards: 3, letterMul: 3, lenMul: 3, addMul: 3,
@@ -488,10 +489,18 @@ const Engine = (function () {
     const gi = G.fabrics.indexOf('gunting'), right = gi !== -1 ? G.fabrics[gi + 1] : null;
     if (right) { const v = 2 * sellValue(G, right); destroyFabric(G, right); G.fx.gunting.v = (G.fx.gunting.v || 0) + v; cut = { id: right, v }; }
     const hs = handSize(G);
-    const total = hs + CFG.supply + G.extra + G.letterAdds.length;
+    // owner 26 Nov (Balatro's full deck): every round uses the same letter deck, A-Z once each + 14 common extras, only shuffled.
+    // A bigger hand or bought supply adds random letters from the bag; a smaller deck (Kain Panjang) drops duplicates, never a letter's last card.
+    const n = Math.max(0, hs + CFG.supply + G.extra);
+    const deck = BASE_DECK.split('');
     const bag = []; for (const c in BAG) for (let i = 0; i < BAG[c]; i++) bag.push(c);
     shuffle(bag, rng);
-    const tiles = bag.slice(0, Math.max(0, total - G.upgrades.length - G.letterAdds.length)).map(c => mk(c));
+    for (let i = 0; deck.length < n; i++) deck.push(bag[i % bag.length]);
+    const dupAt = () => { const cnt = {}; deck.forEach(c => cnt[c] = (cnt[c] || 0) + 1); const d = deck.map((c, i) => cnt[c] > 1 ? i : -1).filter(i => i >= 0); return d.length ? d[Math.floor(rng() * d.length)] : Math.floor(rng() * deck.length); };
+    while (deck.length > n) deck.splice(dupAt(), 1);
+    // an upgraded card takes the place of a plain card of the same letter (or of a duplicate), so the deck size stays the same
+    G.upgrades.forEach(u => { if (!deck.length) return; const k = deck.indexOf(u.ch); deck.splice(k !== -1 ? k : dupAt(), 1); });
+    const tiles = deck.map(c => mk(c));
     G.letterAdds.forEach(c => tiles.push(mk(c)));
     G.upgrades.forEach(u => tiles.push(u));
     shuffle(tiles, rng);
@@ -629,7 +638,7 @@ const Engine = (function () {
   function resumeIds(G, R) { let m = 0; const see = t => { if (t.id > m) m = t.id; }; G.upgrades.forEach(see); if (R) { R.hand.forEach(see); R.supply.forEach(see); } if (m >= UID) UID = m + 1; }
   return { RAR, ED, TERMS, LABELS, LABEL, hasLabel, addFabric, slotsOf, edOf, sellValue, sellFabric, destroyFabric, rollEd, fabPrice, pickFabric, swapBoss, discardsOf, ctxFor, grownFx, nested, shopLabel, rerollPrice, bookStep,
     UPS, HAND_STEP, LEMARI_ADD, BGS, hasAch, DECKS, DECK, ACH, opened, earned, runCounts, avail, val, txt, kindOf, HANDS, MULTI, PRE, SUF, PAIRS, posOf, lvOf, handInfo, spell, V, LB, CFG, FABRICS, FAB, BOSSES, setDict, isWord, rngFrom, shuffle, mk, score, blocked, candidates, tilesFor, best, newGame,
-    roundIndex, targetFor, handSize, permItems, makeRound, draw, submit, stuck, failed, discard, canDiscard, finishRound, rewardOptions, shopItems, shopCards, shopFabrics, rerollShop, addUpgrade, resumeIds, randLetter, get ARR() { return ARR; } };
+    BASE_DECK, roundIndex, targetFor, handSize, permItems, makeRound, draw, submit, stuck, failed, discard, canDiscard, finishRound, rewardOptions, shopItems, shopCards, shopFabrics, rerollShop, addUpgrade, resumeIds, randLetter, get ARR() { return ARR; } };
 })();
 
 /* ---------- UI (only runs in the browser, after the host page calls WRGame.init) ---------- */
@@ -650,6 +659,7 @@ const UI = (function () {
   };
 
   const CSS = `
+.bq-tr{font-size:1.15em}.bq-en{margin-top:4px}.bq-en summary{cursor:pointer;color:var(--muted);font-size:13px}.bq-en[open] summary{margin-bottom:4px}
 .bq-hole{position:fixed;pointer-events:none;border-radius:14px;box-shadow:0 0 0 4px #ffd23f,0 0 0 9999px rgba(0,0,0,.55);z-index:80;transition:left .25s,top .25s,width .25s,height .25s}
 .bq-hole.none{box-shadow:0 0 0 0 transparent,0 0 0 9999px rgba(0,0,0,.45);width:0;height:0;left:50%;top:50%}
 .bq-tut{position:fixed;left:10px;right:10px;z-index:81;pointer-events:none;display:flex;gap:10px;align-items:flex-end;max-width:560px;margin:0 auto}.bq-tut.top{top:10px;align-items:flex-start}.bq-tut.bot{bottom:calc(10px + env(safe-area-inset-bottom))}
@@ -1044,7 +1054,9 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     if (m.state === 'loading') return '<span class="bq-mut">Mencari arti…</span>';
     if (m.state === 'err') return '<span class="bq-msg">' + escH(m.msg) + '</span>';
     const r = m.r || {};
-    return '<b>' + escH(r.translation || '-') + '</b>' + (r.phonetic ? ' <span class="bq-mut">' + escH(r.phonetic) + '</span>' : '') + (r.definition ? '<div>' + escH(r.definition) + '</div>' : '') + (r.example ? '<div class="bq-mut">“' + escH(r.example) + '”</div>' : '');
+    // owner 26 Nov: learners are beginners, so the Indonesian word comes first; the English definition and example wait behind a tap
+    const en = (r.definition ? '<div>' + escH(r.definition) + '</div>' : '') + (r.example ? '<div class="bq-mut">“' + escH(r.example) + '”</div>' : '');
+    return '<b class="bq-tr">' + escH(r.translation || '-') + '</b>' + (r.phonetic ? ' <span class="bq-mut">' + escH(r.phonetic) + '</span>' : '') + (en ? '<details class="bq-en"><summary>Definisi & contoh (Inggris)</summary>' + en + '</details>' : '');
   }
   function showMeaning(w) {
     const el = body.querySelector('[data-mean="' + w + '"]'), m = means[w]; if (!el || !m) return;
