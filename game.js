@@ -659,6 +659,7 @@ const UI = (function () {
   };
 
   const CSS = `
+.bq-cloth{position:relative;overflow:hidden}.bq-cloth>*{position:relative}.bq-cloth.k-card{background:#F1E6C8;border:0!important;box-shadow:0 4px 0 #C9B07A;color:#3d2f12;margin-bottom:4px}.bq-cloth.k-card .d{color:#5f4a1e!important}.bq-cloth.k-card .pr{color:#854F0B!important}.bq-mt{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:40px;padding:0 6px;border-radius:8px;background:#FBF6EA;box-shadow:0 3px 0 #C9B07A;font-size:20px;font-weight:800;color:#3d2f12;margin:0 0 8px;text-transform:uppercase}.bq-mt.long{font-size:15px;padding:0 15px 0 7px}.bq-mt small{position:absolute;right:3px;bottom:1px;font-size:10px;font-weight:700}.bq-mt i{position:absolute;left:-6px;top:-7px;font-style:normal;font-size:14px}.bq-opt .bq-mt{margin:0 10px 0 0;vertical-align:middle}.bq-cloth.k-label{background:#CECBF6;color:#26215C;border:0!important;padding-left:34px;clip-path:polygon(24px 0,100% 0,100% 100%,24px 100%,0 50%);-webkit-mask:radial-gradient(circle 5px at 16px 50%,transparent 96%,#000 100%);mask:radial-gradient(circle 5px at 16px 50%,transparent 96%,#000 100%)}.bq-cloth.k-label::before{content:'';position:absolute;left:11px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;box-shadow:0 0 0 1.5px #534AB7}.bq-cloth.k-label .d{color:#3C3489!important}.bq-cloth.k-label .pr{color:#3C3489!important}.bq-cloth.k-label b{color:#26215C}.bq-cloth.k-box{--kraft:color-mix(in srgb,#b8864f 32%,var(--card));background:linear-gradient(90deg,transparent calc(50% - 16px),color-mix(in srgb,#e9d3a4 55%,var(--card)) calc(50% - 16px) calc(50% + 16px),transparent calc(50% + 16px)) 0 0/100% 20px no-repeat,linear-gradient(color-mix(in srgb,#7a5530 45%,transparent),color-mix(in srgb,#7a5530 45%,transparent)) 0 20px/100% 1.5px no-repeat,repeating-linear-gradient(90deg,color-mix(in srgb,#7a5530 10%,transparent) 0 2px,transparent 2px 7px),var(--kraft);border-color:#b8864f;padding-top:26px}
 .bq-tr{font-size:1.15em}.bq-en{margin-top:4px}.bq-en summary{cursor:pointer;color:var(--muted);font-size:13px}.bq-en[open] summary{margin-bottom:4px}
 .bq-hole{position:fixed;pointer-events:none;border-radius:14px;box-shadow:0 0 0 4px #ffd23f,0 0 0 9999px rgba(0,0,0,.55);z-index:80;transition:left .25s,top .25s,width .25s,height .25s}
 .bq-hole.none{box-shadow:0 0 0 0 transparent,0 0 0 9999px rgba(0,0,0,.45);width:0;height:0;left:50%;top:50%}
@@ -786,7 +787,7 @@ button.bq-slot{cursor:pointer;border:1.5px solid var(--yellow);color:var(--text)
 @media(max-height:680px){.bq-r{--bq-art:44px;gap:5px}.bq-r .bq-sel{min-height:34px}.bq-r .bq-sel .bq-tile{width:30px;height:34px;font-size:16px}.bq-r .bq-btn{min-height:38px}.bq-r .bq-slot{min-height:32px}.bq-r .bq-giveup{padding:0}.bq-r .bq-bar,.bq-r .bq-boss{font-size:11px}.bq-r .bq-boss{padding:4px 8px}.bq-r .bq-hand .bq-tile{height:40px}.bq-r .bq-prev{min-height:66px}}
 .bq-L,.bq-R{display:contents}
 .bq-host>:not(.bq-bgc){position:relative;z-index:1}
-.bq-bgc{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
+.bq-bgc{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 .bq-bgon .bq-mut{color:var(--text);opacity:.8}
 .bq-hn,.bq-pile,.bq-rs,.bq-hudg,.bq-bh,.bq-tg{display:none}
 .bq-handrow{display:flex;align-items:flex-end;justify-content:center;gap:10px}
@@ -977,15 +978,24 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     const choice = () => store.get(KEYB) || 'wave';
     const still = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
     function light() { const c = (getComputedStyle(document.body).backgroundColor.match(/\d+/g) || [0, 0, 0]).map(Number); return c[0] + c[1] + c[2] > 382; }
-    function size() { if (!cv) return; const d = Math.min(2, window.devicePixelRatio || 1); cv.width = Math.round(innerWidth * d); cv.height = Math.round(innerHeight * d); cx.setTransform(d, 0, 0, d, 0, 0); if (style !== 'off') draw(); }
+    // owner 26 Nov: a strip on the right and at the bottom was not covered on a phone (100vw/100vh and innerWidth differ there): the canvas now
+    // fills the screen with inset:0 and its bitmap follows its own size, also when the phone's visible area changes
+    let W = 0, H = 0;
+    function size() { if (!cv) return; const d = Math.min(2, window.devicePixelRatio || 1); W = cv.clientWidth || innerWidth; H = cv.clientHeight || innerHeight;
+      cv.width = Math.round(W * d); cv.height = Math.round(H * d); cx.setTransform(d, 0, 0, d, 0, 0); if (style !== 'off') draw(); }
     function ensure() {
       if (cv) return;
+      root.querySelectorAll('.bq-bgc').forEach(el => el.remove());
       cv = document.createElement('canvas'); cv.className = 'bq-bgc'; cv.setAttribute('aria-hidden', 'true'); root.insertBefore(cv, root.firstChild);
-      cx = cv.getContext('2d'); root.classList.add('bq-host'); window.addEventListener('resize', size); size();
+      cx = cv.getContext('2d'); root.classList.add('bq-host'); window.addEventListener('resize', size);
+      if (window.visualViewport) visualViewport.addEventListener('resize', size);
+      if (window.ResizeObserver) new ResizeObserver(size).observe(cv);
+      size();
     }
     function draw() {
       if (!cx) return;
-      const W = innerWidth, H = innerHeight, p = boss ? (light() ? BOSSL : BOSSD) : (light() ? LIGHT : DARK)[pal % 8];
+      if (!W || !H) { W = cv.clientWidth || innerWidth; H = cv.clientHeight || innerHeight; }
+      const p = boss ? (light() ? BOSSL : BOSSD) : (light() ? LIGHT : DARK)[pal % 8];
       cx.globalAlpha = 1; cx.fillStyle = p[0]; cx.fillRect(0, 0, W, H);
       if (style === 'wave') {
         for (let b = 0; b < 7; b++) { cx.fillStyle = p[1 + (b % 3)]; cx.globalAlpha = 0.5; cx.beginPath(); const base = H * (b / 6) - 20; cx.moveTo(0, H);
@@ -1101,22 +1111,25 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
   const handChip = h => `<span class="bq-chip h">${h.icon} ${h.name} Lv${h.lv} · ${h.chips} × ${h.mult}</span>`;
   const KINDTAG = { chips: '<span class="bq-k c">+Chips</span>', add: '<span class="bq-k m">+Mult</span>', x: '<span class="bq-k x">×Mult</span>', util: '<span class="bq-k">Utilitas</span>', eco: '<span class="bq-k">Koin</span>', rt: '<span class="bq-k u">Ulang</span>', copy: '<span class="bq-k u">Salin</span>' };
   // rarity (knit colour) and edition on any Fabric card (owner 26 Nov)
+  const clothCls = o => o.type === 'fabric' ? fabCls(o.id, o.ed) : 'bq-cloth k-' + (o.type === 'label' ? 'label' : o.type === 'coin' || o.type === 'supply' ? 'box' : 'card');
   const fabCls = (id, ed) => 'bq-fab rr' + (F(id).r || 1) + (ed ? ' ed-' + ed : '');
   const rarTag = id => `<span class="bq-rar">${E.RAR[F(id).r || 1].n}</span>`;
   const edTag = ed => ed ? `<span class="bq-edt">${E.ED[ed].icon} ${E.ED[ed].n} · ${E.ED[ed].d}</span>` : '';
   const fabVal = id => { const v = G && G.fx && G.fx[id] ? G.fx[id].v : 0; return v && ['rapi', 'gunting', 'pitaukur', 'tumbuh', 'kainbaru'].includes(id) ? ` <b style="display:inline">Sekarang: ${['pitaukur', 'tumbuh', 'kainbaru'].includes(id) ? '+' + v + ' Chips' : '+' + v + ' Mult'}</b>` : ''; };
   const fabricCard = (id, tag, ed) => { const f = F(id); return `<span class="ic">${f.icon}</span><b>${f.name}</b> ${KINDTAG[f.kind] || ''}${rarTag(id)}${tag || ''}${edTag(ed)}<span class="d">${f.desc}${fabVal(id)}</span>`; };
+  // a small letter tile (K2), like the cards in the hand: letter, its value, and the upgrade badge
+  const miniTile = (ch, badge) => `<span class="bq-mt${ch.length > 2 ? ' long' : ''}">${badge ? '<i>' + badge + '</i>' : ''}${ch}<small>${ch === '?' ? '½' : E.val({ ch: ch })}</small></span>`;
   function optHtml(o) {
     const U = o.ch ? o.ch.toUpperCase() : '';
     if (o.type === 'fabric') return fabricCard(o.id, '', o.ed);
     if (o.type === 'label') { const l = E.LABEL[o.id]; return `<span class="ic">${l.icon}</span><b>Label ${l.name}</b><span class="d">${l.desc} Permanen sampai run selesai.</span>`; }
-    if (o.type === 'up') { const u = E.UPS[o.kind]; return `<span class="ic">${u.icon}</span><b>${u.name} · huruf ${U}</b><span class="d">${u.desc} Permanen: masuk supply tiap ronde sampai run selesai.</span>`; }
-    if (o.type === 'letter') return `<span class="ic">🔤</span><b>Huruf ${U}</b><span class="d">Satu huruf ${U} ditambahkan ke supply di semua ronde berikutnya.</span>`;
+    if (o.type === 'up') { const u = E.UPS[o.kind]; return `${miniTile(o.ch, u.icon)}<b>${u.name} · huruf ${U}</b><span class="d">${u.desc} Permanen: masuk supply tiap ronde sampai run selesai.</span>`; }
+    if (o.type === 'letter') return `${miniTile(o.ch)}<b>Huruf ${U}</b><span class="d">Satu huruf ${U} ditambahkan ke supply di semua ronde berikutnya.</span>`;
     if (o.type === 'book') { const h = E.HANDS[o.pos], now = E.handInfo(o.pos, E.lvOf(G, o.pos)), nx = E.handInfo(o.pos, now.lv + E.bookStep(G));
       return `<span class="ic">📖</span><b>Buku ${h.name} · Lv${nx.lv}</b><span class="d">Hand ${h.name} naik: ${now.chips} Chips × ${now.mult} Mult → ${nx.chips} × ${nx.mult}.</span>`; }
     if (o.type === 'multi') { const k = E.kindOf(o.ch);
-      return `<span class="ic">🧩</span><b>Kartu ${U}</b><span class="d">${k === 'pre' ? 'Prefiks: di awal kata ×1,5.' : k === 'suf' ? 'Sufiks: di akhir kata ×1,5.' : 'Gabungan huruf, bebas di posisi mana pun.'} 1 kartu = ${o.ch.length} huruf. Masuk supply semua ronde berikutnya.</span>`; }
-    if (o.type === 'wild') return `<span class="ic">❓</span><b>Kartu wild ?</b><span class="d">Jadi huruf apa pun yang kamu pilih, nilainya setengah huruf itu. Masuk supply semua ronde berikutnya.</span>`;
+      return `${miniTile(o.ch)}<b>Kartu ${U}</b><span class="d">${k === 'pre' ? 'Prefiks: di awal kata ×1,5.' : k === 'suf' ? 'Sufiks: di akhir kata ×1,5.' : 'Gabungan huruf, bebas di posisi mana pun.'} 1 kartu = ${o.ch.length} huruf. Masuk supply semua ronde berikutnya.</span>`; }
+    if (o.type === 'wild') return `${miniTile('?')}<b>Kartu wild ?</b><span class="d">Jadi huruf apa pun yang kamu pilih, nilainya setengah huruf itu. Masuk supply semua ronde berikutnya.</span>`;
     if (o.type === 'discard') return `<span class="ic">🗑️</span><b>+1 jatah Buang per ronde</b><span class="d">Sekarang ${E.CFG.discards + G.discardBonus} per ronde.</span>`;
     if (o.type === 'hand') return `<span class="ic">✋</span><b>+1 kartu di tangan</b><span class="d">Tangan jadi ${E.handSize(G) + 1} kartu (maks. 12; di atas 9 kartu tangan jadi 2 baris).</span>`;
     if (o.type === 'supply') return `<span class="ic">📦</span><b>+${o.n} huruf supply</b><span class="d">Supply tiap ronde berikutnya lebih banyak.</span>`;
@@ -1295,7 +1308,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
       const perm = modal.key[0] === 'p', o = perm ? E.permItems(G)[+modal.key.slice(1)] : shop[+modal.key.slice(1)];
       if (!o) return '';
       const can = !o.sold && !o.maxed && G.coins >= o.price;
-      return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><div class="bq-opt ${o.type === 'fabric' ? fabCls(o.id, o.ed) : ''}" style="cursor:default">${optHtml(o)}</div>${o.type === 'fabric' && F(o.id).t ? `<div class="bq-terms">${F(o.id).t.map(t => `<span><b>${t}</b>: ${E.TERMS[t] || ''}</span>`).join('')}</div>` : ''}
+      return `<div class="bq-modal" data-a="closeModal"><div class="bq-card" data-a="noop"><div class="bq-opt ${clothCls(o)}" style="cursor:default">${optHtml(o)}</div>${o.type === 'fabric' && F(o.id).t ? `<div class="bq-terms">${F(o.id).t.map(t => `<span><b>${t}</b>: ${E.TERMS[t] || ''}</span>`).join('')}</div>` : ''}
         <div class="bq-mut" style="margin:8px 0">Koinmu: 🪙 ${G.coins}${o.maxed ? ' · sudah maksimal' : !can ? ' · koin belum cukup' : ''}</div>
         <div class="bq-btns"><button type="button" class="bq-btn" data-a="closeModal">Batal</button><button type="button" class="bq-btn pri" data-a="confirmBuy" ${can ? '' : 'disabled'}>${o.maxed ? 'Maksimal' : 'Beli 🪙 ' + o.price}</button></div></div></div>`;
     }
@@ -1362,11 +1375,11 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     else if (phase === 'bosspre') h = `<div class="bq-card bq-center"><img src="${bossImg(R.boss.id)}" alt="" style="height:150px;width:auto"><h2>${R.boss.name}</h2><p>${R.boss.off ? '<b>✂️ Gunting Emas mematikan aturan boss ini.</b>' : R.boss.desc}${R.boss.block ? `<br><b style="color:var(--error);font-size:22px">Huruf terkunci: ${R.boss.block.toUpperCase()}</b>` : ''}${R.boss.fab ? `<br><b style="color:var(--error)">Fabric dilemahkan: ${F(R.boss.fab).icon} ${F(R.boss.fab).name}</b>` : ''}</p><div class="bq-mut">Capai skor <b>${fmtN(R.target)}</b> untuk mengalahkannya.</div></div>
       ${E.hasLabel(G, 'gantilawan') && G.swapped !== G.stage ? '<button type="button" class="bq-btn" data-a="swapBoss">🔀 Ganti lawan (sekali per stage)</button>' : ''}<button type="button" class="bq-btn pri" data-a="faceBoss">Hadapi boss</button>`;
     else if (phase === 'round') h = roundHtml();
-    else if (phase === 'reward') { rewards.forEach(o => edFound(o.ed)); h = `<h2>Ronde selesai! 🎉</h2><div class="bq-mut">Pilih 1 hadiah.</div><div class="bq-opts">${rewards.map((o, i) => `<button type="button" class="bq-opt ${o.type === 'fabric' ? fabCls(o.id, o.ed) : ''}" data-a="takeReward" data-i="${i}">${optHtml(o)}</button>`).join('')}</div>`; }
+    else if (phase === 'reward') { rewards.forEach(o => edFound(o.ed)); h = `<h2>Ronde selesai! 🎉</h2><div class="bq-mut">Pilih 1 hadiah.</div><div class="bq-opts">${rewards.map((o, i) => `<button type="button" class="bq-opt ${clothCls(o)}" data-a="takeReward" data-i="${i}">${optHtml(o)}</button>`).join('')}</div>`; }
     else if (phase === 'shop') {
       shop.forEach(o => edFound(o.ed));
       const perm = E.permItems(G), secOf = o => o.sec || (o.type === 'fabric' ? 'fabric' : 'card');
-      const box = (o, key, priceTxt, off) => `<button type="button" class="bq-gi ${o.type === 'fabric' ? fabCls(o.id, o.ed) : o.type === 'label' ? 'lab' : ''} ${o.sold ? 'sold' : off ? 'poor' : ''}" data-a="item" data-i="${key}" ${o.sold ? 'disabled' : ''}>${optHtml(o)}<span class="pr">${o.sold ? 'Terjual' : priceTxt}</span></button>`;
+      const box = (o, key, priceTxt, off) => `<button type="button" class="bq-gi ${clothCls(o)} ${o.sold ? 'sold' : off ? 'poor' : ''}" data-a="item" data-i="${key}" ${o.sold ? 'disabled' : ''}>${optHtml(o)}<span class="pr">${o.sold ? 'Terjual' : priceTxt}</span></button>`;
       const rp = E.rerollPrice(G), labs = (G.labels || []).map(id => `<span>${E.LABEL[id].icon} ${E.LABEL[id].name}</span>`).join('');
       const sec = name => shop.map((o, i) => secOf(o) === name ? box(o, 's' + i, '🪙 ' + o.price, G.coins < o.price) : '').join('');
       const rr = name => `<button type="button" class="bq-btn sm" ${G.coins < rp ? 'disabled' : ''} data-a="reroll" data-i="${name}">🔁 Reroll (🪙 ${rp})</button>`;
