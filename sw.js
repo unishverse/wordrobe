@@ -1,6 +1,6 @@
 /* Wordrobe service worker. Never touches the Apps Script API (cross-origin POSTs are not intercepted).
    - index.html / navigations: network first (3 s), cached copy only as a fallback, so a deploy reaches users at once
-   - img/*, words-en.txt, words-game.txt: cache first (bump VERSION when an image or the word list changes)
+   - img/*, words-en.txt, words-game.txt, words-common.txt: cache first (bump VERSION when an image or the word list changes)
    - game.js: network first, revalidated with the server every time (so a deploy shows on the next open, not the one after)
    - everything else on this origin, and Google Fonts: stale while revalidate */
 var VERSION = 'wr-sw-5';
@@ -57,6 +57,6 @@ self.addEventListener('fetch', function (e) {
   if (fonts) { e.respondWith(staleWhileRevalidate(req)); return; }
   if (req.mode === 'navigate' || /\/(index\.html)?$/.test(url.pathname)) { e.respondWith(networkFirst(req)); return; }
   if (/\/game\.js$/.test(url.pathname)) { e.respondWith(networkFirst(req, true)); return; }
-  if (/\/img\/|words-(en|game)\.txt$/.test(url.pathname)) { e.respondWith(cacheFirst(req)); return; }
+  if (/\/img\/|words-(en|game|common)\.txt$/.test(url.pathname)) { e.respondWith(cacheFirst(req)); return; }
   e.respondWith(staleWhileRevalidate(req));
 });

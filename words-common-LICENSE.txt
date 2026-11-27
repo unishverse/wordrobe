@@ -1,0 +1,5 @@
+web/words-common.txt: the 5,000 most frequent English content words (3-8 letters, also in words-game.txt with a part of speech),
+ordered from most to least common. Used by Wordrobe Quest for Bibo's hints (Petunjuk) so hints suggest everyday words.
+Derived from the word frequencies of wordfreq 3.1.1 by Robyn Speer (https://github.com/rspeer/wordfreq).
+wordfreq data is licensed under Creative Commons Attribution-ShareAlike 4.0 (https://creativecommons.org/licenses/by-sa/4.0/);
+this derived list is shared under the same license. A few words not suitable for children were removed.
