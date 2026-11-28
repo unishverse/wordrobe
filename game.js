@@ -1478,10 +1478,10 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     const jr = mode === 'junior';
     G = E.newGame(null, 'base', [], jr ? 'junior' : 'quest'); E.addFabric(G, 'long'); E.addFabric(G, jr ? 'short' : 'golden'); G.tut = true; G.runId = 'tutorial'; G.newAch = [];
     R = E.makeRound(G, E.rngFrom(7)); R.hand = (jr ? 'catsdogu' : 'jacketso').split('').map(c => E.mk(c)); R.target = 99999;
-    tut = { i: 0, list: jr ? TUT_JR : TUT, mode: jr ? 'junior' : 'quest' }; phase = 'round'; sel = []; msg = ''; last = null; modal = null; sendState = ''; render();
+    tut = { i: 0, list: jr ? TUT_JR : TUT, mode: jr ? 'junior' : 'quest' }; phase = 'round'; track('tut_start'); sel = []; msg = ''; last = null; modal = null; sendState = ''; render();
   }
   function tutEnd(go) {
-    const mode = tut ? tut.mode : 'quest';
+    const mode = tut ? tut.mode : 'quest'; track(go ? 'tut_done' : 'tut_skip');
     store.set(mode === 'junior' ? TUTJR : TUTKEY, '1'); tut = null; G = null; R = null; sel = []; anim = null; modal = null; phase = 'intro'; tutDraw();
     if (go) A.pickMode(mode); else render();
   }
@@ -1548,6 +1548,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
   }
   function endRun() {
     if (G && G.tut) { tutEnd(false); return; }
+    track(G && G.won ? 'run_win' : 'run_end');
     checkAch(); Sfx.play('over');
     phase = 'end'; G.reached = G.stage + 1;
     if (E.isJr(G)) {   // Junior keeps its own records
@@ -1644,6 +1645,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
   }
 
   // daily missions live in the host page (the Beranda shows them without loading this file); the game only reports events and takes the reward
+  const track = step => { try { if (host && host.track && !(G && G.tut && step !== 'tut_start' && step !== 'tut_done' && step !== 'tut_skip')) host.track(step); } catch (e) { /* the funnel never breaks the game */ } };
   const quest = (...ev) => { ev.filter(Boolean).forEach(e => { try { const t = host.quest ? host.quest(e) : ''; if (t) toast(t); } catch (x) { /* missions are a bonus: never break a round */ } }); };
   function applyBonus() {
     let b = null; try { b = host.takeBonus ? host.takeBonus() : null; } catch (e) { b = null; }
@@ -1668,6 +1670,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     // MAIN opens the mode choice (owner 27 Nov): Wordrobe Quest or Quest Junior, from the same title screen
     start() { G = null; R = null; modal = null; phase = 'mode'; render(); },
     pickMode(m) {
+      track(m === 'junior' ? 'pick_junior' : 'pick_quest');
       if (m === 'junior') { if (!store.get(TUTJR)) { tutStart('junior'); return; } A.pickDeck('base', 'junior'); return; }
       if (!store.get(TUTKEY) && !(achTotals.runs > 0) && !best && !load()) { tutStart('quest'); return; }   // first play ever: Bibo's tutorial
       deckOpts = E.opened(achOwned).decks;
@@ -1717,7 +1720,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
       const h = E.hintFor(R);
       if (!h) { msg = '💡 Bibo: hmm, belum ada kata yang mudah dari hurufmu. Coba 🔀 Acak atau Buang beberapa huruf.'; render(); return; }
       if (!jr) { G.coins -= HINT_COST; R.hintUsed = true; Sfx.play('coin'); }
-      R.hint = { w: h.w, ids: h.ids };
+      R.hint = { w: h.w, ids: h.ids }; track('hint');
       msg = `<span class="bq-hint">💡 Bibo: coba <b>${h.w.toUpperCase()}</b>! <button type="button" class="bq-arti" data-a="arti" data-i="${h.w}">📖 Cek artinya</button></span>`;
       render();
     },
@@ -1756,7 +1759,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
       if (!G.tut) quest(inL ? 'lemari' : '', r.won ? 'win' : '');
       last = { res: r.res }; sel = []; msg = ''; R.hint = null;
       const lost = !r.won && E.failed(G, R); R.noWord = !r.won && !lost && E.stuck(R); if (lost) G.endReason = 'stuck';
-      if (r.won) { last.fin = E.finishRound(G, R); rewards = E.rewardOptions(G, rng, !!R.boss); R.cleared = true; }
+      if (r.won) { track(R.boss ? 'boss_win' : 'round_win'); last.fin = E.finishRound(G, R); rewards = E.rewardOptions(G, rng, !!R.boss); R.cleared = true; }
       playScore(played, r.res, before, () => {
         const f = r.res.final;
         Sfx.play('attack');
@@ -1862,6 +1865,7 @@ button.bq-slot.k-chips{border-top:4px solid #2f7fd1}button.bq-slot.k-add{border-
     best = +store.get(BEST) || 0;
   }
   function open() {
+    track('quest_open');
     if (!ready) {
       ready = fetch('words-game.txt').then(r => { if (!r.ok) throw new Error('dict'); return r.text(); }).then(t => { E.setDict(t.split('\n').map(w => w.trim()).filter(Boolean)); })
         .then(() => fetch('words-common.txt').then(r => r.ok ? r.text() : '').then(t => E.setCommon(t.split('\n').map(w => w.trim()).filter(Boolean)), () => { /* hints just stay off */ }));

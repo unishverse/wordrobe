@@ -1725,7 +1725,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
       fqLoad = new Promise(function (ok, no) {
         var sc = document.createElement('script');
         // raise v when game.js changes: a new URL skips any old copy the phone or the CDN still holds
-        sc.src = 'game.js?v=30'; sc.onload = ok; sc.onerror = function () { sc.remove(); no(new Error('game')); };
+        sc.src = 'game.js?v=31'; sc.onload = ok; sc.onerror = function () { sc.remove(); no(new Error('game')); };
         document.head.appendChild(sc);
       });
       fqLoad.catch(function () { fqLoad = null; });
@@ -1748,6 +1748,7 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
         lemariHas: function (w) { return hasWord(slKey(w)); },
         quest: questEvent,
         takeBonus: takeQuestBonus,
+        track: track,
         onStats: function (s) { stats = s || stats; },
         failed: function (e) { if (e && SESSION_RE.test(e.message)) signedOut(e.message); }
       });
@@ -1954,13 +1955,21 @@ body[data-screen="add"] .app, body[data-screen="result"] .app, body[data-screen=
     saveToken(r.token);
     try { localStorage.removeItem('wr_known'); } catch (e) { /* old one-trial-per-browser mark, no longer used */ }
     setMe(r.user, r.hasPassword);
+    if (r.isNew) track('signup');
     msg($('home-msg'), !r.isNew ? '' : 'Selamat datang di Wordrobe!', 'ok');
     words = []; wordsLoaded = false; community = null; racks = []; rackLinks = []; rackFilter = '';
     go('home');
     loadWords();
   }
+  // new-player funnel (owner 28 Nov): each step is sent once per account (visit: once a day); never blocks or bothers the player
+  function track(step) {
+    if (!me || !me.user_id) return;
+    var key = 'wr_fun:' + me.user_id + ':' + step + (step === 'visit' ? ':' + new Date().toISOString().slice(0, 10) : '');
+    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) { return; }
+    try { api('logFunnel', readToken(), step).then(null, function () { try { localStorage.removeItem(key); } catch (e) { /* ignore */ } }); } catch (e) { /* ignore */ }
+  }
   function setMe(user, pw) {
-    me = user; hasPassword = !!pw;
+    me = user; hasPassword = !!pw; track('visit');
     $('home-hello').textContent = 'Halo, ' + (user.display_name || 'kamu') + '!';
     $('menu-email').textContent = 'Masuk sebagai ' + (user.email || '@' + user.username);
     $('menu-add-email').hidden = !!user.email;
